@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getSQL } from '@/lib/db';
+import { sendOrderConfirmation } from '@/lib/email';
+import { decrementStock } from '@/lib/stock';
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,13 +38,29 @@ export async function POST(request: NextRequest) {
       const razorpayPaymentId = payment?.id;
 
       if (razorpayOrderId) {
-        await sql`
+        const updated = await sql`
           UPDATE orders
           SET payment_status = 'paid',
               razorpay_payment_id = ${razorpayPaymentId}
           WHERE razorpay_order_id = ${razorpayOrderId}
             AND payment_status = 'pending'
+          RETURNING id
         `;
+
+        if (updated.length > 0) {
+          const orderId = updated[0].id as string;
+
+          // Decrement stock (dedup-guarded via stock_decremented flag)
+          decrementStock(orderId).catch((err) =>
+            console.error('Webhook: failed to decrement stock:', err)
+          );
+
+          // Send confirmation email as backup path
+          // (sendOrderConfirmation has its own dedup guard via confirmation_email_sent flag)
+          sendOrderConfirmation(orderId).catch((err) =>
+            console.error('Webhook: failed to send confirmation email:', err)
+          );
+        }
       }
     }
 

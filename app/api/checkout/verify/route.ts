@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getSQL } from '@/lib/db';
+import { sendOrderConfirmation } from '@/lib/email';
+import { decrementStock } from '@/lib/stock';
 
 interface VerifyBody {
   razorpay_order_id: string;
@@ -54,9 +56,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const orderId = result[0].id as string;
+
+    // Decrement stock for ordered variants (dedup-guarded via stock_decremented flag)
+    decrementStock(orderId).catch((err) =>
+      console.error('Failed to decrement stock:', err)
+    );
+
+    // Send confirmation email (fire-and-forget, guarded against duplicates)
+    sendOrderConfirmation(orderId).catch((err) =>
+      console.error('Failed to send confirmation email:', err)
+    );
+
     return NextResponse.json({
       status: 'paid',
-      orderId: result[0].id,
+      orderId,
     });
   } catch (error: unknown) {
     console.error('verify error:', error);

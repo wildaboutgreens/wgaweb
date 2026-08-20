@@ -49,24 +49,34 @@ export async function POST(request: NextRequest) {
     // ── Fetch variant prices from DB (never trust client prices) ──
     const variantIds = body.items.map((item) => item.variantId);
     const variants = await sql`
-      SELECT id, price_paise, stock_qty, is_active
-      FROM product_variants
-      WHERE id = ANY(${variantIds})
+      SELECT pv.id, pv.label, pv.price_paise, pv.stock_qty, pv.is_active,
+             p.name AS product_name
+      FROM product_variants pv
+      JOIN products p ON p.id = pv.product_id
+      WHERE pv.id = ANY(${variantIds})
     `;
 
     const variantMap = new Map(variants.map((v) => [v.id as string, v]));
 
-    // Validate all variants exist and are active
+    // Validate all variants exist, are active, and have sufficient stock
     for (const item of body.items) {
       const variant = variantMap.get(item.variantId);
       if (!variant) {
         return NextResponse.json({ error: `Variant ${item.variantId} not found` }, { status: 400 });
       }
       if (!variant.is_active) {
-        return NextResponse.json({ error: `Variant ${item.variantId} is no longer available` }, { status: 400 });
+        return NextResponse.json(
+          { error: `${variant.product_name} (${variant.label}) is no longer available` },
+          { status: 400 }
+        );
       }
       if ((variant.stock_qty as number) < item.quantity) {
-        return NextResponse.json({ error: `Insufficient stock for variant ${item.variantId}` }, { status: 400 });
+        return NextResponse.json(
+          {
+            error: `Not enough stock for ${variant.product_name} (${variant.label}). Requested: ${item.quantity}, available: ${variant.stock_qty}`,
+          },
+          { status: 409 }
+        );
       }
     }
 
