@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 import { sendInquiryNotification } from '@/lib/email';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate limit: 3 requests per IP per 10 minutes ──
+    const rateLimited = await checkRateLimit(request, 'inquiries/restaurant', 3, 600);
+    if (rateLimited) return rateLimited;
+
     const sql = getSQL();
     const body = await request.json();
     const { business_name, contact_name, phone, email, message } = body;

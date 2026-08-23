@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 import { getRazorpay } from '@/lib/razorpay';
 import { isServiceable } from '@/lib/pincodes';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 interface CartItem {
   variantId: string;
@@ -21,6 +22,10 @@ interface CreateOrderBody {
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate limit: 10 requests per IP per 5 minutes ──
+    const rateLimited = await checkRateLimit(request, 'checkout/create-order', 10, 300);
+    if (rateLimited) return rateLimited;
+
     const sql = getSQL();
     const body: CreateOrderBody = await request.json();
 

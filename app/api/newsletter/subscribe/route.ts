@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate limit: 3 requests per IP per 10 minutes ──
+    const rateLimited = await checkRateLimit(request, 'newsletter/subscribe', 3, 600);
+    if (rateLimited) return rateLimited;
+
     const sql = getSQL();
     const body = await request.json();
     const { email, source } = body;
