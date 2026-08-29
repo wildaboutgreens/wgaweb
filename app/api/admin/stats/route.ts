@@ -57,6 +57,22 @@ export async function GET() {
     // to seed placeholder content or hide that section until real reviews exist.
     // When reviews are implemented, add review stats here.
 
+    // ── Stale pending orders (likely abandoned) ──
+    const stalePending = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM orders
+      WHERE payment_status = 'pending'
+        AND created_at < now() - interval '1 hour'
+    `;
+
+    // NOTE: Stock reservation with TTL-based expiry/rollback is intentionally
+    // not implemented. Currently stock is decremented only on successful payment,
+    // meaning two customers could theoretically both pass the stock check for the
+    // last tray during the same payment window. At this store's realistic order
+    // volume, that's an acceptable launch risk. Revisit if volume grows enough
+    // to warrant TTL-based reservation logic. This is a deliberate scope decision,
+    // not an oversight.
+
     return NextResponse.json({
       orders_today_count: todayOrders[0]?.count ?? 0,
       orders_today_revenue_paise: Number(todayOrders[0]?.revenue_paise ?? 0),
@@ -64,6 +80,7 @@ export async function GET() {
       low_stock_variants: lowStock,
       newsletter_subscriber_count: subscribers[0]?.count ?? 0,
       new_inquiry_count: newInquiries[0]?.count ?? 0,
+      stale_pending_orders_count: stalePending[0]?.count ?? 0,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';

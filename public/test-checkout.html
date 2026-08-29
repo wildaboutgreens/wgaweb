@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html><body>
+<button id="pay">Pay ₹99</button>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.getElementById('pay').onclick = async () => {
+  const res = await fetch('/api/checkout/create-order', {
+    method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      items: [{ product_variant_id: '097c5cb2-86c1-4ff8-a859-a619d19b0012', quantity: 1 }],
+      purchase_type: 'one_time',
+      customer_name: 'Test Customer',
+      customer_phone: '9999999999',
+      customer_email: 'atinbhardwaj607@gmail.com',
+      delivery_address: 'Sector 17, Chandigarh',
+      delivery_pincode: '160017'
+    })
+  });
+  const data = await res.json();
+  console.log('create-order response:', data);
+  const rzp = new Razorpay({
+    key: 'rzp_test_TVT09WuZnwbq9K',
+    order_id: data.razorpay_order_id,
+    amount: data.amount,
+    handler: async (response) => {
+      const verifyRes = await fetch('/api/checkout/verify', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(response)
+      });
+      console.log('verify response:', await verifyRes.json());
+      alert('Paid — check the orders table');
+    }
+  });
+  rzp.open();
+};
+</script>
+</body></html>

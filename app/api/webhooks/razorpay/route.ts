@@ -64,6 +64,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    if (event.event === 'payment.failed') {
+      const payment = event.payload?.payment?.entity;
+      const razorpayOrderId = payment?.order_id;
+
+      if (razorpayOrderId) {
+        // Mark as failed, but never downgrade a successful payment
+        await sql`
+          UPDATE orders
+          SET payment_status = 'failed'
+          WHERE razorpay_order_id = ${razorpayOrderId}
+            AND payment_status != 'paid'
+        `;
+        console.log(`[webhook] payment.failed for razorpay_order_id: ${razorpayOrderId}`);
+      }
+    }
+
     // Always return 200 to acknowledge receipt
     return NextResponse.json({ status: 'ok' });
   } catch (error: unknown) {

@@ -33,6 +33,13 @@ export async function POST(request: NextRequest) {
     );
 
     if (!isValid) {
+      // Mark the order as failed (but never downgrade a successful payment)
+      await sql`
+        UPDATE orders
+        SET payment_status = 'failed'
+        WHERE razorpay_order_id = ${razorpay_order_id}
+          AND payment_status != 'paid'
+      `;
       return NextResponse.json(
         { error: 'Invalid payment signature' },
         { status: 400 }
