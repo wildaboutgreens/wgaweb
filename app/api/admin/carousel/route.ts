@@ -1,14 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
-// GET /api/admin/carousel — all slides including inactive
-export async function GET() {
+// GET /api/admin/carousel — all slides, optionally filter by ?carousel_key=
+export async function GET(request: NextRequest) {
   try {
     const sql = getSQL();
-    const slides = await sql`
-      SELECT * FROM carousel_slides
-      ORDER BY display_order ASC
-    `;
+    const carouselKey = request.nextUrl.searchParams.get('carousel_key');
+
+    let slides;
+    if (carouselKey) {
+      slides = await sql`
+        SELECT * FROM carousel_slides
+        WHERE carousel_key = ${carouselKey}
+        ORDER BY display_order ASC
+      `;
+    } else {
+      slides = await sql`
+        SELECT * FROM carousel_slides
+        ORDER BY carousel_key ASC, display_order ASC
+      `;
+    }
+
     return NextResponse.json(slides);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -21,7 +33,7 @@ export async function POST(request: NextRequest) {
   try {
     const sql = getSQL();
     const body = await request.json();
-    const { image_url, link_url, display_order, is_active } = body;
+    const { image_url, link_url, display_order, is_active, carousel_key } = body;
 
     if (!image_url) {
       return NextResponse.json(
@@ -31,8 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await sql`
-      INSERT INTO carousel_slides (image_url, link_url, display_order, is_active)
-      VALUES (${image_url}, ${link_url || null}, ${display_order ?? 0}, ${is_active ?? true})
+      INSERT INTO carousel_slides (image_url, link_url, display_order, is_active, carousel_key)
+      VALUES (${image_url}, ${link_url || null}, ${display_order ?? 0}, ${is_active ?? true}, ${carousel_key || 'homepage_hero'})
       RETURNING *
     `;
 

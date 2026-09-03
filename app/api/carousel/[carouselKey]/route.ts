@@ -1,0 +1,28 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getSQL } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+
+// GET /api/carousel/[carouselKey] — active slides for a specific carousel
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: { carouselKey: string } }
+) {
+  try {
+    const sql = getSQL();
+    const { carouselKey } = params;
+
+    const slides = await sql`
+      SELECT id, image_url, link_url, display_order
+      FROM carousel_slides
+      WHERE carousel_key = ${carouselKey}
+        AND is_active = true
+      ORDER BY display_order ASC
+    `;
+
+    return NextResponse.json(slides);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

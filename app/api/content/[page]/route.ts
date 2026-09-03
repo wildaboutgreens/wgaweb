@@ -1,0 +1,31 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getSQL } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+
+// GET /api/content/[page] — returns all content_blocks for a page as { key: value }
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: { page: string } }
+) {
+  try {
+    const sql = getSQL();
+    const { page } = params;
+
+    const blocks = await sql`
+      SELECT key, value
+      FROM content_blocks
+      WHERE page = ${page}
+    `;
+
+    const result: Record<string, string> = {};
+    for (const b of blocks) {
+      result[b.key as string] = b.value as string;
+    }
+
+    return NextResponse.json(result);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

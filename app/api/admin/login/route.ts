@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { signToken, COOKIE_NAME } from '@/lib/auth';
+import { checkRateLimit } from '@/lib/rateLimit';
 
 export async function POST(request: NextRequest) {
   try {
+    // ── Rate Limiting: 5 requests per IP per 15 minutes (900s) ──
+    const rateLimitError = await checkRateLimit(request, 'admin/login', 5, 900);
+    if (rateLimitError) {
+      return rateLimitError;
+    }
+
     const { password } = await request.json();
 
     if (!password || password !== process.env.ADMIN_PASSWORD) {

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // PUT /api/admin/blog/[id] — update a post
 export async function PUT(
   request: NextRequest,
@@ -10,8 +12,7 @@ export async function PUT(
     const sql = getSQL();
     const { id } = params;
     const body = await request.json();
-    const { slug, title, excerpt, content, cover_image_url, is_published } = body;
-
+    const { slug, title, excerpt, content, cover_image_url, is_published, post_type } = body;
 
     if (is_published === true) {
       // Set published_at only if not already set
@@ -23,6 +24,7 @@ export async function PUT(
           excerpt         = COALESCE(${excerpt ?? null}, excerpt),
           content         = COALESCE(${content ?? null}, content),
           cover_image_url = COALESCE(${cover_image_url ?? null}, cover_image_url),
+          post_type       = COALESCE(${post_type ?? null}, post_type),
           is_published    = true,
           published_at    = COALESCE(published_at, now())
         WHERE id = ${id}
@@ -41,6 +43,7 @@ export async function PUT(
           excerpt         = COALESCE(${excerpt ?? null}, excerpt),
           content         = COALESCE(${content ?? null}, content),
           cover_image_url = COALESCE(${cover_image_url ?? null}, cover_image_url),
+          post_type       = COALESCE(${post_type ?? null}, post_type),
           is_published    = COALESCE(${is_published ?? null}, is_published)
         WHERE id = ${id}
         RETURNING *
@@ -69,16 +72,39 @@ export async function DELETE(
     const result = await sql`
       DELETE FROM blog_posts
       WHERE id = ${id}
-      RETURNING id, title
+      RETURNING id
     `;
-
     if (result.length === 0) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Post deleted', post: result[0] });
+    return NextResponse.json({ success: true, deleted: id });
   } catch (error: unknown) {
     console.error('admin delete blog post error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+// GET /api/admin/blog/[id] — get a single post for editing
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const sql = getSQL();
+    const { id } = params;
+
+    const result = await sql`
+      SELECT * FROM blog_posts
+      WHERE id = ${id}
+    `;
+    if (result.length === 0) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(result[0]);
+  } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }

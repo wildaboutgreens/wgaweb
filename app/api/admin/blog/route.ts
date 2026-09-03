@@ -1,14 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
-// GET /api/admin/blog — list ALL posts (published and drafts)
-export async function GET() {
+export const dynamic = 'force-dynamic';
+
+// GET /api/admin/blog — list posts (published and drafts), optional ?type= filter
+export async function GET(request: NextRequest) {
   try {
     const sql = getSQL();
-    const posts = await sql`
-      SELECT * FROM blog_posts
-      ORDER BY created_at DESC
-    `;
+    const type = request.nextUrl.searchParams.get('type');
+
+    let posts;
+    if (type) {
+      posts = await sql`
+        SELECT * FROM blog_posts
+        WHERE post_type = ${type}
+        ORDER BY created_at DESC
+      `;
+    } else {
+      posts = await sql`
+        SELECT * FROM blog_posts
+        ORDER BY created_at DESC
+      `;
+    }
     return NextResponse.json(posts);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -16,12 +29,12 @@ export async function GET() {
   }
 }
 
-// POST /api/admin/blog — create a post
+// POST /api/admin/blog — create a post (article or recipe)
 export async function POST(request: NextRequest) {
   try {
     const sql = getSQL();
     const body = await request.json();
-    const { slug, title, excerpt, content, cover_image_url, is_published } = body;
+    const { slug, title, excerpt, content, cover_image_url, is_published, post_type } = body;
 
     if (!slug || !title || !content) {
       return NextResponse.json(
@@ -30,11 +43,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const type = post_type === 'recipe' ? 'recipe' : 'article';
     const publishedAt = is_published ? new Date().toISOString() : null;
 
     const result = await sql`
-      INSERT INTO blog_posts (slug, title, excerpt, content, cover_image_url, is_published, published_at)
-      VALUES (${slug}, ${title}, ${excerpt || null}, ${content}, ${cover_image_url || null}, ${is_published || false}, ${publishedAt})
+      INSERT INTO blog_posts (slug, title, excerpt, content, cover_image_url, is_published, published_at, post_type)
+      VALUES (${slug}, ${title}, ${excerpt || null}, ${content}, ${cover_image_url || null}, ${is_published || false}, ${publishedAt}, ${type})
       RETURNING *
     `;
 
