@@ -1,8 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import { formatPrice } from '@/lib/format';
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: string | HTMLElement,
+        options: {
+          sitekey: string;
+          callback: (token: string) => void;
+          'expired-callback'?: () => void;
+          'error-callback'?: () => void;
+          theme?: 'light' | 'dark' | 'auto';
+        }
+      ) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
 
 interface OrderItem {
   id: string;
@@ -16,6 +36,7 @@ interface OrderItem {
 
 interface Order {
   id: string;
+  order_number: string;
   customer_name: string;
   customer_phone: string;
   customer_email: string | null;
@@ -28,12 +49,6 @@ interface Order {
   items: OrderItem[];
 }
 
-const paymentStatusStyles: Record<string, string> = {
-  paid: 'bg-green-50 text-green-700 border-green-200',
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  failed: 'bg-red-50 text-red-700 border-red-200',
-};
-
 const fulfillmentStatusStyles: Record<string, string> = {
   unfulfilled: 'bg-amber-50 text-amber-700 border-amber-200',
   shipped: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -42,22 +57,61 @@ const fulfillmentStatusStyles: Record<string, string> = {
 };
 
 export default function TrackOrderPage() {
+  const [orderNumber, setOrderNumber] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const turnstileWidgetId = useRef<string | null>(null);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  // Called by <Script onReady> — guaranteed window.turnstile exists
+  const handleTurnstileScriptReady = useCallback(() => {
+    setTurnstileReady(true);
+  }, []);
+
+  // Render Turnstile widget once script and container are ready
+  const renderTurnstile = useCallback(() => {
+    if (!turnstileReady || !siteKey || !window.turnstile || !turnstileContainerRef.current) return;
+    // Remove previous widget if any
+    if (turnstileWidgetId.current) {
+      try { window.turnstile.remove(turnstileWidgetId.current); } catch { /* ignore */ }
+    }
+    turnstileContainerRef.current.innerHTML = '';
+    turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: siteKey,
+      callback: (token: string) => setTurnstileToken(token),
+      'expired-callback': () => setTurnstileToken(null),
+      'error-callback': () => setTurnstileToken(null),
+      theme: 'light',
+    });
+  }, [turnstileReady, siteKey]);
+
+  useEffect(() => {
+    renderTurnstile();
+  }, [renderTurnstile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    const cleanOrderNumber = orderNumber.trim().toUpperCase();
     const cleanPhone = phone.trim();
     const cleanEmail = email.trim();
 
-    if (!cleanPhone || !cleanEmail) {
-      setError('Please enter both your phone number and email address.');
+    if (!cleanOrderNumber || !cleanPhone || !cleanEmail) {
+      setError('Please enter your order number, phone number, and email address.');
+      return;
+    }
+
+    if (!turnstileToken) {
+      setError('Please complete the CAPTCHA verification.');
       return;
     }
 
@@ -65,7 +119,12 @@ export default function TrackOrderPage() {
     setSearched(false);
 
     try {
-      const query = new URLSearchParams({ phone: cleanPhone, email: cleanEmail });
+      const query = new URLSearchParams({
+        order_number: cleanOrderNumber,
+        phone: cleanPhone,
+        email: cleanEmail,
+        turnstileToken: turnstileToken,
+      });
       const res = await fetch(`/api/orders/lookup?${query.toString()}`);
       const data = await res.json();
 
@@ -81,23 +140,54 @@ export default function TrackOrderPage() {
       setOrders([]);
     } finally {
       setLoading(false);
+      // Reset Turnstile for next submission
+      setTurnstileToken(null);
+      renderTurnstile();
     }
   };
 
   return (
-    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <>
+      {/* Turnstile script — Next.js <Script> ensures proper loading */}
+      {siteKey && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+          onReady={handleTurnstileScriptReady}
+        />
+      )}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
       <div className="text-center max-w-xl mx-auto mb-10">
         <span className="text-4xl mb-3 block">📦</span>
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Track Your Order</h1>
         <p className="text-gray-600 text-sm sm:text-base">
-          Enter the phone number and email address you used at checkout to view the real-time status of your harvest &amp; delivery.
+          Enter your order number, phone number, and email address to view the real time status of your harvest &amp; delivery.
         </p>
       </div>
 
       {/* Lookup Form */}
       <div className="max-w-lg mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-12">
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="orderNumber" className="block text-sm font-medium text-gray-700 mb-1">
+              Order Number *
+            </label>
+            <input
+              id="orderNumber"
+              type="text"
+              value={orderNumber}
+              onChange={(e) => setOrderNumber(e.target.value)}
+              placeholder="e.g. WAG-ABCD1234"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors uppercase tracking-wider"
+              required
+              maxLength={20}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Found in your confirmation email
+            </p>
+          </div>
+
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
               Phone Number *
@@ -128,6 +218,16 @@ export default function TrackOrderPage() {
             />
           </div>
 
+          {/* Turnstile CAPTCHA */}
+          <div className="flex justify-center">
+            <div ref={turnstileContainerRef} />
+          </div>
+          {!siteKey && (
+            <p className="text-xs text-amber-600 text-center">
+              CAPTCHA not configured. Set NEXT_PUBLIC_TURNSTILE_SITE_KEY in your environment.
+            </p>
+          )}
+
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
               {error}
@@ -136,15 +236,15 @@ export default function TrackOrderPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (!!siteKey && !turnstileToken)}
             className="w-full btn-primary py-3 text-sm font-semibold"
           >
-            {loading ? 'Looking up orders...' : 'Track Order'}
+            {loading ? 'Looking up order...' : 'Track Order'}
           </button>
         </form>
 
         <p className="text-xs text-gray-400 text-center mt-4">
-          For security, both phone and email must match your order confirmation.
+          For security, your order number, phone, and email must all match your order.
         </p>
       </div>
 
@@ -156,7 +256,7 @@ export default function TrackOrderPage() {
               <span className="text-4xl mb-3 block">🔍</span>
               <h2 className="text-lg font-bold text-gray-900 mb-1">No Orders Found</h2>
               <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">
-                We couldn&apos;t find any orders matching the provided phone number and email address. Please make sure there are no typos, or reach out to us if you need help.
+                We couldn&apos;t find any paid orders matching the provided details. Please double-check your order number, phone number, and email address, or reach out to us if you need help.
               </p>
               <Link href="/products" className="btn-secondary text-sm">
                 Explore Microgreens
@@ -165,7 +265,7 @@ export default function TrackOrderPage() {
           ) : (
             <div>
               <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Matching Orders ({orders.length})
+                Your Order
               </h2>
               <div className="space-y-6">
                 {orders.map((order) => (
@@ -176,9 +276,9 @@ export default function TrackOrderPage() {
                     {/* Order Top Bar */}
                     <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Order ID</p>
-                        <p className="font-mono text-sm font-semibold text-gray-900">
-                          {order.id.slice(0, 8)}...
+                        <p className="text-xs text-gray-500 uppercase tracking-wide">Order Number</p>
+                        <p className="font-mono text-sm font-bold text-green-700 tracking-wider">
+                          {order.order_number}
                         </p>
                       </div>
                       <div>
@@ -197,20 +297,13 @@ export default function TrackOrderPage() {
                           {formatPrice(order.total_paise)}
                         </p>
                       </div>
-                      <div className="flex gap-2">
-                        <span
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-full border capitalize ${
-                            paymentStatusStyles[order.payment_status] || 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          Payment: {order.payment_status}
-                        </span>
+                      <div>
                         <span
                           className={`text-xs font-semibold px-2.5 py-1 rounded-full border capitalize ${
                             fulfillmentStatusStyles[order.fulfillment_status] || 'bg-gray-100 text-gray-700'
                           }`}
                         >
-                          Fulfillment: {order.fulfillment_status}
+                          {order.fulfillment_status}
                         </span>
                       </div>
                     </div>
@@ -257,5 +350,6 @@ export default function TrackOrderPage() {
         </div>
       )}
     </main>
+    </>
   );
 }

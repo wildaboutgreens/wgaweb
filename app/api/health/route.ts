@@ -7,9 +7,9 @@ export async function GET() {
     await sql`SELECT 1`;
     return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('health check error:', error);
     return NextResponse.json(
-      { status: 'error', message },
+      { status: 'error', db: 'disconnected' },
       { status: 500 }
     );
   }

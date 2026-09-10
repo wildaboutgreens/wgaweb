@@ -12,6 +12,7 @@ function getResend(): Resend {
 
 interface OrderForEmail {
   id: string;
+  order_number: string;
   customer_name: string;
   customer_email: string | null;
   customer_phone: string;
@@ -45,7 +46,7 @@ export async function sendOrderConfirmation(
     WHERE id = ${orderId}
       AND confirmation_email_sent = false
       AND payment_status = 'paid'
-    RETURNING id, customer_name, customer_email, customer_phone,
+    RETURNING id, order_number, customer_name, customer_email, customer_phone,
               delivery_address, total_paise, purchase_type,
               subscription_frequency
   `;
@@ -93,6 +94,10 @@ export async function sendOrderConfirmation(
       subject: `Wild About Greens — Order Confirmed! 🌱`,
       html: `
         <h2>Thanks for your order, ${order.customer_name}!</h2>
+        <div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0;">
+          <p style="margin: 0; font-size: 14px; color: #666;">Your Order Number</p>
+          <p style="margin: 4px 0 0; font-size: 28px; font-weight: bold; color: #15803d; letter-spacing: 2px;">${order.order_number}</p>
+        </div>
         <p>We've received your payment of <strong>${totalFormatted}</strong>.</p>
         ${subscriptionNote ? `<p>${subscriptionNote}</p>` : ''}
         <h3>Order Details</h3>
@@ -103,6 +108,7 @@ export async function sendOrderConfirmation(
         <h3>Delivery Address</h3>
         <p>${order.delivery_address}</p>
         <p>We'll deliver your fresh microgreens soon! 🌿</p>
+        <p style="margin-top: 16px; font-size: 13px; color: #666;">Use your order number <strong>${order.order_number}</strong> to <a href="https://wildaboutgreens.com/track-order">track your order</a>.</p>
         <hr />
         <p style="color: #888; font-size: 12px;">Wild About Greens — Fresh microgreens, delivered.</p>
       `,

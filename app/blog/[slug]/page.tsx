@@ -41,10 +41,10 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const post = await getPost(params.slug);
   if (!post) {
-    return { title: 'Post Not Found — Wild About Greens' };
+    return { title: 'Post Not Found · Wild About Greens' };
   }
   return {
-    title: `${post.title} — Wild About Greens`,
+    title: `${post.title} · Wild About Greens`,
     description: post.excerpt || 'Read the latest insights and guides from Wild About Greens.',
   };
 }

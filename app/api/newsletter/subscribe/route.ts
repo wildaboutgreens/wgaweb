@@ -21,11 +21,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (email.length > 254) {
+      return NextResponse.json({ error: 'Email is too long' }, { status: 400 });
+    }
+
+    const safeSource = typeof source === 'string' ? source.slice(0, 100) : null;
+
     // Insert with ON CONFLICT to silently handle re-subscriptions.
     // Don't reveal whether the email was already subscribed (privacy).
     await sql`
       INSERT INTO newsletter_subscribers (email, source)
-      VALUES (${email.toLowerCase().trim()}, ${source || null})
+      VALUES (${email.toLowerCase().trim()}, ${safeSource})
       ON CONFLICT (email) DO NOTHING
     `;
 
@@ -40,7 +46,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('newsletter subscribe error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

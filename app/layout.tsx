@@ -5,9 +5,9 @@ import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 
 export const metadata: Metadata = {
-  title: 'Wild About Greens — Living Microgreens Delivered Fresh',
+  title: 'Wild About Greens · Living Microgreens Delivered Fresh',
   description:
-    'Grown locally on vertical indoor racks across Chandigarh, Mohali & Panchkula. Pure mineral water, non-GMO seeds, zero pesticides. Cut to order.',
+    'Grown locally on vertical indoor racks across Chandigarh, Mohali & Panchkula. Pure mineral water, non GMO seeds, zero pesticides. Cut to order.',
 };
 
 export default function RootLayout({

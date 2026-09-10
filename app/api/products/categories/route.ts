@@ -17,7 +17,7 @@ export async function GET() {
     const categories = result.map((row) => row.category as string);
     return NextResponse.json(categories);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('categories error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

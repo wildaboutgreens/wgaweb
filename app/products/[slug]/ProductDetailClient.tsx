@@ -6,13 +6,6 @@ import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
 import { Product, Variant, RelatedProduct } from './page';
 
-const PRODUCT_IMAGES = [
-  'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=80&w=1200&auto=format&fit=crop',
-  'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=1200&auto=format&fit=crop',
-  'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=1200&auto=format&fit=crop',
-];
-
 const REVIEWS = [
   {
     name: 'Dr. Neha Verma',
@@ -49,17 +42,17 @@ const REASONS = [
   {
     icon: '🚫',
     title: 'Zero Pesticides',
-    desc: 'Grown indoor in HEPA-filtered air. No chemical sprays, pesticides, or weedkillers ever.',
+    desc: 'Grown indoor in HEPA filtered air. No chemical sprays, pesticides, or weedkillers ever.',
   },
   {
     icon: '⚡',
-    title: '10-Day Peak Density',
+    title: '10 Day Peak Density',
     desc: 'Harvested at the exact biological apex when vitamins and antioxidants reach up to 40x mature greens.',
   },
   {
     icon: '📍',
     title: 'Tricity Local Radius',
-    desc: 'Cultivated right here in our city, 10 minutes from your kitchen. Zero long-distance freight.',
+    desc: 'Cultivated right here in our city, 10 minutes from your kitchen. Zero long distance freight.',
   },
   {
     icon: '💧',
@@ -68,17 +61,19 @@ const REASONS = [
   },
   {
     icon: '🥥',
-    title: 'Sterile Coco-Peat',
-    desc: 'Grown on clean, soil-free coco-peat medium ensuring grit-free, pristine stems and roots.',
+    title: 'Sterile Coco Peat',
+    desc: 'Grown on clean, soil free coco peat medium ensuring grit free, pristine stems and roots.',
   },
 ];
 
 export default function ProductDetailClient({
   product,
   relatedProducts,
+  content = {},
 }: {
   product: Product;
   relatedProducts: RelatedProduct[];
+  content?: Record<string, string>;
 }) {
   const activeVariants = product.variants.filter((v) => v.is_active);
   const [selectedVariant, setSelectedVariant] = useState<Variant>(
@@ -92,6 +87,16 @@ export default function ProductDetailClient({
       is_active: true,
     }
   );
+
+  // Build gallery image list from product images, falling back to thumbnail
+  const PRODUCT_IMAGES =
+    product.images.length > 0
+      ? product.images
+          .sort((a, b) => a.display_order - b.display_order)
+          .map((img) => img.image_url)
+      : product.thumbnail_url
+        ? [product.thumbnail_url]
+        : ['/placeholder.png'];
 
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [plan, setPlan] = useState<'single' | 'subscription'>('single');
@@ -194,7 +199,7 @@ export default function ProductDetailClient({
               <div className="relative rounded-2xl overflow-hidden aspect-[1/1.08] bg-gradient-to-br from-[#EDE7D6] to-[#E1DAC3] p-4 sm:p-7 flex items-center justify-center border border-[#E4DDC8] shadow-sm">
                 {/* Badge */}
                 <span className="absolute top-4 left-4 z-10 font-mono text-[10px] font-bold tracking-wider uppercase px-3 py-1.5 rounded-full bg-[#9C4A5C] text-[#FFFDF8] shadow-sm flex items-center gap-1.5">
-                  <span>🌱</span> 100% Pesticide-Free
+                  <span>🌱</span> 100% Pesticide Free
                 </span>
 
                 {/* Image counter */}
@@ -454,10 +459,19 @@ export default function ProductDetailClient({
                   </button>
                 </div>
 
-                {/* Buy Note */}
-                <div className="flex items-center gap-2 mt-4 text-xs text-[#5C6B60]">
-                  <span>🌱</span>
-                  <span>Harvested on the morning of delivery in Chandigarh, Mohali &amp; Panchkula</span>
+                {/* Buy Note & Guarantee */}
+                <div className="space-y-1.5 mt-4 text-xs text-[#5C6B60]">
+                  <div className="flex items-center gap-2">
+                    <span>🌱</span>
+                    <span>Harvested on the morning of delivery in Chandigarh, Mohali &amp; Panchkula</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[#1C3F2D] font-medium">
+                    <span>🛡️</span>
+                    <span>
+                      {content.guarantee_text ||
+                        "Living Guarantee: If your tray doesn't stay fresh for 7 days on your counter, we replace it free."}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -502,12 +516,12 @@ export default function ProductDetailClient({
                   {openAcc === 1 && (
                     <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
                       <p>
-                        USDA and university studies have confirmed that day-10 microgreens contain between
-                        10x and 40x the vital micronutrients of their full-grown counterparts.
+                        USDA and university studies have confirmed that day 10 microgreens contain between
+                        10x and 40x the vital micronutrients of their full grown counterparts.
                       </p>
                       <p>
                         Broccoli microgreens are world-famous for glucoraphanin, which converts into active
-                        sulforaphane—a potent natural cellular detoxifier.
+                        sulforaphane: a potent natural cellular detoxifier.
                       </p>
                     </div>
                   )}
@@ -531,7 +545,7 @@ export default function ProductDetailClient({
                         pathogens, and absolutely zero pesticide or fertilizer residues.
                       </p>
                       <p>
-                        Grown on sterilized coco-peat with 100% reverse-osmosis mineral drinking water.
+                        Grown on sterilized coco peat with 100% reverse osmosis mineral drinking water.
                       </p>
                     </div>
                   )}
@@ -603,7 +617,10 @@ export default function ProductDetailClient({
           <div className="relative bg-[#1C3F2D] min-h-[280px] overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=85&w=1200&auto=format&fit=crop"
+              src={
+                content.bundle_banner_image ||
+                'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=85&w=1200&auto=format&fit=crop'
+              }
               alt="Tricity Trio"
               className="w-full h-full object-cover"
             />
@@ -612,17 +629,17 @@ export default function ProductDetailClient({
           {/* Copy Side */}
           <div className="flex flex-col justify-center items-center text-center p-10 sm:p-14 lg:p-16 space-y-4">
             <h2 className="font-display uppercase text-3xl sm:text-4xl lg:text-5xl tracking-wide leading-tight">
-              Go For All Three
+              {content.bundle_banner_title || 'Go For All Three'}
             </h2>
             <p className="text-sm sm:text-[15px] leading-relaxed text-white/90 max-w-md">
-              Broccoli for sulforaphane, Radish for spice and zinc, Sunflower shoots for protein and
-              crunch. Get our signature 3-tray variety pack delivered together.
+              {content.bundle_banner_subtitle ||
+                'Broccoli for sulforaphane, Radish for spice and zinc, Sunflower shoots for protein and crunch. Get our signature 3-tray variety pack delivered together.'}
             </p>
             <Link
               href="/products?category=bundle"
               className="inline-flex items-center justify-center bg-[#151F19] text-white font-bold text-xs uppercase tracking-wider px-7 py-3.5 rounded-full hover:-translate-y-0.5 hover:shadow-lg transition-all mt-2"
             >
-              Shop Tricity Trio Bundle →
+              {content.bundle_banner_cta_text || 'Shop Tricity Trio Bundle →'}
             </Link>
           </div>
         </div>
@@ -634,11 +651,17 @@ export default function ProductDetailClient({
           {/* Copy Side */}
           <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
             <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#151F19] leading-tight mb-3">
-              Tiny leaves, <em className="italic text-[#FF9F5A] font-normal">massive impact.</em>
+              {content.stats_banner_title ? (
+                content.stats_banner_title
+              ) : (
+                <>
+                  Tiny leaves, <em className="italic text-[#FF9F5A] font-normal">massive impact.</em>
+                </>
+              )}
             </h2>
             <p className="text-sm sm:text-base text-[#5C6B60] leading-relaxed mb-6 max-w-lg">
-              Because microgreens are harvested just after the cotyledon leaves emerge, all the energy
-              concentrated in the seed is available right in the young shoot.
+              {content.stats_banner_subtitle ||
+                'Because microgreens are harvested just after the cotyledon leaves emerge, all the energy concentrated in the seed is available right in the young shoot.'}
             </p>
 
             <div className="space-y-4">
@@ -673,7 +696,10 @@ export default function ProductDetailClient({
           <div className="relative bg-[#E4DDC8] min-h-[260px] overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=85&w=1200&auto=format&fit=crop"
+              src={
+                content.stats_banner_image ||
+                'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=85&w=1200&auto=format&fit=crop'
+              }
               alt="Fresh Microgreens Harvest"
               className="w-full h-full object-cover"
             />
@@ -686,9 +712,11 @@ export default function ProductDetailClient({
         <div className="wrap">
           <div className="max-w-xl mx-auto text-center mb-8">
             <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#151F19] mb-2">
-              Six reasons why we grow this way.
+              {content.reasons_title || 'Six reasons why we grow this way.'}
             </h2>
-            <p className="text-sm text-[#1C3F2D]">Clean agriculture engineered for urban nutrition.</p>
+            <p className="text-sm text-[#1C3F2D]">
+              {content.reasons_subtitle || 'Clean agriculture engineered for urban nutrition.'}
+            </p>
           </div>
 
           <div className="relative flex items-center gap-3">
@@ -732,10 +760,10 @@ export default function ProductDetailClient({
         <div className="wrap">
           <div className="mb-8">
             <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#151F19]">
-              Straight from the gut.
+              {content.reviews_title || 'Straight from the gut.'}
             </h2>
             <p className="font-mono text-xs uppercase tracking-wider text-[#5C6B60] mt-1">
-              Verified reviews from our Tricity community
+              {content.reviews_subtitle || 'Verified reviews from our Tricity community'}
             </p>
           </div>
 
@@ -797,7 +825,7 @@ export default function ProductDetailClient({
                     <td className="py-3.5 px-3 text-center bg-[#CFFA57]/10 font-bold text-[#CFFA57]">
                       Day 10 Peak
                     </td>
-                    <td className="py-3.5 px-2 text-center text-white/40">30–60 Days (Old)</td>
+                    <td className="py-3.5 px-2 text-center text-white/40">30 to 60 Days (Old)</td>
                   </tr>
                   <tr>
                     <td className="py-3.5 px-2 text-white/90 font-medium">Status at Delivery</td>
@@ -823,7 +851,7 @@ export default function ProductDetailClient({
                   <tr>
                     <td className="py-3.5 px-2 text-white/90 font-medium">Shelf Life in Kitchen</td>
                     <td className="py-3.5 px-3 text-center bg-[#CFFA57]/10 font-bold text-[#CFFA57]">
-                      7–10 Days Living
+                      7 to 10 Days Living
                     </td>
                     <td className="py-3.5 px-2 text-center text-white/40">Wilts in 48 Hours</td>
                   </tr>
@@ -867,8 +895,17 @@ export default function ProductDetailClient({
                   key={rel.id}
                   className="flex-shrink-0 w-56 sm:w-60 bg-[#F3EEE0]/50 rounded-2xl p-4 border border-[#E4DDC8] flex flex-col justify-between"
                 >
-                  <div className="aspect-square bg-gradient-to-br from-[#EDE7D6] to-[#DED7BF] rounded-xl mb-3 flex items-center justify-center text-4xl overflow-hidden">
-                    🌿
+                  <div className="aspect-square bg-gradient-to-br from-[#EDE7D6] to-[#DED7BF] rounded-xl mb-3 flex items-center justify-center text-4xl overflow-hidden relative">
+                    {rel.thumbnail_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={rel.thumbnail_url}
+                        alt={rel.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      '🌿'
+                    )}
                   </div>
                   <div>
                     <span className="font-mono text-[9px] uppercase tracking-wider text-[#5C6B60] block mb-1">
@@ -916,7 +953,7 @@ export default function ProductDetailClient({
               <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/70 px-2.5 py-1 rounded-full inline-block">
                 01 Purity
               </span>
-              <h4 className="text-xl font-extrabold text-[#151F19] leading-tight">Soil-Free &amp; Clean</h4>
+              <h4 className="text-xl font-extrabold text-[#151F19] leading-tight">Soil Free &amp; Clean</h4>
               <p className="font-mono text-xs text-[#5C6B60]">Zero compost pathogens or grit</p>
             </div>
 
@@ -932,7 +969,7 @@ export default function ProductDetailClient({
               <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/70 px-2.5 py-1 rounded-full inline-block">
                 03 Timing
               </span>
-              <h4 className="text-xl font-extrabold text-[#151F19] leading-tight">10-Day Peak</h4>
+              <h4 className="text-xl font-extrabold text-[#151F19] leading-tight">10 Day Peak</h4>
               <p className="font-mono text-xs text-[#5C6B60]">Max biological nutrient concentration</p>
             </div>
 

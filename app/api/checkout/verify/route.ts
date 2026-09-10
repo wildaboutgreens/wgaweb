@@ -21,6 +21,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // ── Length limits (defense-in-depth) ──
+    if (razorpay_order_id.length > 100 || razorpay_payment_id.length > 100 || razorpay_signature.length > 200) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+
     // ── Verify signature ──
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
@@ -53,7 +58,7 @@ export async function POST(request: NextRequest) {
           razorpay_payment_id = ${razorpay_payment_id}
       WHERE razorpay_order_id = ${razorpay_order_id}
         AND payment_status = 'pending'
-      RETURNING id
+      RETURNING id, order_number
     `;
 
     if (result.length === 0) {
@@ -64,6 +69,7 @@ export async function POST(request: NextRequest) {
     }
 
     const orderId = result[0].id as string;
+    const orderNumber = result[0].order_number as string;
 
     // Decrement stock for ordered variants (dedup-guarded via stock_decremented flag)
     decrementStock(orderId).catch((err) =>
@@ -78,10 +84,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       status: 'paid',
       orderId,
+      orderNumber,
     });
   } catch (error: unknown) {
     console.error('verify error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

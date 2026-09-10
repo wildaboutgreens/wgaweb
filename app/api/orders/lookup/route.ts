@@ -15,37 +15,89 @@ interface OrderItem {
   product_slug: string;
 }
 
-// GET /api/orders/lookup?phone=X&email=Y
-// Public order tracking with strict rate limiting & exact phone + email match requirement
+// GET /api/orders/lookup?order_number=X&phone=Y&email=Z&turnstileToken=T
+// Public order tracking: three-factor auth (order_number + phone + email),
+// paid orders only, Turnstile CAPTCHA required.
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = request.nextUrl;
+    const orderNumber = searchParams.get('order_number')?.trim();
+    const phone = searchParams.get('phone')?.trim();
+    const email = searchParams.get('email')?.trim();
+    const turnstileToken = searchParams.get('turnstileToken')?.trim();
+
+    // ── Require Turnstile token ──
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: 'Turnstile verification is required.' },
+        { status: 400 }
+      );
+    }
+
+    // ── Require all three lookup fields ──
+    if (!orderNumber || !phone || !email) {
+      return NextResponse.json(
+        { error: 'Order number, phone, and email are all required for order tracking.' },
+        { status: 400 }
+      );
+    }
+
+    // ── Input length limits ──
+    if (orderNumber.length > 20 || phone.length > 20 || email.length > 254) {
+      return NextResponse.json(
+        { error: 'Invalid input.' },
+        { status: 400 }
+      );
+    }
+
+    // ── Verify Turnstile token server-side ──
+    const turnstileSecret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+    if (!turnstileSecret) {
+      console.error('CLOUDFLARE_TURNSTILE_SECRET_KEY is not configured');
+      return NextResponse.json(
+        { error: 'CAPTCHA verification is not configured. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    const turnstileRes = await fetch(
+      'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          secret: turnstileSecret,
+          response: turnstileToken,
+        }),
+      }
+    );
+
+    const turnstileData = await turnstileRes.json();
+    if (!turnstileData.success) {
+      return NextResponse.json(
+        { error: 'CAPTCHA verification failed. Please try again.' },
+        { status: 403 }
+      );
+    }
+
     // ── Rate Limiting: 5 requests per IP per 10 minutes (600s) ──
     const rateLimitError = await checkRateLimit(request, 'orders/lookup', 5, 600);
     if (rateLimitError) {
       return rateLimitError;
     }
 
-    const { searchParams } = request.nextUrl;
-    const phone = searchParams.get('phone')?.trim();
-    const email = searchParams.get('email')?.trim();
-
-    if (!phone || !email) {
-      return NextResponse.json(
-        { error: 'Both phone and email are required for order tracking.' },
-        { status: 400 }
-      );
-    }
-
     const sql = getSQL();
 
-    // Query orders matching both phone and email exactly.
-    // Note: Do NOT select full delivery_address for privacy/security.
+    // Query: all three fields must match the SAME order, AND payment_status = 'paid'.
+    // This makes it structurally impossible for this route to return an unpaid order.
     const orders = await sql`
-      SELECT id, customer_name, customer_phone, customer_email, delivery_pincode,
+      SELECT id, order_number, customer_name, customer_phone, customer_email, delivery_pincode,
              total_paise, purchase_type, payment_status, fulfillment_status, created_at
       FROM orders
-      WHERE TRIM(customer_phone) = ${phone}
+      WHERE order_number = ${orderNumber}
+        AND TRIM(customer_phone) = ${phone}
         AND LOWER(TRIM(customer_email)) = ${email.toLowerCase()}
+        AND payment_status = 'paid'
       ORDER BY created_at DESC
     `;
 
@@ -80,7 +132,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(ordersWithItems);
   } catch (error: unknown) {
     console.error('orders lookup error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

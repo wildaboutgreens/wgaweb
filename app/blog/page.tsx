@@ -5,8 +5,8 @@ import { getSQL } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Blog & Nutrition Journal — Wild About Greens',
-  description: 'Explore microgreens growing guides, science-backed wellness tips, and farm updates from Wild About Greens.',
+  title: 'Blog & Nutrition Journal · Wild About Greens',
+  description: 'Explore microgreens growing guides, science backed wellness tips, and farm updates from Wild About Greens.',
 };
 
 interface BlogPost {
@@ -50,7 +50,7 @@ export default async function BlogPage() {
             The Greens Journal
           </h1>
           <p className="text-[#5C6B60] text-sm sm:text-base leading-relaxed">
-            Nutritional deep-dives, cellular antioxidant science, and insights from our vertical indoor farm in the Tricity.
+            Nutritional deep dives, cellular antioxidant science, and insights from our vertical indoor farm in the Tricity.
           </p>
         </div>
 

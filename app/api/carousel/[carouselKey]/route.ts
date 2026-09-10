@@ -22,7 +22,7 @@ export async function GET(
 
     return NextResponse.json(slides);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('carouselKey error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

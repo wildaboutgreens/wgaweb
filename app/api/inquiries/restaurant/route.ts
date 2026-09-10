@@ -20,6 +20,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      typeof business_name !== 'string' ||
+      business_name.length > 200 ||
+      typeof contact_name !== 'string' ||
+      contact_name.length > 200 ||
+      typeof phone !== 'string' ||
+      phone.length > 20
+    ) {
+      return NextResponse.json({ error: 'Input fields are too long' }, { status: 400 });
+    }
+
+    if (email && (typeof email !== 'string' || email.length > 254)) {
+      return NextResponse.json({ error: 'Email is too long' }, { status: 400 });
+    }
+
+    if (message && (typeof message !== 'string' || message.length > 2000)) {
+      return NextResponse.json({ error: 'Message is too long' }, { status: 400 });
+    }
+
     const result = await sql`
       INSERT INTO business_inquiries (business_name, contact_name, phone, email, message)
       VALUES (${business_name}, ${contact_name}, ${phone}, ${email || null}, ${message || null})
@@ -44,7 +63,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error: unknown) {
     console.error('restaurant inquiry error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

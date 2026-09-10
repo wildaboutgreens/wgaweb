@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cloudinary } from '@/lib/cloudinary';
+import type { UploadApiOptions } from 'cloudinary';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const folder = (formData.get('folder') as string | null)?.trim() || 'wga-products';
+    const publicId = (formData.get('publicId') as string | null)?.trim() || undefined;
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -20,9 +23,17 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
 
-    const result = await cloudinary.uploader.upload(base64, {
-      folder: 'wga-products',
-    });
+    const uploadOptions: UploadApiOptions = {
+      folder,
+    };
+
+    if (publicId) {
+      uploadOptions.public_id = publicId;
+      uploadOptions.overwrite = true;
+      uploadOptions.invalidate = true;
+    }
+
+    const result = await cloudinary.uploader.upload(base64, uploadOptions);
 
     return NextResponse.json({
       url: result.secure_url,

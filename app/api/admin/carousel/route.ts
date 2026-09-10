@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   try {
     const sql = getSQL();
     const body = await request.json();
-    const { image_url, link_url, display_order, is_active, carousel_key } = body;
+    const { image_url, link_url, display_order, is_active, carousel_key, cloudinary_public_id } = body;
 
     if (!image_url) {
       return NextResponse.json(
@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await sql`
-      INSERT INTO carousel_slides (image_url, link_url, display_order, is_active, carousel_key)
-      VALUES (${image_url}, ${link_url || null}, ${display_order ?? 0}, ${is_active ?? true}, ${carousel_key || 'homepage_hero'})
+      INSERT INTO carousel_slides (image_url, link_url, display_order, is_active, carousel_key, cloudinary_public_id)
+      VALUES (${image_url}, ${link_url || null}, ${display_order ?? 0}, ${is_active ?? true}, ${carousel_key || 'homepage_hero'}, ${cloudinary_public_id ?? null})
       RETURNING *
     `;
 

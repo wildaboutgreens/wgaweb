@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { isAdminPath } from '@/lib/adminAuth';
 
 export default function Footer() {
+  const pathname = usePathname();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -34,17 +38,31 @@ export default function Footer() {
     }
   };
 
+  if (isAdminPath(pathname)) {
+    return null;
+  }
+
   return (
     <footer className="bg-[#151F19] text-[#FFFDF8]/70 pt-16 pb-8 border-t border-white/10 mt-auto">
       <div className="wrap">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] gap-10 pb-12 border-b border-white/10">
           {/* Brand Info */}
           <div>
-            <div className="font-serif text-2xl text-[#FFFDF8] mb-3 flex items-center gap-2 font-semibold">
-              <span>🌱</span> Wild About Greens
-            </div>
+            <Link
+              href="/"
+              className="inline-block mb-3.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#CFFA57] rounded-lg"
+              aria-label="Wild About Greens Home"
+            >
+              <Image
+                src="/logo-picture-bg.png"
+                alt="Wild About Greens"
+                width={188}
+                height={42}
+                className="h-9 sm:h-10 w-auto object-contain"
+              />
+            </Link>
             <p className="text-sm leading-relaxed text-[#FFFDF8]/60 max-w-[290px] mb-4">
-              Living microgreens, cut to order, grown on vertical indoor racks in the Tricity — Chandigarh, Mohali &amp; Panchkula.
+              Living microgreens, cut to order, grown on vertical indoor racks in the Tricity: Chandigarh, Mohali &amp; Panchkula.
             </p>
             <div className="font-mono text-xs text-[#CFFA57] flex items-center gap-1.5">
               <span>📍</span> Delivering to Chandigarh, Mohali &amp; Panchkula
@@ -128,7 +146,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="flex flex-col sm:flex-row justify-between items-center pt-6 text-[12.5px] text-[#FFFDF8]/40 gap-3">
-          <div>© {new Date().getFullYear()} Wild About Greens — Fresh living harvest in Chandigarh, Mohali &amp; Panchkula</div>
+          <div>© {new Date().getFullYear()} Wild About Greens · Fresh living harvest in Chandigarh, Mohali &amp; Panchkula</div>
           <div className="flex items-center gap-5">
             <Link href="/blog" className="text-[#FFFDF8]/60 hover:text-[#CFFA57] transition-colors">
               Blog

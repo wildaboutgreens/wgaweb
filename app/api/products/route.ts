@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (category) {
       products = await sql`
         SELECT id, slug, name, category, description, nutrition_notes,
-               is_bundle, is_active, created_at
+               thumbnail_url, tags, is_bundle, is_active, created_at
         FROM products
         WHERE is_active = true AND category = ${category}
         ORDER BY created_at DESC
@@ -22,16 +22,17 @@ export async function GET(request: NextRequest) {
     } else {
       products = await sql`
         SELECT id, slug, name, category, description, nutrition_notes,
-               is_bundle, is_active, created_at
+               thumbnail_url, tags, is_bundle, is_active, created_at
         FROM products
         WHERE is_active = true
         ORDER BY created_at DESC
       `;
     }
 
-    // Fetch variants for the returned products
+    // Fetch variants and images for the returned products
     const productIds = products.map((p) => p.id as string);
     let variants: Awaited<ReturnType<typeof sql>> = [];
+    let images: Awaited<ReturnType<typeof sql>> = [];
 
     if (productIds.length > 0) {
       variants = await sql`
@@ -40,6 +41,13 @@ export async function GET(request: NextRequest) {
         FROM product_variants pv
         WHERE pv.is_active = true AND pv.product_id = ANY(${productIds})
         ORDER BY pv.price_paise ASC
+      `;
+
+      images = await sql`
+        SELECT id, product_id, image_url, display_order
+        FROM product_images
+        WHERE product_id = ANY(${productIds})
+        ORDER BY display_order ASC, created_at ASC
       `;
     }
 
@@ -53,14 +61,25 @@ export async function GET(request: NextRequest) {
       variantsByProduct.get(pid)!.push(v);
     }
 
+    // Nest images under their products
+    const imagesByProduct = new Map<string, typeof images>();
+    for (const img of images) {
+      const pid = img.product_id as string;
+      if (!imagesByProduct.has(pid)) {
+        imagesByProduct.set(pid, []);
+      }
+      imagesByProduct.get(pid)!.push(img);
+    }
+
     const result = products.map((p) => ({
       ...p,
       variants: variantsByProduct.get(p.id as string) || [],
+      images: imagesByProduct.get(p.id as string) || [],
     }));
 
     return NextResponse.json(result);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('products error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

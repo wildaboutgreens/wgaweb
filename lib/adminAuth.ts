@@ -51,3 +51,51 @@ export async function adminFetch(url: string, options?: RequestInit): Promise<Re
   }
   return res;
 }
+
+const KNOWN_PUBLIC_PREFIXES = [
+  '/products',
+  '/cart',
+  '/checkout',
+  '/order-confirmation',
+  '/track-order',
+  '/our-story',
+  '/blog',
+  '/recipe-khazana',
+];
+
+const ADMIN_SUBPAGES = [
+  'products',
+  'orders',
+  'content',
+  'pins',
+  'blog',
+  'carousel',
+  'inquiries',
+  'login',
+];
+
+export function isAdminPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  if (pathname === '/') return false;
+
+  const adminSlug = process.env.NEXT_PUBLIC_ADMIN_PANEL_SLUG;
+  if (adminSlug && (pathname === `/${adminSlug}` || pathname.startsWith(`/${adminSlug}/`))) {
+    return true;
+  }
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    return true;
+  }
+
+  // If matches known public prefixes, definitely not admin
+  if (KNOWN_PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+    return false;
+  }
+
+  // Any non-public first segment that ends with an admin subpage
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length >= 1 && ADMIN_SUBPAGES.includes(segments[segments.length - 1])) {
+    return true;
+  }
+
+  return false;
+}

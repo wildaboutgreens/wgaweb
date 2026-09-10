@@ -5,7 +5,7 @@ import { getSQL } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Recipe Khazana — Wild About Greens',
+  title: 'Recipe Khazana · Wild About Greens',
   description: 'Fresh, vibrant, and effortless culinary ideas to snip living microgreens into your daily meals.',
 };
 
@@ -44,13 +44,13 @@ export default async function RecipeKhazanaPage() {
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-14">
           <span className="font-mono text-xs font-bold text-[#1C3F2D] uppercase tracking-widest block mb-2.5">
-            🍳 CULINARY INSPIRATION · 10-MINUTE CREATIONS
+            🍳 CULINARY INSPIRATION · 10 MINUTE CREATIONS
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium text-[#151F19] mb-4">
             Recipe Khazana
           </h1>
           <p className="text-[#5C6B60] text-sm sm:text-base leading-relaxed">
-            Simple, vibrant ways to snip living microgreens right from your countertop tray into everyday meals — from sourdough toasts and morning eggs to warm dals and rich bowls.
+            Simple, vibrant ways to snip living microgreens right from your countertop tray into everyday meals: from sourdough toasts and morning eggs to warm dals and rich bowls.
           </p>
         </div>
 
@@ -60,7 +60,7 @@ export default async function RecipeKhazanaPage() {
             <span className="text-5xl mb-4 block">🍳</span>
             <h2 className="font-serif text-xl font-bold text-[#151F19] mb-2">Recipes Coming Right Up!</h2>
             <p className="text-xs sm:text-sm text-[#5C6B60] mb-6 leading-relaxed">
-              We are curating chef-crafted pairings, daily breakfast toasts, and fresh tricity salad dressings. Check back very soon!
+              We are curating chef crafted pairings, daily breakfast toasts, and fresh tricity salad dressings. Check back very soon!
             </p>
             <Link
               href="/products"

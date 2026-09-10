@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
+import ImageField from '@/components/admin/ImageField';
 
 interface Slide {
   id: string;
@@ -10,6 +11,7 @@ interface Slide {
   display_order: number;
   is_active: boolean;
   carousel_key: string;
+  cloudinary_public_id?: string | null;
   created_at: string;
 }
 
@@ -19,6 +21,7 @@ const emptySlide = {
   display_order: 0,
   is_active: true,
   carousel_key: '',
+  cloudinary_public_id: '',
 };
 
 export default function AdminCarouselPage() {
@@ -29,7 +32,6 @@ export default function AdminCarouselPage() {
   const [form, setForm] = useState(emptySlide);
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
 
   const loadSlides = useCallback(async () => {
@@ -52,23 +54,6 @@ export default function AdminCarouselPage() {
   const filteredSlides = allSlides
     .filter((s) => s.carousel_key === activeKey)
     .sort((a, b) => a.display_order - b.display_order);
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await adminFetch('/api/admin/upload-image', { method: 'POST', body: fd });
-      if (res.ok) {
-        const data = await res.json();
-        setForm({ ...form, image_url: data.url });
-      }
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -149,22 +134,19 @@ export default function AdminCarouselPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
-            <div className="flex items-center gap-3">
-              <input type="file" accept="image/*" onChange={handleUpload} className="text-sm" />
-              {uploading && <span className="text-xs text-gray-400">Uploading...</span>}
-            </div>
-            {form.image_url && (
-              <div className="mt-2">
-                <input
-                  value={form.image_url}
-                  onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg text-sm mb-2"
-                />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={form.image_url} alt="Preview" className="h-32 object-cover rounded-lg" />
-              </div>
-            )}
+            <ImageField
+              value={form.image_url || null}
+              onChange={(url, publicId) =>
+                setForm({
+                  ...form,
+                  image_url: url,
+                  cloudinary_public_id: publicId || form.cloudinary_public_id,
+                })
+              }
+              label="Slide Image"
+              aspectRatio="16/9"
+              folder={`carousel/${form.carousel_key?.trim() || activeKey || 'homepage'}`}
+            />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -305,6 +287,7 @@ export default function AdminCarouselPage() {
                           display_order: s.display_order,
                           is_active: s.is_active,
                           carousel_key: s.carousel_key,
+                          cloudinary_public_id: s.cloudinary_public_id || '',
                         });
                       }}
                       className="text-blue-600 hover:text-blue-800 text-sm"

@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { getSQL } from '@/lib/db';
 import { getRazorpay } from '@/lib/razorpay';
 import { isServiceable } from '@/lib/pincodes';
 import { checkRateLimit } from '@/lib/rateLimit';
+
+// Characters excluding easily confused ones: 0/O, 1/I/L
+const ORDER_NUM_CHARS = '23456789ABCDEFGHJKMNPQRSTUVWXYZ'; // 30 chars
+
+function generateOrderNumber(): string {
+  const bytes = crypto.randomBytes(8);
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += ORDER_NUM_CHARS[bytes[i] % ORDER_NUM_CHARS.length];
+  }
+  return `WAG-${code}`;
+}
 
 interface RawCartItem {
   variantId?: string;
@@ -59,6 +72,26 @@ export async function POST(request: NextRequest) {
     }
     if (purchaseType === 'subscription' && !['weekly', 'monthly'].includes(subscriptionFrequency || '')) {
       return NextResponse.json({ error: 'Subscription requires a valid frequency (weekly or monthly)' }, { status: 400 });
+    }
+
+    // ── Length limits (defense-in-depth) ──
+    if (typeof customerName !== 'string' || customerName.length > 200) {
+      return NextResponse.json({ error: 'Customer name is too long (max 200 characters)' }, { status: 400 });
+    }
+    if (typeof customerPhone !== 'string' || customerPhone.length > 20) {
+      return NextResponse.json({ error: 'Phone number is too long (max 20 characters)' }, { status: 400 });
+    }
+    if (customerEmail && (typeof customerEmail !== 'string' || customerEmail.length > 254)) {
+      return NextResponse.json({ error: 'Email is too long (max 254 characters)' }, { status: 400 });
+    }
+    if (typeof deliveryAddress !== 'string' || deliveryAddress.length > 1000) {
+      return NextResponse.json({ error: 'Delivery address is too long (max 1000 characters)' }, { status: 400 });
+    }
+    if (typeof deliveryPincode !== 'string' || deliveryPincode.length > 10) {
+      return NextResponse.json({ error: 'Invalid pincode format' }, { status: 400 });
+    }
+    if (items.length > 50) {
+      return NextResponse.json({ error: 'Too many items in cart' }, { status: 400 });
     }
 
     // ── Validate pincode ──
@@ -164,40 +197,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Insert order into DB ──
-    const orderRows = await sql`
-      INSERT INTO orders (
-        customer_name, customer_phone, customer_email,
-        delivery_address, delivery_pincode,
-        purchase_type, subscription_frequency,
-        subtotal_paise, total_paise,
-        razorpay_order_id, payment_status
-      ) VALUES (
-        ${customerName}, ${customerPhone}, ${customerEmail || null},
-        ${deliveryAddress}, ${deliveryPincode},
-        ${purchaseType}, ${subscriptionFrequency || null},
-        ${subtotalPaise}, ${totalPaise},
-        ${razorpayOrder.id}, 'pending'
-      )
-      RETURNING id
-    `;
+    // ── Insert order into DB (with order_number, retry on collision) ──
+    let orderId: string;
+    let orderNumber: string;
+    const MAX_RETRIES = 3;
 
-    const orderId = orderRows[0].id as string;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      orderNumber = generateOrderNumber();
+      try {
+        const orderRows = await sql`
+          INSERT INTO orders (
+            order_number,
+            customer_name, customer_phone, customer_email,
+            delivery_address, delivery_pincode,
+            purchase_type, subscription_frequency,
+            subtotal_paise, total_paise,
+            razorpay_order_id, payment_status
+          ) VALUES (
+            ${orderNumber},
+            ${customerName}, ${customerPhone}, ${customerEmail || null},
+            ${deliveryAddress}, ${deliveryPincode},
+            ${purchaseType}, ${subscriptionFrequency || null},
+            ${subtotalPaise}, ${totalPaise},
+            ${razorpayOrder.id}, 'pending'
+          )
+          RETURNING id
+        `;
+        orderId = orderRows[0].id as string;
+        break;
+      } catch (insertErr: unknown) {
+        // Check for unique constraint violation on order_number
+        const pgCode = (insertErr as { code?: string })?.code;
+        if (pgCode === '23505' && attempt < MAX_RETRIES - 1) {
+          console.warn(`[create-order] order_number collision on ${orderNumber}, retrying...`);
+          continue;
+        }
+        throw insertErr;
+      }
+    }
 
     // ── Insert order items ──
     for (const item of lineItems) {
       await sql`
         INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price_paise)
-        VALUES (${orderId}, ${item.variantId}, ${item.quantity}, ${item.unitPricePaise})
+        VALUES (${orderId!}, ${item.variantId}, ${item.quantity}, ${item.unitPricePaise})
       `;
     }
 
     // ── Safe server-side log for verification ──
-    console.log('[create-order] Generated razorpay_order_id:', razorpayOrder.id);
+    console.log('[create-order] Generated razorpay_order_id:', razorpayOrder.id, 'order_number:', orderNumber!);
 
     return NextResponse.json({
-      orderId,
-      order_id: orderId,
+      orderId: orderId!,
+      order_id: orderId!,
+      orderNumber: orderNumber!,
+      order_number: orderNumber!,
       razorpayOrderId: razorpayOrder.id,
       razorpay_order_id: razorpayOrder.id,
       amount: totalPaise,
@@ -205,7 +259,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('create-order error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

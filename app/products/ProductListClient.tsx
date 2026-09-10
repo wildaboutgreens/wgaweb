@@ -52,23 +52,14 @@ function getProductMeta(product: Product): ProductMeta {
   };
 }
 
-const CATEGORY_HEADERS: Record<string, { title: string; desc: string }> = {
-  'salad-greens': {
-    title: 'SALAD GREENS',
-    desc: 'Crunchy, peppery, living shoots harvested at peak biological density. Keep on your counter for 7–10 days living.',
-  },
-  'samplers': {
-    title: 'SAMPLERS & BUNDLES',
-    desc: 'Experience the full spectrum of cellular nutrition. Three signature living varieties delivered together at special bundle pricing.',
-  },
-};
-
 export default function ProductListClient({
   initialProducts,
   initialCategories,
+  content = {},
 }: {
   initialProducts: Product[];
   initialCategories: string[];
+  content?: Record<string, string>;
 }) {
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
@@ -77,6 +68,29 @@ export default function ProductListClient({
   const addItem = useCartStore((s) => s.addItem);
 
   const categories = initialCategories.length > 0 ? initialCategories : ['salad-greens', 'samplers'];
+
+  const getCategoryHeader = (catKey: string) => {
+    if (catKey === 'salad-greens') {
+      return {
+        title: content.salad_greens_title || 'SALAD GREENS',
+        desc:
+          content.salad_greens_desc ||
+          'Crunchy, peppery, living shoots harvested at peak biological density. Keep on your counter for 7 to 10 days living.',
+      };
+    }
+    if (catKey === 'samplers') {
+      return {
+        title: content.samplers_title || 'SAMPLERS & BUNDLES',
+        desc:
+          content.samplers_desc ||
+          'Experience the full spectrum of cellular nutrition. Three signature living varieties delivered together at special bundle pricing.',
+      };
+    }
+    return {
+      title: catKey.replace(/-/g, ' ').toUpperCase(),
+      desc: 'Living, nutrient dense microgreens grown with pure mineral RO water in the Tricity.',
+    };
+  };
 
   const filteredProducts = selectedCat
     ? initialProducts.filter((p) => p.category === selectedCat)
@@ -142,17 +156,27 @@ export default function ProductListClient({
         {/* Left Column: Forest Copy */}
         <div className="bg-[#1C3F2D] text-[#FFFDF8] flex flex-col justify-center pt-36 pb-20 px-8 sm:px-14 lg:px-20">
           <div className="font-mono text-[11.5px] tracking-[0.14em] uppercase text-[#B7E23F] mb-5 font-semibold">
-            🌱 LIVING HARVEST · TRICITY GROWN
+            {content.hero_eyebrow || '🌱 LIVING HARVEST · TRICITY GROWN'}
           </div>
 
           <h1 className="font-serif font-medium text-4xl sm:text-5xl lg:text-6xl leading-[1.06] tracking-tight max-w-lg mb-6">
-            Cut to order, delivered{' '}
-            <em className="italic text-[#CFFA57] font-normal">still breathing.</em>
+            {content.hero_title ? (
+              content.hero_title
+            ) : (
+              <>
+                Cut to order, delivered{' '}
+                <em className="italic text-[#CFFA57] font-normal">still breathing.</em>
+              </>
+            )}
           </h1>
 
           <p className="text-sm sm:text-base text-white/80 max-w-md leading-relaxed mb-8">
-            Living microgreen trays delivered on harvest morning across Chandigarh, Mohali &amp;
-            Panchkula. Snip fresh into your daily meals for up to 10 days.
+            {content.hero_subtitle || (
+              <>
+                Living microgreen trays delivered on harvest morning across Chandigarh, Mohali &amp;
+                Panchkula. Snip fresh into your daily meals for up to 10 days.
+              </>
+            )}
           </p>
 
           <button
@@ -168,8 +192,10 @@ export default function ProductListClient({
         <div
           className="relative min-h-[320px] md:min-h-full bg-cover bg-center"
           style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?fm=jpg&q=85&w=1600&auto=format&fit=crop')",
+            backgroundImage: `url('${
+              content.hero_image_url ||
+              'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?fm=jpg&q=85&w=1600&auto=format&fit=crop'
+            }')`,
           }}
         >
           <div className="absolute inset-0 bg-black/10 md:bg-transparent" />
@@ -212,10 +238,7 @@ export default function ProductListClient({
       {/* ================= SECTION 3: PRODUCT CATALOG CAROUSELS ================= */}
       <div className="py-14 space-y-16">
         {Object.entries(productsByCategory).map(([catKey, prods]) => {
-          const headerInfo = CATEGORY_HEADERS[catKey] || {
-            title: catKey.replace(/-/g, ' ').toUpperCase(),
-            desc: 'Living, nutrient-dense microgreens grown with pure mineral RO water in the Tricity.',
-          };
+          const headerInfo = getCategoryHeader(catKey);
 
           return (
             <section key={catKey} className="max-w-[1180px] mx-auto px-4 sm:px-8">
@@ -254,6 +277,11 @@ export default function ProductListClient({
                     const pricePaise = activeVar ? activeVar.price_paise : 9900;
                     const isAdded = !!addedIds[product.id];
 
+                    const cardImage =
+                      product.thumbnail_url ||
+                      product.images?.[0]?.image_url ||
+                      meta.photo;
+
                     return (
                       <div
                         key={product.id}
@@ -271,16 +299,23 @@ export default function ProductListClient({
                               className="absolute top-3 left-3 z-20 font-mono text-[9.5px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1"
                             >
                               <span>🌱</span>
-                              <span>{meta.badge.text}</span>
+                              <span>{product.tags && product.tags.length > 0 ? product.tags[0] : meta.badge.text}</span>
                             </span>
 
                             {/* Background Living Greens Photo */}
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={meta.photo}
-                              alt={product.name}
-                              className="absolute inset-0 w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
-                            />
+                            {cardImage ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={cardImage}
+                                alt={product.name}
+                                className="absolute inset-0 w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
+                              />
+                            ) : (
+                              <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#E6EBE4] to-[#D5DDD2] flex flex-col items-center justify-center p-4">
+                                <span className="text-4xl opacity-50 mb-1">🌿</span>
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-[#5C6B60] opacity-75">Fresh Greens</span>
+                              </div>
+                            )}
 
                             {/* Clamshell Lid Inset Sheen */}
                             <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_8px_rgba(255,255,255,0.45),inset_0_0_20px_rgba(255,255,255,0.3)]">
@@ -290,13 +325,19 @@ export default function ProductListClient({
                             {/* Vertical Branded Sleeve Down Left Portion */}
                             <div className="absolute top-[8%] bottom-[8%] left-[8%] w-[48%] rounded-xl overflow-hidden flex flex-col bg-white/95 backdrop-blur-sm shadow-xl z-10 border border-black/5">
                               {/* Sleeve Top Photo Thumbnail */}
-                              <div className="h-[28%] overflow-hidden relative">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={meta.photo}
-                                  alt="Thumb"
-                                  className="w-full h-full object-cover"
-                                />
+                              <div className="h-[28%] overflow-hidden relative bg-[#EDE7D6]">
+                                {cardImage ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={cardImage}
+                                    alt="Thumb"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-sm opacity-50">
+                                    🌿
+                                  </div>
+                                )}
                               </div>
 
                               {/* Sleeve Body */}
@@ -335,7 +376,7 @@ export default function ProductListClient({
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-[#3E8F52] text-xs">🌿</span>
-                              <span>Living tray · 7–10 days fresh</span>
+                              <span>Living tray · 7 to 10 days fresh</span>
                             </div>
                           </div>
                         </div>
@@ -440,7 +481,7 @@ export default function ProductListClient({
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="text-[#CFFA57] text-base leading-none mt-0.5">✦</span>
-                <span>10-day biological harvest peak density</span>
+                <span>10 day biological harvest peak density</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="text-[#CFFA57] text-base leading-none mt-0.5">✦</span>
@@ -458,11 +499,11 @@ export default function ProductListClient({
             {/* Left Copy & 3-Photo Collage */}
             <div>
               <h2 className="font-display uppercase text-3xl sm:text-4xl lg:text-5xl text-[#CFFA57] leading-none mb-3">
-                Full Transparency
+                {content.comparison_title || 'Full Transparency'}
               </h2>
               <p className="font-serif italic text-base sm:text-lg text-white/90 mb-8 max-w-md">
-                We publish everything about how your greens are cultivated. No hidden secrets, no
-                industrial shortcuts.
+                {content.comparison_subtitle ||
+                  'We publish everything about how your greens are cultivated. No hidden secrets, no industrial shortcuts.'}
               </p>
 
               {/* Overlapping Photo Collage */}
@@ -513,7 +554,7 @@ export default function ProductListClient({
                 <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-4">
                   <span className="font-semibold text-white/90">Growing Medium</span>
                   <span className="w-24 sm:w-28 text-center text-[#CFFA57] font-bold flex items-center justify-center gap-1">
-                    <span>✓</span> Sterile Coco-Peat
+                    <span>✓</span> Sterile Coco Peat
                   </span>
                   <span className="w-24 sm:w-28 text-center text-white/40">Field Soil / Slurry</span>
                 </div>
@@ -539,7 +580,7 @@ export default function ProductListClient({
                   <span className="w-24 sm:w-28 text-center text-[#CFFA57] font-bold flex items-center justify-center gap-1">
                     <span>✓</span> &lt; 6 Hours Living
                   </span>
-                  <span className="w-24 sm:w-28 text-center text-white/40">5–12 Days Freight</span>
+                  <span className="w-24 sm:w-28 text-center text-white/40">5 to 12 Days Freight</span>
                 </div>
 
                 <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-4">
@@ -560,7 +601,7 @@ export default function ProductListClient({
         <div className="max-w-[1180px] mx-auto px-4 sm:px-8">
           <div className="mb-8">
             <h2 className="font-serif font-medium text-2xl sm:text-3xl text-[#151F19]">
-              Why Choose Wild About Greens?
+              {content.why_choose_title || 'Why Choose Wild About Greens?'}
             </h2>
           </div>
 
@@ -574,7 +615,7 @@ export default function ProductListClient({
               </div>
               <div>
                 <h4 className="font-serif font-bold text-xl text-[#151F19] leading-snug mb-1">
-                  Soil-Free &amp; Clean
+                  Soil Free &amp; Clean
                 </h4>
                 <p className="font-mono text-xs text-[#5C6B60]">
                   Zero compost pathogens, pests, or dirt grit
@@ -608,7 +649,7 @@ export default function ProductListClient({
               </div>
               <div>
                 <h4 className="font-serif font-bold text-xl text-[#151F19] leading-snug mb-1">
-                  10-Day Peak
+                  10 Day Peak
                 </h4>
                 <p className="font-mono text-xs text-[#5C6B60]">
                   Maximum biological micronutrient density

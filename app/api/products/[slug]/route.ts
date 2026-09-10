@@ -11,7 +11,7 @@ export async function GET(
 
     const products = await sql`
       SELECT id, slug, name, category, description, nutrition_notes,
-             is_bundle, is_active, created_at
+             thumbnail_url, tags, is_bundle, is_active, created_at
       FROM products
       WHERE slug = ${slug} AND is_active = true
       LIMIT 1
@@ -31,9 +31,16 @@ export async function GET(
       ORDER BY price_paise ASC
     `;
 
-    return NextResponse.json({ ...product, variants });
+    const images = await sql`
+      SELECT id, product_id, image_url, display_order
+      FROM product_images
+      WHERE product_id = ${product.id}
+      ORDER BY display_order ASC, created_at ASC
+    `;
+
+    return NextResponse.json({ ...product, variants, images });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('product detail error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

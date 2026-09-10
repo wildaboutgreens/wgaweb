@@ -12,6 +12,10 @@ export async function POST(request: NextRequest) {
 
     const { password } = await request.json();
 
+    if (typeof password !== 'string' || password.length > 200) {
+      return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
+    }
+
     if (!password || password !== process.env.ADMIN_PASSWORD) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
@@ -30,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('admin login error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

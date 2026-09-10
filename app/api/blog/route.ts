@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
     return NextResponse.json(posts);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('blog list error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

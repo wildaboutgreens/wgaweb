@@ -2,12 +2,15 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
+import { isAdminPath } from '@/lib/adminAuth';
 import { formatPrice } from '@/lib/format';
 import { X, Plus, Minus } from './icons';
 
 export default function CartDrawer() {
+  const pathname = usePathname();
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPaise } = useCartStore();
   const total = totalPaise();
 
@@ -20,6 +23,10 @@ export default function CartDrawer() {
     }
     return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
+
+  if (isAdminPath(pathname)) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

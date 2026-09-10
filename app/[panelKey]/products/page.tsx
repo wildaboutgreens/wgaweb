@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
 import { formatPrice } from '@/lib/format';
+import ImageField from '@/components/admin/ImageField';
 
 interface Variant {
   id: string;
@@ -13,6 +14,15 @@ interface Variant {
   is_active: boolean;
 }
 
+interface ProductImage {
+  id: string;
+  product_id: string;
+  image_url: string;
+  display_order: number;
+  cloudinary_public_id?: string | null;
+  created_at?: string;
+}
+
 interface Product {
   id: string;
   slug: string;
@@ -20,10 +30,12 @@ interface Product {
   category: string;
   description: string;
   nutrition_notes: string | null;
-  cover_image_url: string | null;
+  thumbnail_url: string | null;
+  tags: string[];
   is_bundle: boolean;
   is_active: boolean;
   variants?: Variant[];
+  images?: ProductImage[];
 }
 
 const emptyProduct = {
@@ -32,7 +44,8 @@ const emptyProduct = {
   category: '',
   description: '',
   nutrition_notes: '',
-  cover_image_url: '',
+  thumbnail_url: '',
+  tags: [] as string[],
   is_bundle: false,
   is_active: true,
 };
@@ -49,8 +62,10 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState(emptyProduct);
+  const [tagString, setTagString] = useState('');
   const [isNew, setIsNew] = useState(false);
   const [variants, setVariants] = useState<Variant[]>([]);
+  const [images, setImages] = useState<ProductImage[]>([]);
   const [variantForm, setVariantForm] = useState(emptyVariant);
   const [showVariantForm, setShowVariantForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -70,27 +85,40 @@ export default function AdminProductsPage() {
       const data = await res.json();
       setEditing(data);
       setForm({
-        name: data.name,
-        slug: data.slug,
-        category: data.category,
-        description: data.description,
+        name: data.name || '',
+        slug: data.slug || '',
+        category: data.category || '',
+        description: data.description || '',
         nutrition_notes: data.nutrition_notes || '',
-        cover_image_url: data.cover_image_url || '',
-        is_bundle: data.is_bundle,
-        is_active: data.is_active,
+        thumbnail_url: data.thumbnail_url || '',
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        is_bundle: data.is_bundle ?? false,
+        is_active: data.is_active ?? true,
       });
+      setTagString(Array.isArray(data.tags) ? data.tags.join(', ') : '');
       setVariants(data.variants || []);
+      setImages(data.images || []);
     }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
+      const parsedTags = tagString
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const payload = {
+        ...form,
+        tags: parsedTags,
+      };
+
       if (isNew) {
         const res = await adminFetch('/api/admin/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
         if (res.ok) {
           setIsNew(false);
@@ -101,7 +129,7 @@ export default function AdminProductsPage() {
         const res = await adminFetch(`/api/admin/products/${editing.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
         if (res.ok) {
           loadProducts();
@@ -199,13 +227,26 @@ export default function AdminProductsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cover Image URL</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
               <input
-                value={form.cover_image_url}
-                onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })}
+                value={tagString}
+                onChange={(e) => setTagString(e.target.value)}
+                placeholder="e.g. spicy, salad, bundle"
                 className="w-full px-3 py-2 border rounded-lg text-sm"
               />
             </div>
+          </div>
+
+          {/* Thumbnail upload field */}
+          <div>
+            <ImageField
+              value={form.thumbnail_url || null}
+              onChange={(url) => setForm((prev) => ({ ...prev, thumbnail_url: url }))}
+              label="Product Thumbnail"
+              aspectRatio="1/1"
+              folder={`products/${form.slug?.trim() || editing?.slug || 'new-product'}/thumbnail`}
+              publicId="thumbnail"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -261,6 +302,100 @@ export default function AdminProductsPage() {
             )}
           </div>
         </div>
+
+        {/* Gallery section */}
+        {!isNew && editing && (
+          <div className="bg-white rounded-xl border p-6 mb-6">
+            <div className="mb-4">
+              <h2 className="font-bold text-gray-900">Product Image Gallery</h2>
+              <p className="text-xs text-gray-500">
+                Multiple images for the public product detail gallery / carousel
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
+              {images.map((img) => (
+                <div
+                  key={img.id}
+                  className="border rounded-xl p-2 bg-gray-50 flex flex-col justify-between space-y-2 shadow-sm"
+                >
+                  <ImageField
+                    value={img.image_url}
+                    onChange={async (url, publicId) => {
+                      await adminFetch(`/api/admin/images/${img.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          image_url: url,
+                          cloudinary_public_id: publicId,
+                        }),
+                      });
+                      loadProduct(editing.id);
+                    }}
+                    aspectRatio="1/1"
+                    folder={`products/${form.slug?.trim() || editing.slug || 'product'}/gallery`}
+                  />
+                  <div className="flex items-center justify-between gap-1 pt-1 border-t">
+                    <div className="flex items-center gap-1">
+                      <span className="text-[11px] text-gray-500 font-medium">Order:</span>
+                      <input
+                        type="number"
+                        defaultValue={img.display_order}
+                        onBlur={async (e) => {
+                          const newOrder = parseInt(e.target.value, 10);
+                          if (!isNaN(newOrder) && newOrder !== img.display_order) {
+                            await adminFetch(`/api/admin/images/${img.id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ display_order: newOrder }),
+                            });
+                            loadProduct(editing.id);
+                          }
+                        }}
+                        className="w-12 px-1 py-0.5 border rounded text-xs text-center bg-white"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!confirm('Delete this gallery image?')) return;
+                        await adminFetch(`/api/admin/images/${img.id}`, { method: 'DELETE' });
+                        loadProduct(editing.id);
+                      }}
+                      className="text-red-500 hover:text-red-700 text-xs font-semibold px-1"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+
+              {/* Empty ImageField to add a new gallery image */}
+              <div className="border rounded-xl p-2 bg-gray-50 shadow-sm">
+                <ImageField
+                  value={null}
+                  onChange={async (url, publicId) => {
+                    const addRes = await adminFetch(`/api/admin/products/${editing.id}/images`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        image_url: url,
+                        display_order: images.length,
+                        cloudinary_public_id: publicId,
+                      }),
+                    });
+                    if (addRes.ok) {
+                      loadProduct(editing.id);
+                    }
+                  }}
+                  aspectRatio="1/1"
+                  folder={`products/${form.slug?.trim() || editing.slug || 'product'}/gallery`}
+                />
+                <p className="text-[11px] text-gray-400 text-center mt-1">+ Add Image</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Variants section */}
         {!isNew && (
@@ -377,8 +512,10 @@ export default function AdminProductsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-gray-500 border-b bg-gray-50">
+              <th className="px-4 py-3">Thumbnail</th>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Category</th>
+              <th className="px-4 py-3">Tags</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
@@ -386,9 +523,38 @@ export default function AdminProductsPage() {
           <tbody>
             {products.map((p) => (
               <tr key={p.id} className="border-b last:border-0 hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium">{p.name}</td>
+                <td className="px-4 py-3">
+                  {p.thumbnail_url ? (
+                    <img
+                      src={p.thumbnail_url}
+                      alt={p.name}
+                      className="w-10 h-10 object-cover rounded-lg border bg-white"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-sm text-gray-400 border">
+                      🌿
+                    </div>
+                  )}
+                </td>
+                <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
                 <td className="px-4 py-3 text-gray-500 capitalize">
                   {p.category.replace(/-/g, ' ')}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1">
+                    {p.tags && p.tags.length > 0 ? (
+                      p.tags.map((t) => (
+                        <span
+                          key={t}
+                          className="text-[10px] font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200"
+                        >
+                          {t}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-gray-400">—</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <span
@@ -402,7 +568,7 @@ export default function AdminProductsPage() {
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => loadProduct(p.id)}
-                    className="text-blue-600 hover:text-blue-800 text-sm"
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                   >
                     Edit
                   </button>

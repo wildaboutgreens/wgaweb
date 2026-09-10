@@ -20,6 +20,11 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalPaise, clearCart } = useCartStore();
   const total = totalPaise();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [form, setForm] = useState({
     name: '',
@@ -138,7 +143,8 @@ export default function CheckoutPage() {
 
             if (verifyRes.ok) {
               clearCart();
-              router.push(`/order-confirmation?orderId=${verifyData.orderId || data.orderId}`);
+              const confirmNumber = verifyData.orderNumber || data.orderNumber;
+              router.push(`/order-confirmation?orderNumber=${confirmNumber}`);
             } else {
               setError('Payment verification failed. If you were charged, please contact us.');
               setLoading(false);
@@ -150,7 +156,7 @@ export default function CheckoutPage() {
         },
         modal: {
           ondismiss: () => {
-            setError('Payment was cancelled. Your cart is still saved — you can try again anytime.');
+            setError('Payment was cancelled. Your cart is still saved, you can try again anytime.');
             setLoading(false);
           },
         },
@@ -163,7 +169,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (items.length === 0) return null;
+  if (!mounted || items.length === 0) return null;
 
   return (
     <main className="max-w-2xl mx-auto px-4 sm:px-6 py-8">

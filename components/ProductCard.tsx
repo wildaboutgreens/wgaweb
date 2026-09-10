@@ -13,10 +13,18 @@ interface ProductCardProps {
   name: string;
   category: string;
   description?: string;
+  thumbnail_url?: string | null;
   variants: Variant[];
 }
 
-export default function ProductCard({ slug, name, category, description, variants }: ProductCardProps) {
+export default function ProductCard({
+  slug,
+  name,
+  category,
+  description,
+  thumbnail_url,
+  variants,
+}: ProductCardProps) {
   const activeVariants = variants.filter((v) => v.is_active);
   const lowestPrice = activeVariants.length > 0
     ? Math.min(...activeVariants.map((v) => v.price_paise))
@@ -28,9 +36,18 @@ export default function ProductCard({ slug, name, category, description, variant
       href={`/products/${slug}`}
       className="group block bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
     >
-      {/* Image placeholder */}
-      <div className="aspect-square bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
-        <span className="text-5xl opacity-60">🌿</span>
+      {/* Product Image */}
+      <div className="aspect-square bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center relative overflow-hidden">
+        {thumbnail_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={thumbnail_url}
+            alt={name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <span className="text-5xl opacity-60">🌿</span>
+        )}
       </div>
 
       {/* Content */}

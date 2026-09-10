@@ -1,13 +1,33 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
 import { Plus, Minus } from '@/components/icons';
 
 export default function CartPage() {
+  const [mounted, setMounted] = useState(false);
   const { items, removeItem, updateQuantity, totalPaise } = useCartStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const total = totalPaise();
+
+  if (!mounted) {
+    return (
+      <div className="bg-[#F3EEE0] text-[#151F19] min-h-screen pt-32 pb-24 text-center">
+        <main className="max-w-2xl mx-auto px-4">
+          <div className="bg-[#FFFDF8] border border-[#E4DDC8] rounded-3xl p-10 sm:p-14 shadow-sm">
+            <span className="text-6xl mb-5 block">🛒</span>
+            <p className="font-mono text-sm text-[#5C6B60]">Loading cart...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (

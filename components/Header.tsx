@@ -2,8 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useCartStore } from '@/lib/cartStore';
+import { isAdminPath } from '@/lib/adminAuth';
+import { Truck } from '@/components/icons';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Header() {
   const pathname = usePathname();
@@ -13,8 +17,13 @@ export default function Header() {
   const [exploreOpen, setExploreOpen] = useState(false);
   const exploreRef = useRef<HTMLDivElement>(null);
 
+  const [mounted, setMounted] = useState(false);
   const totalItems = useCartStore((s) => s.totalItems());
   const setIsOpen = useCartStore((s) => s.setIsOpen);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,7 +45,24 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const showSolidNav = !isHomepage || isScrolled;
+  const handleNavToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    setExploreOpen(false);
+    setMobileMenuOpen(false);
+    if (pathname === '/') {
+      e.preventDefault();
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+        window.history.pushState(null, '', `/#${targetId}`);
+      }
+    }
+  };
+
+  const showSolidNav = !isHomepage || isScrolled || mobileMenuOpen;
+
+  if (isAdminPath(pathname)) {
+    return null;
+  }
 
   return (
     <header
@@ -79,28 +105,36 @@ export default function Header() {
               </button>
 
               {/* Dropdown Menu */}
-              {exploreOpen && (
-                <div className="absolute top-full left-0 pt-2 z-50 w-52">
-                  <div className="bg-[#FFFDF8] rounded-2xl p-2 shadow-2xl border border-[#E4DDC8] text-[#151F19] space-y-1">
-                    <Link
-                      href="/#why"
-                      onClick={() => setExploreOpen(false)}
-                      className="block px-3.5 py-2.5 rounded-xl text-[13px] font-medium hover:bg-[#F3EEE0] transition-colors"
-                    >
-                      <span className="block font-semibold">Why Microgreens</span>
-                      <span className="text-[11px] text-[#5C6B60]">The 10-day biological secret</span>
-                    </Link>
-                    <Link
-                      href="/products"
-                      onClick={() => setExploreOpen(false)}
-                      className="block px-3.5 py-2.5 rounded-xl text-[13px] font-medium hover:bg-[#F3EEE0] transition-colors"
-                    >
-                      <span className="block font-semibold">Shop by Goal</span>
-                      <span className="text-[11px] text-[#5C6B60]">Target your cellular nutrition</span>
-                    </Link>
-                  </div>
-                </div>
-              )}
+              <AnimatePresence>
+                {exploreOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    className="absolute top-full left-0 pt-2 z-50 w-52"
+                  >
+                    <div className="bg-[#FFFDF8] rounded-2xl p-2 shadow-2xl border border-[#E4DDC8] text-[#151F19] space-y-1">
+                      <Link
+                        href="/#why"
+                        onClick={(e) => handleNavToSection(e, 'why')}
+                        className="block px-3.5 py-2.5 rounded-xl text-[13px] font-medium hover:bg-[#F3EEE0] transition-colors"
+                      >
+                        <span className="block font-semibold">Why Microgreens</span>
+                        <span className="text-[11px] text-[#5C6B60]">The 10 day biological secret</span>
+                      </Link>
+                      <Link
+                        href="/#goals"
+                        onClick={(e) => handleNavToSection(e, 'goals')}
+                        className="block px-3.5 py-2.5 rounded-xl text-[13px] font-medium hover:bg-[#F3EEE0] transition-colors"
+                      >
+                        <span className="block font-semibold">Shop by Goal</span>
+                        <span className="text-[11px] text-[#5C6B60]">Target your cellular nutrition</span>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Recipe Khazana Link */}
@@ -122,12 +156,31 @@ export default function Header() {
           {/* Nav Center Logo */}
           <Link
             href="/"
-            className={`font-serif font-semibold text-[21px] tracking-wide flex items-center gap-2 justify-self-center whitespace-nowrap transition-colors ${
-              showSolidNav ? 'text-[#151F19]' : 'text-[#FFFDF8]'
-            }`}
+            className="flex items-center justify-self-start lg:justify-self-center group py-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1C3F2D] rounded-lg"
+            aria-label="Wild About Greens Home"
           >
-            <span className="leaf-wiggle">🌱</span>
-            <span>Wild About Greens</span>
+            <div className="relative h-9 sm:h-10 lg:h-11 w-[161px] sm:w-[179px] lg:w-[197px] transition-transform duration-200 group-hover:scale-[1.02]">
+              <Image
+                src="/logo-picture-bg.png"
+                alt="Wild About Greens"
+                width={188}
+                height={42}
+                priority
+                className={`absolute inset-0 w-full h-full object-contain object-left lg:object-center transition-opacity duration-300 ${
+                  showSolidNav ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                }`}
+              />
+              <Image
+                src="/logo-white-bg.png"
+                alt="Wild About Greens"
+                width={188}
+                height={42}
+                priority
+                className={`absolute inset-0 w-full h-full object-contain object-left lg:object-center transition-opacity duration-300 ${
+                  showSolidNav ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+              />
+            </div>
           </Link>
 
           {/* Nav Right */}
@@ -182,7 +235,7 @@ export default function Header() {
                 <path d="M3 6h18" />
                 <path d="M16 10a4 4 0 01-8 0" />
               </svg>
-              {totalItems > 0 && (
+              {mounted && totalItems > 0 && (
                 <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-[#CFFA57] text-[#122A1F] text-[9px] font-extrabold flex items-center justify-center shadow-sm">
                   {totalItems}
                 </span>
@@ -198,18 +251,7 @@ export default function Header() {
               aria-label="Track Order"
               title="Track Order"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                viewBox="0 0 24 24"
-              >
-                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
+              <Truck className="w-5 h-5" />
             </Link>
 
             {/* Mobile Hamburger Toggle */}
@@ -241,14 +283,14 @@ export default function Header() {
             </div>
             <Link
               href="/#why"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={(e) => handleNavToSection(e, 'why')}
               className="block py-2 px-2 font-medium hover:bg-white/50 rounded-lg"
             >
               Why Microgreens
             </Link>
             <Link
-              href="/products"
-              onClick={() => setMobileMenuOpen(false)}
+              href="/#goals"
+              onClick={(e) => handleNavToSection(e, 'goals')}
               className="block py-2 px-2 font-medium hover:bg-white/50 rounded-lg border-b border-[#E4DDC8]/60"
             >
               Shop by Goal

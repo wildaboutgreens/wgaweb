@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
+import ImageField from '@/components/admin/ImageField';
 
 interface Post {
   id: string;
@@ -178,11 +179,13 @@ export default function AdminBlogPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cover Image URL</label>
-            <input
-              value={form.cover_image_url}
-              onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg text-sm"
+            <ImageField
+              value={form.cover_image_url || null}
+              onChange={(url) => setForm({ ...form, cover_image_url: url })}
+              label="Cover Image"
+              aspectRatio="16/9"
+              folder={`blog/${form.slug?.trim() || editing?.slug || 'new-post'}/cover`}
+              publicId="cover"
             />
           </div>
           <label className="flex items-center gap-2 text-sm">

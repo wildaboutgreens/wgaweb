@@ -73,7 +73,7 @@ export default function StoryModal() {
               <div className="space-y-4">
                 <p>
                   When you buy a head of broccoli or a bunch of spinach from your local vendor or a
-                  quick-delivery app, you feel good about making a healthy choice. We did too.
+                  quick delivery app, you feel good about making a healthy choice. We did too.
                 </p>
                 <p>
                   But then we looked closer. We looked at the heavy{' '}
@@ -96,7 +96,7 @@ export default function StoryModal() {
 
               <div className="space-y-4">
                 <p>
-                  So we started a micro-enterprise right here in our city. Vertical indoor racks where we
+                  So we started a micro enterprise right here in our city. Vertical indoor racks where we
                   control everything. No soil, no pests, no chemicals. Pure mineral RO water under
                   pristine LED lights.
                 </p>
@@ -113,7 +113,7 @@ export default function StoryModal() {
                   <u className="decoration-[#B7E23F] decoration-[3px] underline-offset-2 font-semibold text-[#122A1F]">
                     nutritional insurance policy
                   </u>{' '}
-                  for your family. No marketing gimmicks, no pseudo-science. Just the bare, honest truth.
+                  for your family. No marketing gimmicks, no pseudo science. Just the bare, honest truth.
                 </p>
               </div>
             </div>

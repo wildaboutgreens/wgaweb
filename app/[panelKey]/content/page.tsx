@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
+import ImageField from '@/components/admin/ImageField';
+import { CONTENT_REGISTRY } from '@/lib/contentRegistry';
 
 interface ContentBlock {
   id: string;
@@ -19,54 +21,42 @@ const PAGES = [
   { value: 'our-story', label: 'Our Story' },
 ];
 
-// Human-readable labels for known keys
-const KEY_LABELS: Record<string, string> = {
-  hero_title: 'Hero Title',
-  hero_subtitle: 'Hero Subtitle',
-  hero_cta_text: 'Hero CTA Button Text',
-  hero_cta_link: 'Hero CTA Button Link',
-  hero_image_url: 'Hero Background Image',
-  why_section_title: 'Why Section Title',
-  why_section_subtitle: 'Why Section Subtitle',
-  cta_title: 'CTA Section Title',
-  cta_subtitle: 'CTA Section Subtitle',
-  cta_button_text: 'CTA Button Text',
-  cta_button_link: 'CTA Button Link',
-  page_title: 'Page Title',
-  page_subtitle: 'Page Subtitle',
-  section_1_title: 'Section 1 Title',
-  section_1_body: 'Section 1 Body',
-  section_2_title: 'Section 2 Title',
-  section_2_body: 'Section 2 Body',
-  section_3_title: 'Section 3 Title',
-  section_3_body: 'Section 3 Body',
-  section_4_title: 'Section 4 Title',
-  section_4_body: 'Section 4 Body',
-  banner_text: 'Banner Text',
-  meta_description: 'Meta Description',
-};
-
-function humanLabel(key: string): string {
-  return KEY_LABELS[key] || key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export default function AdminContentPage() {
   const [activePage, setActivePage] = useState(PAGES[0].value);
-  const [form, setForm] = useState<Record<string, { value: string; value_type: string }>>({});
+  const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [newKey, setNewKey] = useState('');
-  const [newValueType, setNewValueType] = useState('text');
+  const [loading, setLoading] = useState(true);
+
+  const fields = CONTENT_REGISTRY[activePage] || [];
 
   const loadBlocks = async (page: string) => {
-    const res = await adminFetch(`/api/admin/content/${page}`);
-    if (res.ok) {
-      const data: ContentBlock[] = await res.json();
-      const formData: Record<string, { value: string; value_type: string }> = {};
-      for (const b of data) {
-        formData[b.key] = { value: b.value, value_type: b.value_type };
+    setLoading(true);
+    try {
+      const res = await adminFetch(`/api/admin/content/${page}`);
+      const pageFields = CONTENT_REGISTRY[page] || [];
+      const formData: Record<string, string> = {};
+
+      if (res.ok) {
+        const data: ContentBlock[] = await res.json();
+        const dataMap = new Map<string, string>();
+        for (const b of data) {
+          dataMap.set(b.key, b.value);
+        }
+
+        for (const f of pageFields) {
+          formData[f.key] = dataMap.has(f.key) ? dataMap.get(f.key)! : f.defaultValue;
+        }
+      } else {
+        for (const f of pageFields) {
+          formData[f.key] = f.defaultValue;
+        }
       }
       setForm(formData);
+    } catch (err) {
+      console.error('Failed to load content blocks:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,41 +68,36 @@ export default function AdminContentPage() {
   const handleSave = async () => {
     setSaving(true);
     setSaved(false);
-    const blockArray = Object.entries(form).map(([key, data]) => ({
-      key,
-      value: data.value,
-      value_type: data.value_type,
-    }));
+    try {
+      const blockArray = fields.map((field) => ({
+        key: field.key,
+        value: form[field.key] ?? '',
+        value_type: field.type,
+      }));
 
-    const res = await adminFetch(`/api/admin/content/${activePage}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ blocks: blockArray }),
-    });
+      const res = await adminFetch(`/api/admin/content/${activePage}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocks: blockArray }),
+      });
 
-    if (res.ok) {
-      setSaved(true);
-      loadBlocks(activePage);
+      if (res.ok) {
+        setSaved(true);
+        loadBlocks(activePage);
+      }
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-  };
-
-  const addField = () => {
-    const key = newKey.trim().toLowerCase().replace(/\s+/g, '_');
-    if (!key || form[key]) return;
-    setForm({ ...form, [key]: { value: '', value_type: newValueType } });
-    setNewKey('');
-  };
-
-  const removeField = (key: string) => {
-    const updated = { ...form };
-    delete updated[key];
-    setForm(updated);
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Content Blocks</h1>
+    <div className="max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Content Blocks</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Edit live site copy and images across key pages. Changes go live immediately upon saving.
+        </p>
+      </div>
 
       {/* Page Tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -122,7 +107,7 @@ export default function AdminContentPage() {
             onClick={() => setActivePage(p.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activePage === p.value
-                ? 'bg-gray-900 text-white'
+                ? 'bg-gray-900 text-white shadow-sm'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -131,114 +116,73 @@ export default function AdminContentPage() {
         ))}
       </div>
 
-      {/* Content Fields */}
-      <div className="bg-white rounded-xl border p-6 space-y-5 mb-6">
-        {Object.keys(form).length === 0 && (
-          <p className="text-gray-400 text-sm">
-            No content blocks for this page yet. Add fields below.
-          </p>
-        )}
-
-        {Object.entries(form).map(([key, data]) => (
-          <div key={key}>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-sm font-medium text-gray-700">{humanLabel(key)}</label>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 font-mono">{key}</span>
-                <button
-                  onClick={() => removeField(key)}
-                  className="text-xs text-red-400 hover:text-red-600"
-                >
-                  Remove
-                </button>
+      {/* Content Fields List */}
+      <div className="bg-white rounded-xl border p-6 space-y-6 mb-6 shadow-sm">
+        {loading ? (
+          <div className="py-12 text-center text-sm text-gray-400">Loading fields...</div>
+        ) : (
+          fields.map((field) => (
+            <div key={field.key} className="pt-4 first:pt-0 border-t first:border-0 border-gray-100">
+              <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                <label className="text-sm font-semibold text-gray-800">{field.label}</label>
+                <span className="text-[11px] font-mono text-gray-400 select-none">
+                  {field.key}
+                </span>
               </div>
-            </div>
-            {data.value_type === 'richtext' ? (
-              <textarea
-                value={data.value}
-                onChange={(e) =>
-                  setForm({ ...form, [key]: { ...data, value: e.target.value } })
-                }
-                rows={5}
-                className="w-full px-3 py-2 border rounded-lg text-sm font-mono"
-              />
-            ) : data.value_type === 'image_url' ? (
-              <div className="space-y-2">
-                <input
-                  value={data.value}
+              {field.description && (
+                <p className="text-xs text-gray-500 mb-2 leading-relaxed">{field.description}</p>
+              )}
+
+              {field.type === 'textarea' ? (
+                <textarea
+                  value={form[field.key] ?? ''}
                   onChange={(e) =>
-                    setForm({ ...form, [key]: { ...data, value: e.target.value } })
+                    setForm((prev) => ({ ...prev, [field.key]: e.target.value }))
                   }
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  rows={4}
+                  className="w-full px-3 py-2 border rounded-lg text-sm leading-relaxed focus:ring-2 focus:ring-green-700/20 focus:border-green-700 outline-none"
                 />
-                {data.value && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={data.value}
-                    alt={key}
-                    className="h-20 object-cover rounded-lg"
-                  />
-                )}
-              </div>
-            ) : (
-              <input
-                value={data.value}
-                onChange={(e) =>
-                  setForm({ ...form, [key]: { ...data, value: e.target.value } })
-                }
-                className="w-full px-3 py-2 border rounded-lg text-sm"
-              />
-            )}
-          </div>
-        ))}
+              ) : field.type === 'image_url' ? (
+                <ImageField
+                  value={form[field.key] || null}
+                  onChange={(url) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      [field.key]: url,
+                    }))
+                  }
+                  aspectRatio="16/9"
+                  folder={`content/${activePage}`}
+                  publicId={field.key}
+                />
+              ) : (
+                <input
+                  type="text"
+                  value={form[field.key] ?? ''}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, [field.key]: e.target.value }))
+                  }
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-700/20 focus:border-green-700 outline-none"
+                />
+              )}
+            </div>
+          ))
+        )}
       </div>
 
-      {/* Add New Field */}
-      <div className="bg-gray-50 rounded-xl border p-4 mb-6">
-        <p className="text-sm font-medium text-gray-700 mb-3">Add New Content Field</p>
-        <div className="flex flex-wrap gap-3 items-end">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Key</label>
-            <input
-              value={newKey}
-              onChange={(e) => setNewKey(e.target.value)}
-              placeholder="e.g. hero_title"
-              className="px-3 py-2 border rounded-lg text-sm w-48"
-            />
-          </div>
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Type</label>
-            <select
-              value={newValueType}
-              onChange={(e) => setNewValueType(e.target.value)}
-              className="px-3 py-2 border rounded-lg text-sm"
-            >
-              <option value="text">Text</option>
-              <option value="richtext">Rich Text</option>
-              <option value="image_url">Image URL</option>
-            </select>
-          </div>
-          <button
-            onClick={addField}
-            className="px-4 py-2 bg-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-300"
-          >
-            + Add Field
-          </button>
-        </div>
-      </div>
-
-      {/* Save */}
-      <div className="flex items-center gap-3">
+      {/* Save Button Bar */}
+      <div className="flex items-center gap-3 sticky bottom-4 bg-white/90 backdrop-blur-md p-3 rounded-xl border shadow-md">
         <button
           onClick={handleSave}
-          disabled={saving}
-          className="px-6 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50"
+          disabled={saving || loading}
+          className="px-6 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50 transition-all"
         >
           {saving ? 'Saving...' : 'Save All Changes'}
         </button>
         {saved && (
-          <span className="text-sm text-green-600 font-medium">✓ Saved successfully</span>
+          <span className="text-sm text-green-700 font-semibold flex items-center gap-1">
+            <span>✓</span> Saved successfully
+          </span>
         )}
       </div>
     </div>

@@ -47,7 +47,7 @@ export default function AdminLayoutClient({
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 admin-panel-root">
       {/* Sidebar */}
       <aside className="w-64 bg-gray-900 text-white flex flex-col shrink-0">
         <div className="p-4 border-b border-gray-700">
