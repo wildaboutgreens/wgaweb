@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET /api/admin/content/[page] — read all blocks for a page (with full metadata)
 export async function GET(
   _request: NextRequest,
@@ -17,7 +20,11 @@ export async function GET(
       ORDER BY key ASC
     `;
 
-    return NextResponse.json(blocks);
+    return NextResponse.json(blocks, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });

@@ -33,7 +33,9 @@ export default function AdminContentPage() {
   const loadBlocks = async (page: string) => {
     setLoading(true);
     try {
-      const res = await adminFetch(`/api/admin/content/${page}`);
+      const res = await adminFetch(`/api/admin/content/${page}`, {
+        cache: 'no-store',
+      });
       const pageFields = CONTENT_REGISTRY[page] || [];
       const formData: Record<string, string> = {};
 
@@ -82,8 +84,17 @@ export default function AdminContentPage() {
       });
 
       if (res.ok) {
+        const data: ContentBlock[] = await res.json();
         setSaved(true);
-        loadBlocks(activePage);
+        if (Array.isArray(data)) {
+          setForm((prev) => {
+            const next = { ...prev };
+            for (const b of data) {
+              next[b.key] = b.value;
+            }
+            return next;
+          });
+        }
       }
     } finally {
       setSaving(false);
