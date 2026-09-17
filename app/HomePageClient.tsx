@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import SprigDefs, { Sprig } from '@/components/SprigDefs';
@@ -15,13 +15,155 @@ export interface ContentPin {
   display_order: number;
 }
 
+export interface GoalPin {
+  id: string;
+  group_key?: string;
+  icon: string | null;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  link_url: string | null;
+  display_order: number;
+}
+
+export interface FeaturedRecipe {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+}
+
 interface HomePageClientProps {
   content: Record<string, string>;
   dbPins: ContentPin[];
+  recipeCount?: number;
+  featuredRecipes?: FeaturedRecipe[];
+  initialGoalPins?: GoalPin[];
 }
 
-export default function HomePageClient({ content, dbPins }: HomePageClientProps) {
+const DEFAULT_GOAL_PINS: GoalPin[] = [
+  {
+    id: 'goal-1',
+    icon: 'Immunity',
+    title: 'Boost Immunity',
+    description: 'Broccoli & radish blends',
+    image_url: 'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=700&auto=format&fit=crop',
+    link_url: '/products?category=immunity',
+    display_order: 1,
+  },
+  {
+    id: 'goal-2',
+    icon: 'Weight',
+    title: 'Weight Management',
+    description: 'Low cal, high fibre trays',
+    image_url: 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=700&auto=format&fit=crop',
+    link_url: '/products?category=weight',
+    display_order: 2,
+  },
+  {
+    id: 'goal-3',
+    icon: 'Kids',
+    title: 'Kids Nutrition',
+    description: 'Mild, sweet pea shoots',
+    image_url: 'https://plus.unsplash.com/premium_photo-1666184891926-68f52da26f15?fm=jpg&q=80&w=700&auto=format&fit=crop',
+    link_url: '/products?category=kids',
+    display_order: 3,
+  },
+  {
+    id: 'goal-4',
+    icon: 'Fitness',
+    title: 'Fitness & Recovery',
+    description: 'Protein forward sunflower',
+    image_url: 'https://images.unsplash.com/photo-1610622930110-3c076902312a?fm=jpg&q=80&w=700&auto=format&fit=crop',
+    link_url: '/products?category=fitness',
+    display_order: 4,
+  },
+  {
+    id: 'goal-5',
+    icon: 'Low GI',
+    title: 'Diabetes Friendly',
+    description: 'Low glycemic greens',
+    image_url: 'https://plus.unsplash.com/premium_photo-1699976106481-02baab9811da?fm=jpg&q=80&w=700&auto=format&fit=crop',
+    link_url: '/products?category=low-gi',
+    display_order: 5,
+  },
+  {
+    id: 'goal-6',
+    icon: 'Heart',
+    title: 'Heart Health',
+    description: 'Potassium rich mixes',
+    image_url: 'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=700&auto=format&fit=crop',
+    link_url: '/products?category=heart',
+    display_order: 6,
+  },
+  {
+    id: 'goal-7',
+    icon: 'Aging',
+    title: 'Healthy Aging',
+    description: 'Antioxidant dense trays',
+    image_url: 'https://plus.unsplash.com/premium_photo-1675368982408-ee5a9e0fab6c?fm=jpg&q=80&w=700&auto=format&fit=crop',
+    link_url: '/products?category=aging',
+    display_order: 7,
+  },
+  {
+    id: 'goal-8',
+    icon: 'All',
+    title: 'All Trays',
+    description: 'Every variety we grow',
+    image_url: 'https://plus.unsplash.com/premium_photo-1661635029307-2183e966e5a8?fm=jpg&q=80&w=700&auto=format&fit=crop',
+    link_url: '/products',
+    display_order: 8,
+  },
+];
+
+const GOAL_BG_COLORS = [
+  'bg-[#DCF5A8]',
+  'bg-[#FFE0B2]',
+  'bg-[#FFC9C0]',
+  'bg-[#BEE3F5]',
+  'bg-[#E9D8F2]',
+  'bg-[#F7D9D3]',
+  'bg-[#D6EDD9]',
+  'bg-[#EDE1C7]',
+];
+
+function isVideoMedia(url?: string | null): boolean {
+  if (!url) return false;
+  return url.includes('/video/upload/') || /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
+}
+
+export default function HomePageClient({
+  content,
+  dbPins,
+  recipeCount = 0,
+  featuredRecipes = [],
+  initialGoalPins = [],
+}: HomePageClientProps) {
   const shouldReduceMotion = useReducedMotion();
+  const [goalPins, setGoalPins] = useState<GoalPin[]>(
+    initialGoalPins.length > 0 ? initialGoalPins : []
+  );
+
+  useEffect(() => {
+    fetch('/api/pins/homepage_shop_by_goal')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setGoalPins(data);
+        }
+      })
+      .catch((err) => console.error('Error fetching goal pins:', err));
+  }, []);
+
+  const activeGoals = goalPins.length > 0 ? goalPins : DEFAULT_GOAL_PINS;
+
+  // Hero background: support video or image
+  const heroVideo =
+    (content.hero_video_url && isVideoMedia(content.hero_video_url) ? content.hero_video_url : null) ||
+    (content.hero_image_url && isVideoMedia(content.hero_image_url) ? content.hero_image_url : null);
+  const heroImage =
+    (!isVideoMedia(content.hero_image_url) && content.hero_image_url) ||
+    'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=85&w=2400&auto=format&fit=crop';
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash) {
@@ -172,16 +314,26 @@ export default function HomePageClient({ content, dbPins }: HomePageClientProps)
 
       {/* ================= HERO ================= */}
       <section className="relative min-h-screen flex items-center justify-center text-center overflow-hidden text-[#FFFDF8] pt-28 pb-16">
-        {/* Background photo with subtle Ken Burns animation */}
-        <div
-          className="absolute inset-0 z-0 bg-cover bg-center animate-kenburns"
-          style={{
-            backgroundImage: `url('${
-              content.hero_image_url ||
-              'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=85&w=2400&auto=format&fit=crop'
-            }')`,
-          }}
-        />
+        {/* Background photo or video */}
+        {heroVideo ? (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute inset-0 z-0 w-full h-full object-cover"
+            poster={heroImage}
+          >
+            <source src={heroVideo} />
+          </video>
+        ) : (
+          <div
+            className="absolute inset-0 z-0 bg-cover bg-center animate-kenburns"
+            style={{
+              backgroundImage: `url('${heroImage}')`,
+            }}
+          />
+        )}
         {/* Scrim overlay */}
         <div
           className="absolute inset-0 z-[1]"
@@ -395,34 +547,36 @@ export default function HomePageClient({ content, dbPins }: HomePageClientProps)
               </motion.p>
               <motion.div variants={scrollItemVariants}>
                 <Link
-                  href="/products"
+                  href="/blog"
                   className="btn-primary-mockup btn-amber-mockup font-bold text-sm shadow-md inline-block"
                 >
-                  {content.why_cta_text || 'Shop Fresh Trays →'}
+                  {content.why_cta_text || 'Pathshala →'}
                 </Link>
               </motion.div>
             </motion.div>
 
-            {/* Interactive SVG Chart */}
+            {/* Interactive SVG Chart & Optional Visual Media */}
             <motion.div
               variants={scrollItemVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
+              className="space-y-6"
             >
+              {content.why_image && (
+                <div className="rounded-2xl overflow-hidden shadow-md border border-[#E4DDC8]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={content.why_image}
+                    alt={content.why_image_alt || 'Why Microgreens'}
+                    className="w-full h-56 sm:h-64 object-cover"
+                  />
+                </div>
+              )}
               <WhyMicrogreensChart />
             </motion.div>
           </div>
 
-          <motion.p
-            variants={scrollItemVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="text-[11px] text-[#5C6B60] text-center max-w-xl mx-auto mt-10"
-          >
-            *Nutrient figures and decline curve illustrative for this mockup: to be replaced with our own verified lab data before publishing live.
-          </motion.p>
         </div>
       </section>
 
@@ -458,213 +612,53 @@ export default function HomePageClient({ content, dbPins }: HomePageClientProps)
             viewport={{ once: true, amount: 0.15 }}
             className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-5 sm:gap-6"
           >
-            {/* Goal 1 */}
-            <motion.div variants={scrollItemVariants}>
-              <Link href="/products?category=immunity" className="group block">
-                <div className="relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl bg-[#DCF5A8]">
-                  <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-                    Immunity
-                  </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=700&auto=format&fit=crop"
-                    alt="Boost Immunity"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="pt-3.5 px-1">
-                  <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
-                    Boost Immunity
-                  </h4>
-                  <p className="text-xs text-[#5C6B60]">Broccoli &amp; radish blends</p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
-                    Shop →
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
+            {activeGoals.map((pin, index) => {
+              const bgColor = GOAL_BG_COLORS[index % GOAL_BG_COLORS.length];
+              const isHeart =
+                pin.icon?.toLowerCase() === 'heart' ||
+                pin.title?.toLowerCase().includes('heart');
 
-            {/* Goal 2 */}
-            <motion.div variants={scrollItemVariants}>
-              <Link href="/products?category=weight" className="group block">
-                <div className="relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl bg-[#FFE0B2]">
-                  <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-                    Weight
-                  </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=700&auto=format&fit=crop"
-                    alt="Weight Management"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="pt-3.5 px-1">
-                  <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
-                    Weight Management
-                  </h4>
-                  <p className="text-xs text-[#5C6B60]">Low cal, high fibre trays</p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
-                    Shop →
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Goal 3 */}
-            <motion.div variants={scrollItemVariants}>
-              <Link href="/products?category=kids" className="group block">
-                <div className="relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl bg-[#FFC9C0]">
-                  <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-                    Kids
-                  </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://plus.unsplash.com/premium_photo-1666184891926-68f52da26f15?fm=jpg&q=80&w=700&auto=format&fit=crop"
-                    alt="Kids Nutrition"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="pt-3.5 px-1">
-                  <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
-                    Kids Nutrition
-                  </h4>
-                  <p className="text-xs text-[#5C6B60]">Mild, sweet pea shoots</p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
-                    Shop →
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Goal 4 */}
-            <motion.div variants={scrollItemVariants}>
-              <Link href="/products?category=fitness" className="group block">
-                <div className="relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl bg-[#BEE3F5]">
-                  <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-                    Fitness
-                  </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://images.unsplash.com/photo-1610622930110-3c076902312a?fm=jpg&q=80&w=700&auto=format&fit=crop"
-                    alt="Fitness & Recovery"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="pt-3.5 px-1">
-                  <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
-                    Fitness &amp; Recovery
-                  </h4>
-                  <p className="text-xs text-[#5C6B60]">Protein forward sunflower</p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
-                    Shop →
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Goal 5 */}
-            <motion.div variants={scrollItemVariants}>
-              <Link href="/products?category=low-gi" className="group block">
-                <div className="relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl bg-[#E9D8F2]">
-                  <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-                    Low GI
-                  </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://plus.unsplash.com/premium_photo-1699976106481-02baab9811da?fm=jpg&q=80&w=700&auto=format&fit=crop"
-                    alt="Diabetes Friendly"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="pt-3.5 px-1">
-                  <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
-                    Diabetes Friendly
-                  </h4>
-                  <p className="text-xs text-[#5C6B60]">Low glycemic greens</p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
-                    Shop →
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Goal 6 */}
-            <motion.div variants={scrollItemVariants}>
-              <Link href="/products?category=heart" className="group block">
-                <div className="relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl bg-[#F7D9D3]">
-                  <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-                    Heart
-                  </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=700&auto=format&fit=crop"
-                    alt="Heart Health"
-                    className="w-[78%] h-[78%] object-cover heart-clip drop-shadow-[0_10px_14px_rgba(21,31,25,0.28)] group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="pt-3.5 px-1">
-                  <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
-                    Heart Health
-                  </h4>
-                  <p className="text-xs text-[#5C6B60]">Potassium rich mixes</p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
-                    Shop →
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Goal 7 */}
-            <motion.div variants={scrollItemVariants}>
-              <Link href="/products?category=aging" className="group block">
-                <div className="relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl bg-[#D6EDD9]">
-                  <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-                    Aging
-                  </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://plus.unsplash.com/premium_photo-1675368982408-ee5a9e0fab6c?fm=jpg&q=80&w=700&auto=format&fit=crop"
-                    alt="Healthy Aging"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="pt-3.5 px-1">
-                  <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
-                    Healthy Aging
-                  </h4>
-                  <p className="text-xs text-[#5C6B60]">Antioxidant dense trays</p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
-                    Shop →
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Goal 8 */}
-            <motion.div variants={scrollItemVariants}>
-              <Link href="/products" className="group block">
-                <div className="relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl bg-[#EDE1C7]">
-                  <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
-                    All
-                  </span>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://plus.unsplash.com/premium_photo-1661635029307-2183e966e5a8?fm=jpg&q=80&w=700&auto=format&fit=crop"
-                    alt="All Trays"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="pt-3.5 px-1">
-                  <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
-                    All Trays
-                  </h4>
-                  <p className="text-xs text-[#5C6B60]">Every variety we grow</p>
-                  <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
-                    Shop →
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
+              return (
+                <motion.div key={pin.id || index} variants={scrollItemVariants}>
+                  <Link href={pin.link_url || '/products'} className="group block">
+                    <div
+                      className={`relative rounded-2xl overflow-hidden aspect-square flex items-center justify-center transition-transform duration-300 group-hover:-translate-y-1.5 group-hover:shadow-xl ${bgColor}`}
+                    >
+                      {pin.icon && (
+                        <span className="absolute top-3 left-3 z-10 bg-[#FFFDF8]/95 text-[#122A1F] font-mono text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm">
+                          {pin.icon}
+                        </span>
+                      )}
+                      {pin.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={pin.image_url}
+                          alt={pin.title}
+                          className={
+                            isHeart
+                              ? 'w-[78%] h-[78%] object-cover heart-clip drop-shadow-[0_10px_14px_rgba(21,31,25,0.28)] group-hover:scale-105 transition-transform duration-500'
+                              : 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
+                          }
+                        />
+                      ) : (
+                        <span className="text-4xl">🌱</span>
+                      )}
+                    </div>
+                    <div className="pt-3.5 px-1">
+                      <h4 className="font-serif text-base font-semibold text-[#122A1F] mb-1">
+                        {pin.title}
+                      </h4>
+                      {pin.description && (
+                        <p className="text-xs text-[#5C6B60]">{pin.description}</p>
+                      )}
+                      <span className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#1C3F2D] group-hover:gap-2.5 transition-all">
+                        Shop →
+                      </span>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </section>
@@ -722,44 +716,70 @@ export default function HomePageClient({ content, dbPins }: HomePageClientProps)
             viewport={{ once: true, amount: 0.2 }}
             className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mb-10"
           >
-            <motion.div
-              variants={scrollItemVariants}
-              className="pl-4 border-l-2 border-[#CFFA57]/60 hover:border-[#CFFA57] hover:translate-x-1 transition-all duration-300"
-            >
-              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[#B7E23F] block mb-2 font-semibold">
-                Recipe 01 / 24
-              </span>
-              <h3 className="font-serif text-xl sm:text-2xl font-semibold mb-1.5">
-                Microgreens Avocado Toast
-              </h3>
-              <div className="font-mono text-[11px] tracking-wide uppercase text-[#B7E23F] mb-3 font-medium">
-                5 mins · Easy · Serves 1
-              </div>
-              <p className="text-sm text-[#FFFDF8]/90 leading-relaxed">
-                A power packed start to your day with healthy fats, fiber and a burst of nutrition.
-                Sunflower shoots, chilled curd, roasted cumin, mint.
-              </p>
-            </motion.div>
+            {featuredRecipes && featuredRecipes.length > 0 ? (
+              featuredRecipes.map((recipe, idx) => (
+                <motion.div
+                  key={recipe.id}
+                  variants={scrollItemVariants}
+                  className="pl-4 border-l-2 border-[#CFFA57]/60 hover:border-[#CFFA57] hover:translate-x-1 transition-all duration-300"
+                >
+                  <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[#B7E23F] block mb-2 font-semibold">
+                    Recipe {String(idx + 1).padStart(2, '0')}{recipeCount > 0 ? ` / ${recipeCount}` : ''}
+                  </span>
+                  <h3 className="font-serif text-xl sm:text-2xl font-semibold mb-1.5">
+                    <Link href={`/blog/${recipe.slug}`} className="hover:text-[#CFFA57] transition-colors">
+                      {recipe.title}
+                    </Link>
+                  </h3>
+                  {recipe.excerpt && (
+                    <p className="text-sm text-[#FFFDF8]/90 leading-relaxed">
+                      {recipe.excerpt}
+                    </p>
+                  )}
+                </motion.div>
+              ))
+            ) : (
+              <>
+                <motion.div
+                  variants={scrollItemVariants}
+                  className="pl-4 border-l-2 border-[#CFFA57]/60 hover:border-[#CFFA57] hover:translate-x-1 transition-all duration-300"
+                >
+                  <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[#B7E23F] block mb-2 font-semibold">
+                    Recipe 01{recipeCount > 0 ? ` / ${recipeCount}` : ''}
+                  </span>
+                  <h3 className="font-serif text-xl sm:text-2xl font-semibold mb-1.5">
+                    Microgreens Avocado Toast
+                  </h3>
+                  <div className="font-mono text-[11px] tracking-wide uppercase text-[#B7E23F] mb-3 font-medium">
+                    5 mins · Easy · Serves 1
+                  </div>
+                  <p className="text-sm text-[#FFFDF8]/90 leading-relaxed">
+                    A power packed start to your day with healthy fats, fiber and a burst of nutrition.
+                    Sunflower shoots, chilled curd, roasted cumin, mint.
+                  </p>
+                </motion.div>
 
-            <motion.div
-              variants={scrollItemVariants}
-              className="pl-4 border-l-2 border-[#CFFA57]/60 hover:border-[#CFFA57] hover:translate-x-1 transition-all duration-300"
-            >
-              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[#B7E23F] block mb-2 font-semibold">
-                Recipe 02 / 24
-              </span>
-              <h3 className="font-serif text-xl sm:text-2xl font-semibold mb-1.5">
-                Microgreens Poha
-              </h3>
-              <div className="font-mono text-[11px] tracking-wide uppercase text-[#B7E23F] mb-3 font-medium">
-                15 mins · Easy · Serves 2
-              </div>
-              <p className="text-sm text-[#FFFDF8]/90 leading-relaxed">
-                The tricity breakfast you already make, quietly upgraded. Temper mustard seeds, curry
-                leaves and peanuts, fold through soaked poha with turmeric, then kill the heat and stir in
-                a fistful of radish and pea shoots so they stay raw, crunchy and intact.
-              </p>
-            </motion.div>
+                <motion.div
+                  variants={scrollItemVariants}
+                  className="pl-4 border-l-2 border-[#CFFA57]/60 hover:border-[#CFFA57] hover:translate-x-1 transition-all duration-300"
+                >
+                  <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[#B7E23F] block mb-2 font-semibold">
+                    Recipe 02{recipeCount > 0 ? ` / ${recipeCount}` : ''}
+                  </span>
+                  <h3 className="font-serif text-xl sm:text-2xl font-semibold mb-1.5">
+                    Microgreens Poha
+                  </h3>
+                  <div className="font-mono text-[11px] tracking-wide uppercase text-[#B7E23F] mb-3 font-medium">
+                    15 mins · Easy · Serves 2
+                  </div>
+                  <p className="text-sm text-[#FFFDF8]/90 leading-relaxed">
+                    The tricity breakfast you already make, quietly upgraded. Temper mustard seeds, curry
+                    leaves and peanuts, fold through soaked poha with turmeric, then kill the heat and stir in
+                    a fistful of radish and pea shoots so they stay raw, crunchy and intact.
+                  </p>
+                </motion.div>
+              </>
+            )}
           </motion.div>
 
           <motion.div

@@ -48,7 +48,7 @@ VALUES ('homepage', 'why_body_2', 'textarea', 'A single tray of broccoli microgr
 ON CONFLICT (page, key) DO UPDATE SET value_type = EXCLUDED.value_type;
 
 INSERT INTO content_blocks (page, key, value_type, value, updated_at)
-VALUES ('homepage', 'why_cta_text', 'text', 'Shop Fresh Trays →', now())
+VALUES ('homepage', 'why_cta_text', 'text', 'Pathshala →', now())
 ON CONFLICT (page, key) DO UPDATE SET value_type = EXCLUDED.value_type;
 
 INSERT INTO content_blocks (page, key, value_type, value, updated_at)
@@ -149,7 +149,7 @@ VALUES ('product-listing', 'comparison_subtitle', 'textarea', 'Real nutrient den
 ON CONFLICT (page, key) DO UPDATE SET value_type = EXCLUDED.value_type;
 
 INSERT INTO content_blocks (page, key, value_type, value, updated_at)
-VALUES ('product-listing', 'why_choose_title', 'text', 'Why Choose Wild About Greens?', now())
+VALUES ('product-listing', 'why_choose_title', 'text', 'The Lesser Known Fact', now())
 ON CONFLICT (page, key) DO UPDATE SET value_type = EXCLUDED.value_type;
 
 -- ================= PRODUCT-DETAIL =================
@@ -166,7 +166,7 @@ VALUES ('product-detail', 'bundle_banner_image', 'image_url', '', now())
 ON CONFLICT (page, key) DO UPDATE SET value_type = EXCLUDED.value_type;
 
 INSERT INTO content_blocks (page, key, value_type, value, updated_at)
-VALUES ('product-detail', 'bundle_banner_cta_text', 'text', 'Shop Tricity Trio Bundle →', now())
+VALUES ('product-detail', 'bundle_banner_cta_text', 'text', 'Try the Hat Trick Pack →', now())
 ON CONFLICT (page, key) DO UPDATE SET value_type = EXCLUDED.value_type;
 
 INSERT INTO content_blocks (page, key, value_type, value, updated_at)

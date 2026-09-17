@@ -17,10 +17,15 @@ export { cloudinary };
  */
 export function extractPublicIdFromUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== 'string') return null;
-  const uploadIndex = url.indexOf('/image/upload/');
+  let uploadIndex = url.indexOf('/image/upload/');
+  let uploadPrefixLength = '/image/upload/'.length;
+  if (uploadIndex === -1) {
+    uploadIndex = url.indexOf('/video/upload/');
+    uploadPrefixLength = '/video/upload/'.length;
+  }
   if (uploadIndex === -1) return null;
 
-  let pathAfterUpload = url.slice(uploadIndex + '/image/upload/'.length);
+  let pathAfterUpload = url.slice(uploadIndex + uploadPrefixLength);
   pathAfterUpload = pathAfterUpload.split('?')[0];
 
   const parts = pathAfterUpload.split('/');

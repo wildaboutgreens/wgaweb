@@ -13,7 +13,7 @@ export async function GET(
     const { groupKey } = params;
 
     const pins = await sql`
-      SELECT id, group_key, icon, title, description, display_order
+      SELECT id, group_key, icon, title, description, image_url, link_url, display_order
       FROM content_pins
       WHERE group_key = ${groupKey}
         AND is_active = true

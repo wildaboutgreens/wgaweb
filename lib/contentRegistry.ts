@@ -42,6 +42,13 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       description: 'Upload a custom photo for the homepage hero background.',
     },
     {
+      key: 'hero_video_url',
+      label: 'Hero Background Video (Optional)',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Upload a video for the homepage hero background. Autoplay, muted, loop. If set, replaces the hero photo.',
+    },
+    {
       key: 'why_badge',
       label: 'Why Microgreens Badge',
       type: 'text',
@@ -84,7 +91,14 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'why_cta_text',
       label: 'Why Microgreens CTA Button',
       type: 'text',
-      defaultValue: 'Shop Fresh Trays →',
+      defaultValue: 'Pathshala →',
+    },
+    {
+      key: 'why_image',
+      label: 'Why Microgreens Section Image',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Optional image to show in the "Day X beats Day Y" section alongside the data chart.',
     },
     {
       key: 'goals_badge',
@@ -238,7 +252,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'why_choose_title',
       label: 'Why Choose Us Title',
       type: 'text',
-      defaultValue: 'Why Choose Wild About Greens?',
+      defaultValue: 'The Lesser Known Fact',
     },
   ],
 
@@ -267,7 +281,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'bundle_banner_cta_text',
       label: 'Tricity Trio Banner CTA Button',
       type: 'text',
-      defaultValue: 'Shop Tricity Trio Bundle →',
+      defaultValue: 'Try the Hat Trick Pack →',
     },
     {
       key: 'stats_banner_title',
@@ -312,13 +326,6 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Customer Reviews Section Subtitle',
       type: 'text',
       defaultValue: 'Verified reviews from our Tricity community',
-    },
-    {
-      key: 'guarantee_text',
-      label: 'Living Freshness Guarantee',
-      type: 'textarea',
-      defaultValue:
-        "Living Guarantee: If your tray doesn't stay fresh for 7 days on your counter, we replace it free.",
     },
   ],
 
@@ -366,6 +373,27 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       type: 'text',
       defaultValue:
         "We have a different relationship with food and we're out to change yours",
+    },
+    {
+      key: 'story_image_1',
+      label: 'Our Story Photo 1 (Left)',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'First image in the diagonal slice collage of the Our Story section.',
+    },
+    {
+      key: 'story_image_2',
+      label: 'Our Story Photo 2 (Middle)',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Second image in the diagonal slice collage of the Our Story section.',
+    },
+    {
+      key: 'story_image_3',
+      label: 'Our Story Photo 3 (Right)',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Third image in the diagonal slice collage of the Our Story section.',
     },
     {
       key: 'journey_title',
@@ -437,6 +465,22 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       type: 'textarea',
       defaultValue:
         'Get 15% off your first order, plus early access to new varieties, growing tips and tricity-only drops.',
+    },
+  ],
+  'emails': [
+    {
+      key: 'newsletter_thankyou_subject',
+      label: 'Newsletter Thank-You Email Subject',
+      type: 'text',
+      defaultValue: 'Welcome to Wild About Greens! [placeholder — replace with real copy]',
+      description: 'Subject line for the welcome email sent after newsletter signup.',
+    },
+    {
+      key: 'newsletter_thankyou_body',
+      label: 'Newsletter Thank-You Email Body',
+      type: 'textarea',
+      defaultValue: 'Hi there!\n\nWelcome to Wild About Greens — we\'re so glad you\'re here. 🌱\n\n[placeholder — replace with real copy]\n\nStay fresh,\nThe Wild About Greens Team',
+      description: 'Body content for the welcome email. Use plain text with line breaks.',
     },
   ],
 };

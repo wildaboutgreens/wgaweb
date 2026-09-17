@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
   try {
     const sql = getSQL();
     const body = await request.json();
-    const { group_key, icon, title, description, display_order, is_active } = body;
+    const { group_key, icon, title, description, display_order, is_active, image_url, link_url } = body;
 
     if (!group_key || !title) {
       return NextResponse.json(
@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await sql`
-      INSERT INTO content_pins (group_key, icon, title, description, display_order, is_active)
-      VALUES (${group_key}, ${icon || null}, ${title}, ${description || null}, ${display_order ?? 0}, ${is_active ?? true})
+      INSERT INTO content_pins (group_key, icon, title, description, image_url, link_url, display_order, is_active)
+      VALUES (${group_key}, ${icon || null}, ${title}, ${description || null}, ${image_url || null}, ${link_url || null}, ${display_order ?? 0}, ${is_active ?? true})
       RETURNING *
     `;
 

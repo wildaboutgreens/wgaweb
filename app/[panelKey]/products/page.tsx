@@ -20,32 +20,54 @@ interface ProductImage {
   image_url: string;
   display_order: number;
   cloudinary_public_id?: string | null;
+  alt_text?: string | null;
   created_at?: string;
 }
+
+interface HighlightBadge {
+  icon: string;
+  label: string;
+}
+
+const defaultBadges: HighlightBadge[] = [
+  { icon: '⚡', label: '40x Sulforaphane' },
+  { icon: '🛡️', label: 'Zero Pesticides' },
+  { icon: '💧', label: 'Mineral RO Grown' },
+  { icon: '✂️', label: 'Cut to Order' },
+];
 
 interface Product {
   id: string;
   slug: string;
   name: string;
-  category: string;
+  categories: string[];
   description: string;
   nutrition_notes: string | null;
   thumbnail_url: string | null;
+  thumbnail_alt_text?: string | null;
   tags: string[];
+  badge_label?: string | null;
+  highlight_1?: string | null;
+  highlight_2?: string | null;
   is_bundle: boolean;
   is_active: boolean;
   variants?: Variant[];
   images?: ProductImage[];
+  detail_highlight_badges?: HighlightBadge[] | null;
 }
 
 const emptyProduct = {
   name: '',
   slug: '',
-  category: '',
+  categories: [] as string[],
   description: '',
   nutrition_notes: '',
   thumbnail_url: '',
+  thumbnail_alt_text: '',
   tags: [] as string[],
+  badge_label: '',
+  highlight_1: '',
+  highlight_2: '',
   is_bundle: false,
   is_active: true,
 };
@@ -69,6 +91,27 @@ export default function AdminProductsPage() {
   const [variantForm, setVariantForm] = useState(emptyVariant);
   const [showVariantForm, setShowVariantForm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [catInput, setCatInput] = useState('');
+  const [showCatDropdown, setShowCatDropdown] = useState(false);
+  const [badges, setBadges] = useState<HighlightBadge[]>(defaultBadges);
+
+  const handleBadgeChange = (index: number, field: 'icon' | 'label', value: string) => {
+    setBadges((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddBadge = () => {
+    if (badges.length >= 4) return;
+    setBadges((prev) => [...prev, { icon: '🌱', label: '' }]);
+  };
+
+  const handleRemoveBadge = (index: number) => {
+    setBadges((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const loadProducts = async () => {
     const res = await adminFetch('/api/admin/products');
@@ -77,6 +120,10 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     loadProducts();
+    fetch('/api/products/categories')
+      .then((r) => r.json())
+      .then(setAllCategories)
+      .catch(() => {});
   }, []);
 
   const loadProduct = async (id: string) => {
@@ -87,17 +134,26 @@ export default function AdminProductsPage() {
       setForm({
         name: data.name || '',
         slug: data.slug || '',
-        category: data.category || '',
+        categories: Array.isArray(data.categories) ? data.categories : (data.category ? [data.category] : []),
         description: data.description || '',
         nutrition_notes: data.nutrition_notes || '',
         thumbnail_url: data.thumbnail_url || '',
+        thumbnail_alt_text: data.thumbnail_alt_text || '',
         tags: Array.isArray(data.tags) ? data.tags : [],
+        badge_label: data.badge_label || '',
+        highlight_1: data.highlight_1 || '',
+        highlight_2: data.highlight_2 || '',
         is_bundle: data.is_bundle ?? false,
         is_active: data.is_active ?? true,
       });
       setTagString(Array.isArray(data.tags) ? data.tags.join(', ') : '');
       setVariants(data.variants || []);
       setImages(data.images || []);
+      if (Array.isArray(data.detail_highlight_badges) && data.detail_highlight_badges.length > 0) {
+        setBadges(data.detail_highlight_badges);
+      } else {
+        setBadges(defaultBadges);
+      }
     }
   };
 
@@ -112,6 +168,7 @@ export default function AdminProductsPage() {
       const payload = {
         ...form,
         tags: parsedTags,
+        detail_highlight_badges: badges,
       };
 
       if (isNew) {
@@ -121,9 +178,10 @@ export default function AdminProductsPage() {
           body: JSON.stringify(payload),
         });
         if (res.ok) {
+          const created = await res.json();
           setIsNew(false);
-          setEditing(null);
           loadProducts();
+          loadProduct(created.id);
         }
       } else if (editing) {
         const res = await adminFetch(`/api/admin/products/${editing.id}`, {
@@ -219,12 +277,74 @@ export default function AdminProductsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-              <input
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg text-sm"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categories</label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {form.categories.map((cat) => (
+                  <span key={cat} className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-xs font-medium px-2.5 py-1 rounded-full border border-emerald-200">
+                    {cat.replace(/-/g, ' ')}
+                    <button type="button" onClick={() => setForm(prev => ({ ...prev, categories: prev.categories.filter(c => c !== cat) }))} className="text-emerald-500 hover:text-red-500 ml-0.5">&times;</button>
+                  </span>
+                ))}
+              </div>
+              <div className="relative">
+                <input
+                  value={catInput}
+                  onChange={(e) => { setCatInput(e.target.value); setShowCatDropdown(true); }}
+                  onFocus={() => setShowCatDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowCatDropdown(false), 200)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && catInput.trim()) {
+                      e.preventDefault();
+                      const val = catInput.trim().toLowerCase().replace(/\s+/g, '-');
+                      if (!form.categories.includes(val)) {
+                        setForm(prev => ({ ...prev, categories: [...prev.categories, val] }));
+                      }
+                      setCatInput('');
+                      setShowCatDropdown(false);
+                    }
+                  }}
+                  placeholder="Type to search or add a category…"
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                />
+                {showCatDropdown && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-auto">
+                    {allCategories
+                      .filter(c => !form.categories.includes(c) && c.toLowerCase().includes(catInput.toLowerCase()))
+                      .map(cat => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setForm(prev => ({ ...prev, categories: [...prev.categories, cat] }));
+                            setCatInput('');
+                            setShowCatDropdown(false);
+                          }}
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 capitalize"
+                        >
+                          {cat.replace(/-/g, ' ')}
+                        </button>
+                      ))}
+                    {catInput.trim() && !allCategories.includes(catInput.trim().toLowerCase().replace(/\s+/g, '-')) && (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          const val = catInput.trim().toLowerCase().replace(/\s+/g, '-');
+                          if (!form.categories.includes(val)) {
+                            setForm(prev => ({ ...prev, categories: [...prev.categories, val] }));
+                          }
+                          setCatInput('');
+                          setShowCatDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50 font-medium"
+                      >
+                        + Create &ldquo;{catInput.trim()}&rdquo;
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
@@ -235,6 +355,89 @@ export default function AdminProductsPage() {
                 className="w-full px-3 py-2 border rounded-lg text-sm"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Badge Label</label>
+              <input
+                value={form.badge_label}
+                onChange={(e) => setForm({ ...form, badge_label: e.target.value })}
+                placeholder="e.g. Bestseller, Customer Favorite"
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Highlight Line 1</label>
+              <input
+                value={form.highlight_1}
+                onChange={(e) => setForm({ ...form, highlight_1: e.target.value })}
+                placeholder="e.g. 40x sulforaphane vs mature head"
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Highlight Line 2</label>
+              <input
+                value={form.highlight_2}
+                onChange={(e) => setForm({ ...form, highlight_2: e.target.value })}
+                placeholder="e.g. Living tray · 7 to 10 days fresh"
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Detail Highlight Badges (max 4) */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900">
+                  Detail Highlight Badges (Max 4)
+                </label>
+                <p className="text-xs text-gray-500">
+                  The 4 feature chips shown under the description on the public product page (e.g. ⚡ 40x Sulforaphane).
+                </p>
+              </div>
+              {badges.length < 4 && (
+                <button
+                  type="button"
+                  onClick={handleAddBadge}
+                  className="px-3 py-1.5 text-xs font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  + Add Badge
+                </button>
+              )}
+            </div>
+
+            {badges.length === 0 ? (
+              <p className="text-xs text-gray-400 italic">No custom badges set. The default 4 badges will be displayed.</p>
+            ) : (
+              <div className="space-y-2">
+                {badges.map((b, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Icon (e.g. ⚡)"
+                      value={b.icon}
+                      onChange={(e) => handleBadgeChange(idx, 'icon', e.target.value)}
+                      className="w-20 px-2 py-1.5 border rounded-lg text-sm text-center bg-white"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Badge Label (e.g. 40x Sulforaphane)"
+                      value={b.label}
+                      onChange={(e) => handleBadgeChange(idx, 'label', e.target.value)}
+                      className="flex-1 px-3 py-1.5 border rounded-lg text-sm bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveBadge(idx)}
+                      className="text-red-500 hover:text-red-700 p-1.5 text-sm font-bold"
+                      title="Remove badge"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Thumbnail upload field */}
@@ -246,6 +449,8 @@ export default function AdminProductsPage() {
               aspectRatio="1/1"
               folder={`products/${form.slug?.trim() || editing?.slug || 'new-product'}/thumbnail`}
               publicId="thumbnail"
+              altText={form.thumbnail_alt_text || ''}
+              onAltTextChange={(val) => setForm((prev) => ({ ...prev, thumbnail_alt_text: val }))}
             />
           </div>
           <div>
@@ -283,6 +488,13 @@ export default function AdminProductsPage() {
               />
               Bundle
             </label>
+          </div>
+          <div className="flex gap-2">
+            {isNew && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 w-full">
+                💡 <strong>Image Gallery</strong> will appear here right after you save — it needs a product ID first.
+              </p>
+            )}
           </div>
           <div className="flex gap-2">
             <button
@@ -334,6 +546,17 @@ export default function AdminProductsPage() {
                     }}
                     aspectRatio="1/1"
                     folder={`products/${form.slug?.trim() || editing.slug || 'product'}/gallery`}
+                    altText={img.alt_text || ''}
+                    onAltTextChange={async (alt) => {
+                      await adminFetch(`/api/admin/images/${img.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          alt_text: alt,
+                        }),
+                      });
+                      loadProduct(editing.id);
+                    }}
                   />
                   <div className="flex items-center justify-between gap-1 pt-1 border-t">
                     <div className="flex items-center gap-1">
@@ -501,6 +724,7 @@ export default function AdminProductsPage() {
           onClick={() => {
             setIsNew(true);
             setForm(emptyProduct);
+            setBadges(defaultBadges);
           }}
           className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800"
         >
@@ -538,7 +762,7 @@ export default function AdminProductsPage() {
                 </td>
                 <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
                 <td className="px-4 py-3 text-gray-500 capitalize">
-                  {p.category.replace(/-/g, ' ')}
+                  {(p.categories || []).map(c => c.replace(/-/g, ' ')).join(', ')}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">

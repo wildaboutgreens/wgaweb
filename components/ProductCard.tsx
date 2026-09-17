@@ -14,6 +14,7 @@ interface ProductCardProps {
   category: string;
   description?: string;
   thumbnail_url?: string | null;
+  thumbnail_alt_text?: string | null;
   variants: Variant[];
 }
 
@@ -23,6 +24,7 @@ export default function ProductCard({
   category,
   description,
   thumbnail_url,
+  thumbnail_alt_text,
   variants,
 }: ProductCardProps) {
   const activeVariants = variants.filter((v) => v.is_active);
@@ -42,7 +44,7 @@ export default function ProductCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={thumbnail_url}
-            alt={name}
+            alt={thumbnail_alt_text || name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (

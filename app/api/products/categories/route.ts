@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const sql = getSQL();
     const result = await sql`
-      SELECT DISTINCT category
+      SELECT DISTINCT unnest(categories) AS category
       FROM products
       WHERE is_active = true
       ORDER BY category ASC

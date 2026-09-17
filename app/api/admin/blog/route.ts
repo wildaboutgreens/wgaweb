@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   try {
     const sql = getSQL();
     const body = await request.json();
-    const { slug, title, excerpt, content, cover_image_url, is_published, post_type } = body;
+    const { slug, title, excerpt, content, cover_image_url, cover_image_alt_text, is_published, post_type, show_on_homepage } = body;
 
     if (!slug || !title || !content) {
       return NextResponse.json(
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
     const publishedAt = is_published ? new Date().toISOString() : null;
 
     const result = await sql`
-      INSERT INTO blog_posts (slug, title, excerpt, content, cover_image_url, is_published, published_at, post_type)
-      VALUES (${slug}, ${title}, ${excerpt || null}, ${content}, ${cover_image_url || null}, ${is_published || false}, ${publishedAt}, ${type})
+      INSERT INTO blog_posts (slug, title, excerpt, content, cover_image_url, cover_image_alt_text, is_published, published_at, post_type, show_on_homepage)
+      VALUES (${slug}, ${title}, ${excerpt || null}, ${content}, ${cover_image_url || null}, ${cover_image_alt_text || null}, ${is_published || false}, ${publishedAt}, ${type}, ${show_on_homepage || false})
       RETURNING *
     `;
 

@@ -13,7 +13,7 @@ export async function PUT(
     const { id } = params;
     const body = await request.json();
 
-    const { display_order, image_url, cloudinary_public_id } = body;
+    const { display_order, image_url, cloudinary_public_id, alt_text } = body;
 
     const existing = await sql`SELECT * FROM product_images WHERE id = ${id}`;
     if (existing.length === 0) {
@@ -37,7 +37,8 @@ export async function PUT(
       SET
         display_order = COALESCE(${typeof display_order === 'number' ? display_order : null}, display_order),
         image_url = COALESCE(${image_url ?? null}, image_url),
-        cloudinary_public_id = COALESCE(${cloudinary_public_id ?? null}, cloudinary_public_id)
+        cloudinary_public_id = COALESCE(${cloudinary_public_id ?? null}, cloudinary_public_id),
+        alt_text = CASE WHEN ${alt_text !== undefined} THEN ${alt_text ?? null} ELSE alt_text END
       WHERE id = ${id}
       RETURNING *
     `;

@@ -4,10 +4,24 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://wildaboutgreens.com';
+
 export const metadata: Metadata = {
   title: 'Wild About Greens · Living Microgreens Delivered Fresh',
   description:
     'Grown locally on vertical indoor racks across Chandigarh, Mohali & Panchkula. Pure mineral water, non GMO seeds, zero pesticides. Cut to order.',
+  openGraph: {
+    type: 'website',
+    siteName: 'Wild About Greens',
+    title: 'Wild About Greens · Living Microgreens Delivered Fresh',
+    description: 'Grown locally on vertical indoor racks across Chandigarh, Mohali & Panchkula. Pure mineral water, non GMO seeds, zero pesticides. Cut to order.',
+    url: siteUrl,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Wild About Greens · Living Microgreens Delivered Fresh',
+    description: 'Grown locally on vertical indoor racks across Chandigarh, Mohali & Panchkula. Pure mineral water, non GMO seeds, zero pesticides.',
+  },
 };
 
 export default function RootLayout({

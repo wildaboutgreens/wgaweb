@@ -11,8 +11,10 @@ interface Post {
   content: string;
   excerpt: string | null;
   cover_image_url: string | null;
+  cover_image_alt_text?: string | null;
   post_type: 'article' | 'recipe';
   is_published: boolean;
+  show_on_homepage: boolean;
   published_at: string | null;
   created_at: string;
 }
@@ -23,8 +25,10 @@ const emptyPost = {
   content: '',
   excerpt: '',
   cover_image_url: '',
+  cover_image_alt_text: '',
   post_type: 'article' as 'article' | 'recipe',
   is_published: false,
+  show_on_homepage: false,
 };
 
 export default function AdminBlogPage() {
@@ -56,8 +60,10 @@ export default function AdminBlogPage() {
         content: data.content,
         excerpt: data.excerpt || '',
         cover_image_url: data.cover_image_url || '',
+        cover_image_alt_text: data.cover_image_alt_text || '',
         post_type: data.post_type || 'article',
         is_published: data.is_published,
+        show_on_homepage: data.show_on_homepage || false,
       });
     }
   };
@@ -186,6 +192,8 @@ export default function AdminBlogPage() {
               aspectRatio="16/9"
               folder={`blog/${form.slug?.trim() || editing?.slug || 'new-post'}/cover`}
               publicId="cover"
+              altText={form.cover_image_alt_text || ''}
+              onAltTextChange={(alt) => setForm({ ...form, cover_image_alt_text: alt })}
             />
           </div>
           <label className="flex items-center gap-2 text-sm">
@@ -195,6 +203,14 @@ export default function AdminBlogPage() {
               onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
             />
             Published
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.show_on_homepage}
+              onChange={(e) => setForm({ ...form, show_on_homepage: e.target.checked })}
+            />
+            Show on Homepage
           </label>
           <div className="flex gap-2">
             <button

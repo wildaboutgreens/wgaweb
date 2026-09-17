@@ -12,7 +12,7 @@ export async function POST(
     const { id: productId } = params;
     const body = await request.json();
 
-    const { image_url, display_order, cloudinary_public_id } = body;
+    const { image_url, display_order, cloudinary_public_id, alt_text } = body;
 
     if (!image_url || typeof image_url !== 'string') {
       return NextResponse.json(
@@ -24,8 +24,8 @@ export async function POST(
     const order = typeof display_order === 'number' ? display_order : 0;
 
     const result = await sql`
-      INSERT INTO product_images (product_id, image_url, display_order, cloudinary_public_id)
-      VALUES (${productId}, ${image_url}, ${order}, ${cloudinary_public_id ?? null})
+      INSERT INTO product_images (product_id, image_url, display_order, cloudinary_public_id, alt_text)
+      VALUES (${productId}, ${image_url}, ${order}, ${cloudinary_public_id ?? null}, ${alt_text ?? null})
       RETURNING *
     `;
 

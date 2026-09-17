@@ -1,7 +1,22 @@
+import type { Metadata } from 'next';
 import { getSQL } from '@/lib/db';
 import ProductListClient from './ProductListClient';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Shop Living Microgreens · Wild About Greens',
+  description: 'Browse our range of living microgreen trays — broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning in Chandigarh, Mohali & Panchkula.',
+  openGraph: {
+    title: 'Shop Living Microgreens · Wild About Greens',
+    description: 'Browse our range of living microgreen trays — broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Shop Living Microgreens · Wild About Greens',
+    description: 'Browse our range of living microgreen trays. Cut to order, delivered on harvest morning.',
+  },
+};
 
 export interface Variant {
   id: string;
@@ -18,17 +33,22 @@ export interface ProductImage {
   product_id: string;
   image_url: string;
   display_order: number;
+  alt_text?: string | null;
 }
 
 export interface Product {
   id: string;
   slug: string;
   name: string;
-  category: string;
+  categories: string[];
   description: string;
   nutrition_notes: string | null;
   thumbnail_url: string | null;
+  thumbnail_alt_text?: string | null;
   tags: string[];
+  badge_label?: string | null;
+  highlight_1?: string | null;
+  highlight_2?: string | null;
   is_bundle: boolean;
   variants: Variant[];
   images?: ProductImage[];
@@ -38,11 +58,15 @@ interface ProductRow {
   id: string;
   slug: string;
   name: string;
-  category: string;
+  categories: string[];
   description: string;
   nutrition_notes: string | null;
   thumbnail_url: string | null;
+  thumbnail_alt_text: string | null;
   tags: string[];
+  badge_label?: string | null;
+  highlight_1?: string | null;
+  highlight_2?: string | null;
   is_bundle: boolean;
 }
 
@@ -54,8 +78,8 @@ async function getProducts(): Promise<Product[]> {
   try {
     const sql = getSQL();
     const products = await sql`
-      SELECT id, slug, name, category, description, nutrition_notes,
-             thumbnail_url, tags, is_bundle
+      SELECT id, slug, name, categories, description, nutrition_notes,
+             thumbnail_url, thumbnail_alt_text, tags, badge_label, highlight_1, highlight_2, is_bundle
       FROM products
       WHERE is_active = true
       ORDER BY is_bundle ASC, created_at ASC
@@ -73,7 +97,7 @@ async function getProducts(): Promise<Product[]> {
         ORDER BY price_paise ASC
       `,
       sql`
-        SELECT id, product_id, image_url, display_order
+        SELECT id, product_id, image_url, display_order, alt_text
         FROM product_images
         WHERE product_id = ANY(${productIds})
         ORDER BY display_order ASC, created_at ASC
@@ -98,7 +122,7 @@ async function getCategories(): Promise<string[]> {
   try {
     const sql = getSQL();
     const rows = await sql`
-      SELECT DISTINCT category
+      SELECT DISTINCT unnest(categories) AS category
       FROM products
       WHERE is_active = true
       ORDER BY category ASC
@@ -130,11 +154,40 @@ async function getContentMap(): Promise<Record<string, string>> {
   }
 }
 
+export interface WhyChoosePin {
+  id: string;
+  group_key: string;
+  icon: string | null;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  link_url: string | null;
+  display_order: number;
+}
+
+async function getWhyChoosePins(): Promise<WhyChoosePin[]> {
+  try {
+    const sql = getSQL();
+    const pins = await sql`
+      SELECT id, group_key, icon, title, description, image_url, link_url, display_order
+      FROM content_pins
+      WHERE group_key = 'product_listing_why_choose'
+        AND is_active = true
+      ORDER BY display_order ASC
+    `;
+    return pins as unknown as WhyChoosePin[];
+  } catch (err) {
+    console.error('Error fetching why choose pins:', err);
+    return [];
+  }
+}
+
 export default async function ProductsPage() {
-  const [products, categories, content] = await Promise.all([
+  const [products, categories, content, whyChoosePins] = await Promise.all([
     getProducts(),
     getCategories(),
     getContentMap(),
+    getWhyChoosePins(),
   ]);
 
   return (
@@ -142,6 +195,7 @@ export default async function ProductsPage() {
       initialProducts={products}
       initialCategories={categories}
       content={content}
+      initialWhyChoosePins={whyChoosePins}
     />
   );
 }

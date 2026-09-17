@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
-import { Product, Variant, RelatedProduct } from './page';
+import { Product, Variant, RelatedProduct, Review, HighlightBadge } from './page';
 
 const REVIEWS = [
   {
@@ -70,11 +71,38 @@ export default function ProductDetailClient({
   product,
   relatedProducts,
   content = {},
+  reviews = [],
 }: {
   product: Product;
   relatedProducts: RelatedProduct[];
   content?: Record<string, string>;
+  reviews?: Review[];
 }) {
+  const shouldReduceMotion = useReducedMotion();
+
+  const effectiveBadges: HighlightBadge[] =
+    Array.isArray(product.detail_highlight_badges) && product.detail_highlight_badges.length > 0
+      ? product.detail_highlight_badges
+      : [
+          { icon: '⚡', label: '40x Sulforaphane' },
+          { icon: '🛡️', label: 'Zero Pesticides' },
+          { icon: '💧', label: 'Mineral RO Grown' },
+          { icon: '✂️', label: 'Cut to Order' },
+        ];
+
+  const effectiveReviews: Review[] =
+    reviews && reviews.length > 0
+      ? reviews
+      : REVIEWS.map((r, i) => ({
+          id: `seed-${i}`,
+          product_id: null,
+          reviewer_name: r.name,
+          reviewer_location: r.loc,
+          review_text: r.text,
+          rating: r.rating,
+          display_order: i + 1,
+          is_active: true,
+        }));
   const activeVariants = product.variants.filter((v) => v.is_active);
   const [selectedVariant, setSelectedVariant] = useState<Variant>(
     activeVariants[0] || {
@@ -93,10 +121,13 @@ export default function ProductDetailClient({
     product.images.length > 0
       ? product.images
           .sort((a, b) => a.display_order - b.display_order)
-          .map((img) => img.image_url)
+          .map((img, i) => ({
+            url: img.image_url,
+            alt: img.alt_text || `${product.name} - image ${i + 1}`,
+          }))
       : product.thumbnail_url
-        ? [product.thumbnail_url]
-        : ['/placeholder.png'];
+        ? [{ url: product.thumbnail_url, alt: product.thumbnail_alt_text || product.name }]
+        : [{ url: '/placeholder.png', alt: product.name }];
 
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [plan, setPlan] = useState<'single' | 'subscription'>('single');
@@ -234,8 +265,8 @@ export default function ProductDetailClient({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   key={activeImgIdx}
-                  src={PRODUCT_IMAGES[activeImgIdx]}
-                  alt={product.name}
+                  src={PRODUCT_IMAGES[activeImgIdx]?.url}
+                  alt={PRODUCT_IMAGES[activeImgIdx]?.alt || product.name}
                   className="w-full h-full object-cover rounded-xl transition-all duration-300"
                 />
               </div>
@@ -253,7 +284,11 @@ export default function ProductDetailClient({
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={img} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                    <img
+                      src={img.url}
+                      alt={img.alt || `${product.name} thumbnail ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
                   </button>
                 ))}
               </div>
@@ -301,20 +336,38 @@ export default function ProductDetailClient({
               </div>
 
               {/* Benefit Chips */}
-              <div className="flex flex-wrap gap-2.5 mb-8">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF8] border border-[#E4DDC8] text-xs font-semibold text-[#122A1F] shadow-sm">
-                  ⚡ 40x Sulforaphane
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF8] border border-[#E4DDC8] text-xs font-semibold text-[#122A1F] shadow-sm">
-                  🛡️ Zero Pesticides
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF8] border border-[#E4DDC8] text-xs font-semibold text-[#122A1F] shadow-sm">
-                  💧 Mineral RO Grown
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF8] border border-[#E4DDC8] text-xs font-semibold text-[#122A1F] shadow-sm">
-                  ✂️ Cut to Order
-                </span>
-              </div>
+              <motion.div
+                className="flex flex-wrap gap-2.5 mb-8"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-20px' }}
+                variants={{
+                  visible: {
+                    transition: {
+                      staggerChildren: shouldReduceMotion ? 0 : 0.06,
+                    },
+                  },
+                  hidden: {},
+                }}
+              >
+                {effectiveBadges.map((badge, idx) => (
+                  <motion.span
+                    key={idx}
+                    variants={{
+                      hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 8 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        transition: { duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeOut' },
+                      },
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFFDF8] border border-[#E4DDC8] text-xs font-semibold text-[#122A1F] shadow-sm"
+                  >
+                    <span>{badge.icon}</span>
+                    <span>{badge.label}</span>
+                  </motion.span>
+                ))}
+              </motion.div>
 
               {/* BUY BOX */}
               <div
@@ -463,14 +516,7 @@ export default function ProductDetailClient({
                 <div className="space-y-1.5 mt-4 text-xs text-[#5C6B60]">
                   <div className="flex items-center gap-2">
                     <span>🌱</span>
-                    <span>Harvested on the morning of delivery in Chandigarh, Mohali &amp; Panchkula</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-[#1C3F2D] font-medium">
-                    <span>🛡️</span>
-                    <span>
-                      {content.guarantee_text ||
-                        "Living Guarantee: If your tray doesn't stay fresh for 7 days on your counter, we replace it free."}
-                    </span>
+                    <span>Harvested on the morning of delivery.</span>
                   </div>
                 </div>
               </div>
@@ -481,95 +527,139 @@ export default function ProductDetailClient({
                 <div className="border-b border-[#E4DDC8]">
                   <button
                     onClick={() => setOpenAcc(openAcc === 0 ? null : 0)}
-                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19]"
+                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
                   >
                     <span>How to Eat &amp; Store</span>
-                    <span className="font-mono text-xl text-[#1C3F2D]">
+                    <span className="font-mono text-xl text-[#1C3F2D] select-none">
                       {openAcc === 0 ? '−' : '+'}
                     </span>
                   </button>
-                  {openAcc === 0 && (
-                    <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
-                      <p>
-                        Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of
-                        water to the bottom drip tray once a day.
-                      </p>
-                      <p>
-                        When ready to eat, simply snip what you need with kitchen scissors right above the root
-                        line. Your tray stays living and fresh for 7 to 10 days!
-                      </p>
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {openAcc === 0 && (
+                      <motion.div
+                        key="acc-0"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
+                          <p>
+                            Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of
+                            water to the bottom drip tray once a day.
+                          </p>
+                          <p>
+                            When ready to eat, simply snip what you need with kitchen scissors right above the root
+                            line. Your tray stays living and fresh for 7 to 10 days!
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Accordion 2 */}
                 <div className="border-b border-[#E4DDC8]">
                   <button
                     onClick={() => setOpenAcc(openAcc === 1 ? null : 1)}
-                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19]"
+                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
                   >
                     <span>Nutrient Profile &amp; Science</span>
-                    <span className="font-mono text-xl text-[#1C3F2D]">
+                    <span className="font-mono text-xl text-[#1C3F2D] select-none">
                       {openAcc === 1 ? '−' : '+'}
                     </span>
                   </button>
-                  {openAcc === 1 && (
-                    <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
-                      <p>
-                        USDA and university studies have confirmed that day 10 microgreens contain between
-                        10x and 40x the vital micronutrients of their full grown counterparts.
-                      </p>
-                      <p>
-                        Broccoli microgreens are world-famous for glucoraphanin, which converts into active
-                        sulforaphane: a potent natural cellular detoxifier.
-                      </p>
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {openAcc === 1 && (
+                      <motion.div
+                        key="acc-1"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
+                          <p>
+                            USDA and university studies have confirmed that day 10 microgreens contain between
+                            10x and 40x the vital micronutrients of their full grown counterparts.
+                          </p>
+                          <p>
+                            Broccoli microgreens are world-famous for glucoraphanin, which converts into active
+                            sulforaphane: a potent natural cellular detoxifier.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Accordion 3 */}
                 <div className="border-b border-[#E4DDC8]">
                   <button
                     onClick={() => setOpenAcc(openAcc === 2 ? null : 2)}
-                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19]"
+                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
                   >
                     <span>Growing Method &amp; Purity</span>
-                    <span className="font-mono text-xl text-[#1C3F2D]">
+                    <span className="font-mono text-xl text-[#1C3F2D] select-none">
                       {openAcc === 2 ? '−' : '+'}
                     </span>
                   </button>
-                  {openAcc === 2 && (
-                    <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
-                      <p>
-                        We operate vertical indoor climate racks in the Tricity. No soil, no organic compost
-                        pathogens, and absolutely zero pesticide or fertilizer residues.
-                      </p>
-                      <p>
-                        Grown on sterilized coco peat with 100% reverse osmosis mineral drinking water.
-                      </p>
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {openAcc === 2 && (
+                      <motion.div
+                        key="acc-2"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
+                          <p>
+                            We operate vertical indoor climate racks in the Tricity. No soil, no organic compost
+                            pathogens, and absolutely zero pesticide or fertilizer residues.
+                          </p>
+                          <p>
+                            Grown on sterilized coco peat with 100% reverse osmosis mineral drinking water.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
 
                 {/* Accordion 4 */}
                 <div className="border-b border-[#E4DDC8]">
                   <button
                     onClick={() => setOpenAcc(openAcc === 3 ? null : 3)}
-                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19]"
+                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
                   >
                     <span>Delivery &amp; Packaging</span>
-                    <span className="font-mono text-xl text-[#1C3F2D]">
+                    <span className="font-mono text-xl text-[#1C3F2D] select-none">
                       {openAcc === 3 ? '−' : '+'}
                     </span>
                   </button>
-                  {openAcc === 3 && (
-                    <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
-                      <p>
-                        Delivered in our reusable food-grade living trays. We dispatch orders within hours
-                        of the final quality check across Chandigarh, Mohali, and Panchkula.
-                      </p>
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {openAcc === 3 && (
+                      <motion.div
+                        key="acc-3"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
+                          <p>
+                            Delivered in our reusable food-grade living trays. We dispatch orders within hours
+                            of the final quality check across Chandigarh, Mohali, and Panchkula.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 
@@ -621,7 +711,7 @@ export default function ProductDetailClient({
                 content.bundle_banner_image ||
                 'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=85&w=1200&auto=format&fit=crop'
               }
-              alt="Tricity Trio"
+              alt={content.bundle_banner_image_alt || content.bundle_banner_title || 'Tricity Trio'}
               className="w-full h-full object-cover"
             />
           </div>
@@ -639,7 +729,7 @@ export default function ProductDetailClient({
               href="/products?category=bundle"
               className="inline-flex items-center justify-center bg-[#151F19] text-white font-bold text-xs uppercase tracking-wider px-7 py-3.5 rounded-full hover:-translate-y-0.5 hover:shadow-lg transition-all mt-2"
             >
-              {content.bundle_banner_cta_text || 'Shop Tricity Trio Bundle →'}
+              {content.bundle_banner_cta_text || 'Try the Hat Trick Pack →'}
             </Link>
           </div>
         </div>
@@ -767,23 +857,49 @@ export default function ProductDetailClient({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {REVIEWS.map((rev, i) => (
-              <div
-                key={i}
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-40px' }}
+            variants={{
+              visible: {
+                transition: {
+                  staggerChildren: shouldReduceMotion ? 0 : 0.08,
+                },
+              },
+              hidden: {},
+            }}
+          >
+            {effectiveReviews.map((rev, i) => (
+              <motion.div
+                key={rev.id || i}
+                variants={{
+                  hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 16 },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    transition: { duration: shouldReduceMotion ? 0 : 0.25, ease: 'easeOut' },
+                  },
+                }}
                 className="bg-white rounded-2xl p-5 flex flex-col justify-between shadow-sm border border-black/5"
               >
                 <p className="text-xs leading-relaxed text-[#151F19] italic mb-4">
-                  &ldquo;{rev.text}&rdquo;
+                  &ldquo;{rev.review_text}&rdquo;
                 </p>
                 <div className="pt-3 border-t border-[#E4DDC8]">
-                  <div className="font-bold text-xs text-[#151F19]">{rev.name}</div>
-                  <div className="font-mono text-[10px] text-[#5C6B60]">{rev.loc}</div>
-                  <div className="text-[#FF9F5A] text-xs tracking-wider mt-1">★★★★★</div>
+                  <div className="font-bold text-xs text-[#151F19]">{rev.reviewer_name}</div>
+                  {rev.reviewer_location && (
+                    <div className="font-mono text-[10px] text-[#5C6B60]">{rev.reviewer_location}</div>
+                  )}
+                  <div className="text-[#FF9F5A] text-xs tracking-wider mt-1">
+                    {'★'.repeat(rev.rating || 5)}
+                    {'☆'.repeat(5 - (rev.rating || 5))}
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -900,7 +1016,7 @@ export default function ProductDetailClient({
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={rel.thumbnail_url}
-                        alt={rel.name}
+                        alt={rel.thumbnail_alt_text || rel.name}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -909,7 +1025,7 @@ export default function ProductDetailClient({
                   </div>
                   <div>
                     <span className="font-mono text-[9px] uppercase tracking-wider text-[#5C6B60] block mb-1">
-                      {rel.category.replace(/-/g, ' ')}
+                      {(rel.categories || []).map(c => c.replace(/-/g, ' ')).join(', ')}
                     </span>
                     <h4 className="font-serif text-base font-semibold text-[#122A1F] leading-snug mb-1">
                       {rel.name}
@@ -994,8 +1110,8 @@ export default function ProductDetailClient({
           <div className="flex items-center gap-3 min-w-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={PRODUCT_IMAGES[0]}
-              alt="Thumb"
+              src={PRODUCT_IMAGES[0]?.url}
+              alt={PRODUCT_IMAGES[0]?.alt || product.name}
               className="w-11 h-11 rounded-lg object-cover border border-black/10 flex-shrink-0"
             />
             <div className="min-w-0">

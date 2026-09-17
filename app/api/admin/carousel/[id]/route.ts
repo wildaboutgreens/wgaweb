@@ -11,7 +11,7 @@ export async function PUT(
     const sql = getSQL();
     const { id } = params;
     const body = await request.json();
-    const { image_url, link_url, display_order, is_active, carousel_key, cloudinary_public_id } = body;
+    const { image_url, link_url, display_order, is_active, carousel_key, cloudinary_public_id, alt_text } = body;
 
     const existing = await sql`SELECT * FROM carousel_slides WHERE id = ${id}`;
     if (existing.length === 0) {
@@ -38,7 +38,8 @@ export async function PUT(
         display_order        = COALESCE(${display_order ?? null}, display_order),
         is_active            = COALESCE(${is_active ?? null}, is_active),
         carousel_key         = COALESCE(${carousel_key ?? null}, carousel_key),
-        cloudinary_public_id = COALESCE(${cloudinary_public_id ?? null}, cloudinary_public_id)
+        cloudinary_public_id = COALESCE(${cloudinary_public_id ?? null}, cloudinary_public_id),
+        alt_text             = CASE WHEN ${alt_text !== undefined} THEN ${alt_text ?? null} ELSE alt_text END
       WHERE id = ${id}
       RETURNING *
     `;

@@ -30,7 +30,7 @@ export async function GET(
     `;
 
     const images = await sql`
-      SELECT id, product_id, image_url, display_order, cloudinary_public_id, created_at
+      SELECT id, product_id, image_url, display_order, cloudinary_public_id, alt_text, created_at
       FROM product_images
       WHERE product_id = ${id}
       ORDER BY display_order ASC, created_at ASC
@@ -53,22 +53,28 @@ export async function PUT(
     const { id } = params;
     const body = await request.json();
 
-    const { slug, name, category, description, nutrition_notes, is_bundle, is_active, thumbnail_url, tags } = body;
+    const { slug, name, categories, badge_label, highlight_1, highlight_2, description, nutrition_notes, is_bundle, is_active, thumbnail_url, thumbnail_alt_text, tags, detail_highlight_badges } = body;
 
     const formattedTags = tags !== undefined ? (Array.isArray(tags) ? tags : []) : null;
+    const badgesJson = detail_highlight_badges !== undefined && detail_highlight_badges !== null ? JSON.stringify(detail_highlight_badges) : null;
 
     const result = await sql`
       UPDATE products
       SET
         slug            = COALESCE(${slug ?? null}, slug),
         name            = COALESCE(${name ?? null}, name),
-        category        = COALESCE(${category ?? null}, category),
+        categories      = CASE WHEN ${categories !== undefined} THEN ${categories} ELSE categories END,
+        badge_label     = CASE WHEN ${badge_label !== undefined} THEN ${badge_label ?? null} ELSE badge_label END,
+        highlight_1     = CASE WHEN ${highlight_1 !== undefined} THEN ${highlight_1 ?? null} ELSE highlight_1 END,
+        highlight_2     = CASE WHEN ${highlight_2 !== undefined} THEN ${highlight_2 ?? null} ELSE highlight_2 END,
         description     = COALESCE(${description ?? null}, description),
         nutrition_notes = COALESCE(${nutrition_notes ?? null}, nutrition_notes),
         is_bundle       = COALESCE(${is_bundle ?? null}, is_bundle),
         is_active       = COALESCE(${is_active ?? null}, is_active),
         thumbnail_url   = CASE WHEN ${thumbnail_url !== undefined} THEN ${thumbnail_url ?? null} ELSE thumbnail_url END,
-        tags            = CASE WHEN ${tags !== undefined} THEN ${formattedTags} ELSE tags END
+        thumbnail_alt_text = CASE WHEN ${thumbnail_alt_text !== undefined} THEN ${thumbnail_alt_text ?? null} ELSE thumbnail_alt_text END,
+        tags            = CASE WHEN ${tags !== undefined} THEN ${formattedTags} ELSE tags END,
+        detail_highlight_badges = CASE WHEN ${detail_highlight_badges !== undefined} THEN ${badgesJson}::jsonb ELSE detail_highlight_badges END
       WHERE id = ${id}
       RETURNING *
     `;

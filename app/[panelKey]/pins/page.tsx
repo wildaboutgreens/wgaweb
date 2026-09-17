@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
+import ImageField from '@/components/admin/ImageField';
 
 interface Pin {
   id: string;
@@ -9,6 +10,8 @@ interface Pin {
   icon: string | null;
   title: string;
   description: string | null;
+  image_url?: string | null;
+  link_url?: string | null;
   display_order: number;
   is_active: boolean;
 }
@@ -18,6 +21,8 @@ const emptyPin = {
   icon: '',
   title: '',
   description: '',
+  image_url: '',
+  link_url: '',
   display_order: 0,
   is_active: true,
 };
@@ -133,12 +138,12 @@ export default function AdminPinsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Icon (emoji or text)
+                Badge / Icon (e.g. 01 Purity or 🌱)
               </label>
               <input
                 value={form.icon}
                 onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                placeholder="e.g. 🌱"
+                placeholder="e.g. 01 Purity or 🌱"
                 className="w-full px-3 py-2 border rounded-lg text-sm"
               />
             </div>
@@ -157,6 +162,26 @@ export default function AdminPinsPage() {
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
+              className="w-full px-3 py-2 border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <ImageField
+              value={form.image_url || null}
+              onChange={(url) => setForm((prev) => ({ ...prev, image_url: url }))}
+              label="Image (optional)"
+              aspectRatio="1/1"
+              folder={`pins/${form.group_key || activeGroup || 'general'}`}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Link URL (optional)
+            </label>
+            <input
+              value={form.link_url || ''}
+              onChange={(e) => setForm({ ...form, link_url: e.target.value })}
+              placeholder="e.g. /products?category=immunity"
               className="w-full px-3 py-2 border rounded-lg text-sm"
             />
           </div>
@@ -258,11 +283,33 @@ export default function AdminPinsPage() {
                 className="bg-white rounded-xl border p-5 flex items-start justify-between"
               >
                 <div className="flex items-start gap-3">
-                  {pin.icon && <span className="text-2xl">{pin.icon}</span>}
+                  {pin.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={pin.image_url}
+                      alt={pin.title}
+                      className="w-12 h-12 rounded-lg object-cover border shrink-0"
+                    />
+                  ) : (
+                    pin.icon && (
+                      <span
+                        className={
+                          pin.icon.length <= 4
+                            ? 'text-2xl shrink-0'
+                            : 'font-mono text-[11px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-[#DCF5A8]/70 px-2.5 py-1 rounded-full shrink-0 self-start'
+                        }
+                      >
+                        {pin.icon}
+                      </span>
+                    )
+                  )}
                   <div>
                     <h3 className="font-bold text-gray-900">{pin.title}</h3>
                     {pin.description && (
                       <p className="text-sm text-gray-500 mt-0.5">{pin.description}</p>
+                    )}
+                    {pin.link_url && (
+                      <p className="text-xs text-blue-600 mt-0.5 font-mono">{pin.link_url}</p>
                     )}
                     <div className="flex gap-3 mt-2 text-xs text-gray-400">
                       <span>Order: {pin.display_order}</span>
@@ -285,6 +332,8 @@ export default function AdminPinsPage() {
                         icon: pin.icon || '',
                         title: pin.title,
                         description: pin.description || '',
+                        image_url: pin.image_url || '',
+                        link_url: pin.link_url || '',
                         display_order: pin.display_order,
                         is_active: pin.is_active,
                       });

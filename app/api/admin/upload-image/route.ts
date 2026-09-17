@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cloudinary } from '@/lib/cloudinary';
 import type { UploadApiOptions } from 'cloudinary';
 
+const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // 4.5 MB Netlify payload safety limit
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -13,9 +15,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
+    // Validate file type (image or video)
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (!isImage && !isVideo) {
+      return NextResponse.json(
+        { error: 'File must be an image or video' },
+        { status: 400 }
+      );
+    }
+
+    // Enforce payload size limit
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      return NextResponse.json(
+        {
+          error: `File is too large (${sizeMB} MB). Maximum allowed upload size is 4.5 MB.`,
+        },
+        { status: 413 }
+      );
     }
 
     // Convert to base64 data URI for Cloudinary upload
@@ -25,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     const uploadOptions: UploadApiOptions = {
       folder,
+      resource_type: isVideo ? 'video' : 'image',
     };
 
     if (publicId) {
@@ -38,6 +57,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       url: result.secure_url,
       publicId: result.public_id,
+      resourceType: result.resource_type || (isVideo ? 'video' : 'image'),
     });
   } catch (error: unknown) {
     console.error('upload-image error:', error);

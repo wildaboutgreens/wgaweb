@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
-import { Product } from './page';
+import { Product, WhyChoosePin } from './page';
 
 interface ProductMeta {
   photo: string;
@@ -12,6 +12,56 @@ interface ProductMeta {
   badge: { text: string; bg: string; color: string };
   sleeveDesc: string;
 }
+
+const WHY_CHOOSE_STYLES = [
+  { bg: 'bg-[#DCF5A8]/60', border: 'border-[#DCF5A8]' },
+  { bg: 'bg-[#BEE3F5]/60', border: 'border-[#BEE3F5]' },
+  { bg: 'bg-[#FFE0B2]/60', border: 'border-[#FFE0B2]' },
+  { bg: 'bg-[#E9D8F2]/60', border: 'border-[#E9D8F2]' },
+];
+
+const DEFAULT_WHY_CHOOSE_PINS: WhyChoosePin[] = [
+  {
+    id: 'wc-1',
+    group_key: 'product_listing_why_choose',
+    icon: '01 Purity',
+    title: 'Soil Free & Clean',
+    description: 'Zero compost pathogens, pests, or dirt grit',
+    image_url: '/images/why-choose/soil-free-clean.jpg',
+    link_url: null,
+    display_order: 1,
+  },
+  {
+    id: 'wc-2',
+    group_key: 'product_listing_why_choose',
+    icon: '02 Water',
+    title: 'Mineral RO Water',
+    description: 'Pure drinking-grade reverse osmosis supply',
+    image_url: '/images/why-choose/mineral-ro-water.jpg',
+    link_url: null,
+    display_order: 2,
+  },
+  {
+    id: 'wc-3',
+    group_key: 'product_listing_why_choose',
+    icon: '03 Timing',
+    title: '10 Day Peak',
+    description: 'Maximum biological micronutrient density',
+    image_url: '/images/why-choose/10-day-peak.jpg',
+    link_url: null,
+    display_order: 3,
+  },
+  {
+    id: 'wc-4',
+    group_key: 'product_listing_why_choose',
+    icon: '04 Freshness',
+    title: 'Cut to Order',
+    description: 'Living tray still breathing in your kitchen',
+    image_url: '/images/why-choose/cut-to-order.jpg',
+    link_url: null,
+    display_order: 4,
+  },
+];
 
 const PRODUCT_METAS: Record<string, ProductMeta> = {
   'broccoli-microgreens': {
@@ -56,14 +106,32 @@ export default function ProductListClient({
   initialProducts,
   initialCategories,
   content = {},
+  initialWhyChoosePins = [],
 }: {
   initialProducts: Product[];
   initialCategories: string[];
   content?: Record<string, string>;
+  initialWhyChoosePins?: WhyChoosePin[];
 }) {
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
+  const [whyChoosePins, setWhyChoosePins] = useState<WhyChoosePin[]>(
+    initialWhyChoosePins.length > 0 ? initialWhyChoosePins : DEFAULT_WHY_CHOOSE_PINS
+  );
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    fetch('/api/pins/product_listing_why_choose')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setWhyChoosePins(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const activeWhyChoose = whyChoosePins.length > 0 ? whyChoosePins : DEFAULT_WHY_CHOOSE_PINS;
 
   const addItem = useCartStore((s) => s.addItem);
 
@@ -93,7 +161,7 @@ export default function ProductListClient({
   };
 
   const filteredProducts = selectedCat
-    ? initialProducts.filter((p) => p.category === selectedCat)
+    ? initialProducts.filter((p) => p.categories?.includes(selectedCat))
     : initialProducts;
 
   // Group products by category
@@ -102,13 +170,13 @@ export default function ProductListClient({
     productsByCategory[selectedCat] = filteredProducts;
   } else {
     categories.forEach((cat) => {
-      const prods = initialProducts.filter((p) => p.category === cat);
+      const prods = initialProducts.filter((p) => p.categories?.includes(cat));
       if (prods.length > 0) {
         productsByCategory[cat] = prods;
       }
     });
     // Add any products whose category is not in initialCategories
-    const remaining = initialProducts.filter((p) => !categories.includes(p.category));
+    const remaining = initialProducts.filter((p) => !p.categories?.some((c) => categories.includes(c)));
     if (remaining.length > 0) {
       productsByCategory['other'] = remaining;
     }
@@ -289,7 +357,10 @@ export default function ProductListClient({
                       >
                         <div>
                           {/* ================= VERTICAL CLAMSHELL CARD ================= */}
-                          <div className="relative rounded-[18px] aspect-[1/1.34] overflow-hidden mb-3.5 border border-[#E4DDC8] shadow-sm bg-gradient-to-br from-[#EEF1EE] to-[#DFE4DF] transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-lg">
+                          <Link
+                            href={`/products/${product.slug}`}
+                            className="block relative rounded-[18px] aspect-[1/1.34] overflow-hidden mb-3.5 border border-[#E4DDC8] shadow-sm bg-gradient-to-br from-[#EEF1EE] to-[#DFE4DF] transition-all duration-300 group-hover:-translate-y-1.5 group-hover:shadow-lg cursor-pointer"
+                          >
                             {/* Product Tag Badge */}
                             <span
                               style={{
@@ -299,7 +370,7 @@ export default function ProductListClient({
                               className="absolute top-3 left-3 z-20 font-mono text-[9.5px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1"
                             >
                               <span>🌱</span>
-                              <span>{product.tags && product.tags.length > 0 ? product.tags[0] : meta.badge.text}</span>
+                              <span>{product.badge_label || meta.badge.text}</span>
                             </span>
 
                             {/* Background Living Greens Photo */}
@@ -307,7 +378,7 @@ export default function ProductListClient({
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={cardImage}
-                                alt={product.name}
+                                alt={product.thumbnail_alt_text || product.name}
                                 className="absolute inset-0 w-full h-full object-cover opacity-95 transition-transform duration-500 group-hover:scale-105"
                               />
                             ) : (
@@ -330,7 +401,7 @@ export default function ProductListClient({
                                   // eslint-disable-next-line @next/next/no-img-element
                                   <img
                                     src={cardImage}
-                                    alt="Thumb"
+                                    alt={product.thumbnail_alt_text || product.name}
                                     className="w-full h-full object-cover"
                                   />
                                 ) : (
@@ -359,7 +430,7 @@ export default function ProductListClient({
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          </Link>
 
                           {/* Product Title */}
                           <Link href={`/products/${product.slug}`}>
@@ -372,11 +443,11 @@ export default function ProductListClient({
                           <div className="border-t border-b border-[#E4DDC8] py-2.5 mb-3 space-y-1.5 text-xs text-[#5C6B60]">
                             <div className="flex items-center gap-2">
                               <span className="text-[#1C3F2D] text-xs">⚡</span>
-                              <span className="truncate">{meta.benefit}</span>
+                              <span className="truncate">{product.highlight_1 || meta.benefit}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-[#3E8F52] text-xs">🌿</span>
-                              <span>Living tray · 7 to 10 days fresh</span>
+                              <span>{product.highlight_2 || 'Living tray · 7 to 10 days fresh'}</span>
                             </div>
                           </div>
                         </div>
@@ -601,78 +672,79 @@ export default function ProductListClient({
         <div className="max-w-[1180px] mx-auto px-4 sm:px-8">
           <div className="mb-8">
             <h2 className="font-serif font-medium text-2xl sm:text-3xl text-[#151F19]">
-              {content.why_choose_title || 'Why Choose Wild About Greens?'}
+              {content.why_choose_title || 'The Lesser Known Fact'}
             </h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {/* Block 1 */}
-            <div className="bg-[#DCF5A8]/60 p-6 rounded-2xl border border-[#DCF5A8] flex flex-col justify-between aspect-[1/1.2] shadow-sm">
-              <div className="flex justify-between items-start">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/80 px-2.5 py-1 rounded-full">
-                  01 Purity
-                </span>
-              </div>
-              <div>
-                <h4 className="font-serif font-bold text-xl text-[#151F19] leading-snug mb-1">
-                  Soil Free &amp; Clean
-                </h4>
-                <p className="font-mono text-xs text-[#5C6B60]">
-                  Zero compost pathogens, pests, or dirt grit
-                </p>
-              </div>
-            </div>
+            {activeWhyChoose.map((pin, idx) => {
+              const style = WHY_CHOOSE_STYLES[idx % WHY_CHOOSE_STYLES.length];
+              const cardContent = (
+                <>
+                  {pin.image_url ? (
+                    <div
+                      className={`${style.bg} rounded-2xl border ${style.border} flex flex-col justify-between shadow-sm overflow-hidden min-h-[280px] h-full transition-transform duration-300 hover:-translate-y-1 hover:shadow-md`}
+                    >
+                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={pin.image_url}
+                          alt={pin.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                        {pin.icon && (
+                          <span className="absolute top-3 left-3 z-10 font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-[#FFFDF8]/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
+                            {pin.icon}
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-5 flex flex-col justify-end flex-1">
+                        <h4 className="font-serif font-bold text-lg text-[#151F19] leading-snug mb-1">
+                          {pin.title}
+                        </h4>
+                        {pin.description && (
+                          <p className="font-mono text-xs text-[#5C6B60] leading-relaxed">
+                            {pin.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className={`${style.bg} p-6 rounded-2xl border ${style.border} flex flex-col justify-between aspect-[1/1.2] min-h-[280px] h-full shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-md`}
+                    >
+                      <div className="flex justify-between items-start">
+                        {pin.icon && (
+                          <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/80 px-2.5 py-1 rounded-full">
+                            {pin.icon}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-serif font-bold text-xl text-[#151F19] leading-snug mb-1">
+                          {pin.title}
+                        </h4>
+                        {pin.description && (
+                          <p className="font-mono text-xs text-[#5C6B60]">
+                            {pin.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
 
-            {/* Block 2 */}
-            <div className="bg-[#BEE3F5]/60 p-6 rounded-2xl border border-[#BEE3F5] flex flex-col justify-between aspect-[1/1.2] shadow-sm">
-              <div className="flex justify-between items-start">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/80 px-2.5 py-1 rounded-full">
-                  02 Water
-                </span>
-              </div>
-              <div>
-                <h4 className="font-serif font-bold text-xl text-[#151F19] leading-snug mb-1">
-                  Mineral RO Water
-                </h4>
-                <p className="font-mono text-xs text-[#5C6B60]">
-                  Pure drinking-grade reverse osmosis supply
-                </p>
-              </div>
-            </div>
-
-            {/* Block 3 */}
-            <div className="bg-[#FFE0B2]/60 p-6 rounded-2xl border border-[#FFE0B2] flex flex-col justify-between aspect-[1/1.2] shadow-sm">
-              <div className="flex justify-between items-start">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/80 px-2.5 py-1 rounded-full">
-                  03 Timing
-                </span>
-              </div>
-              <div>
-                <h4 className="font-serif font-bold text-xl text-[#151F19] leading-snug mb-1">
-                  10 Day Peak
-                </h4>
-                <p className="font-mono text-xs text-[#5C6B60]">
-                  Maximum biological micronutrient density
-                </p>
-              </div>
-            </div>
-
-            {/* Block 4 */}
-            <div className="bg-[#E9D8F2]/60 p-6 rounded-2xl border border-[#E9D8F2] flex flex-col justify-between aspect-[1/1.2] shadow-sm">
-              <div className="flex justify-between items-start">
-                <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/80 px-2.5 py-1 rounded-full">
-                  04 Freshness
-                </span>
-              </div>
-              <div>
-                <h4 className="font-serif font-bold text-xl text-[#151F19] leading-snug mb-1">
-                  Cut to Order
-                </h4>
-                <p className="font-mono text-xs text-[#5C6B60]">
-                  Living tray still breathing in your kitchen
-                </p>
-              </div>
-            </div>
+              return pin.link_url ? (
+                <Link key={pin.id || idx} href={pin.link_url} className="block group h-full">
+                  {cardContent}
+                </Link>
+              ) : (
+                <div key={pin.id || idx} className="block group h-full">
+                  {cardContent}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>

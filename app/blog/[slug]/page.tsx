@@ -12,6 +12,7 @@ interface BlogPost {
   content: string;
   excerpt: string | null;
   cover_image_url: string | null;
+  cover_image_alt_text?: string | null;
   is_published: boolean;
   published_at: string | null;
   created_at: string;
@@ -21,7 +22,7 @@ async function getPost(slug: string): Promise<BlogPost | null> {
   try {
     const sql = getSQL();
     const posts = await sql`
-      SELECT id, slug, title, content, excerpt, cover_image_url, is_published, published_at, created_at
+      SELECT id, slug, title, content, excerpt, cover_image_url, cover_image_alt_text, is_published, published_at, created_at
       FROM blog_posts
       WHERE slug = ${slug} AND is_published = true
       LIMIT 1
@@ -46,6 +47,18 @@ export async function generateMetadata({
   return {
     title: `${post.title} · Wild About Greens`,
     description: post.excerpt || 'Read the latest insights and guides from Wild About Greens.',
+    openGraph: {
+      title: `${post.title} · Wild About Greens`,
+      description: post.excerpt || 'Read the latest insights and guides from Wild About Greens.',
+      type: 'article',
+      ...(post.cover_image_url ? { images: [{ url: post.cover_image_url }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${post.title} · Wild About Greens`,
+      description: post.excerpt || 'Read the latest insights and guides from Wild About Greens.',
+      ...(post.cover_image_url ? { images: [post.cover_image_url] } : {}),
+    },
   };
 }
 
@@ -95,7 +108,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={post.cover_image_url}
-            alt={post.title}
+            alt={post.cover_image_alt_text || post.title}
             className="w-full h-full object-cover"
           />
         </div>

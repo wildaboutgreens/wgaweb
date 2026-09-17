@@ -21,6 +21,7 @@ export default function AdminLayoutClient({
     { href: `/${currentKey}`, label: 'Dashboard', icon: '📊' },
     { href: `/${currentKey}/products`, label: 'Products', icon: '🌱' },
     { href: `/${currentKey}/orders`, label: 'Orders', icon: '📦' },
+    { href: `/${currentKey}/reviews`, label: 'Reviews', icon: '⭐' },
     { href: `/${currentKey}/content`, label: 'Content', icon: '✏️' },
     { href: `/${currentKey}/pins`, label: 'Pins', icon: '📌' },
     { href: `/${currentKey}/blog`, label: 'Blog', icon: '📝' },

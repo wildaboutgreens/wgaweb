@@ -19,6 +19,7 @@ const PAGES = [
   { value: 'product-listing', label: 'Product Listing' },
   { value: 'product-detail', label: 'Product Detail' },
   { value: 'our-story', label: 'Our Story' },
+  { value: 'emails', label: 'Emails' },
 ];
 
 export default function AdminContentPage() {
@@ -48,10 +49,17 @@ export default function AdminContentPage() {
 
         for (const f of pageFields) {
           formData[f.key] = dataMap.has(f.key) ? dataMap.get(f.key)! : f.defaultValue;
+          if (f.type === 'image_url') {
+            const altKey = `${f.key}_alt`;
+            formData[altKey] = dataMap.has(altKey) ? dataMap.get(altKey)! : '';
+          }
         }
       } else {
         for (const f of pageFields) {
           formData[f.key] = f.defaultValue;
+          if (f.type === 'image_url') {
+            formData[`${f.key}_alt`] = '';
+          }
         }
       }
       setForm(formData);
@@ -71,11 +79,21 @@ export default function AdminContentPage() {
     setSaving(true);
     setSaved(false);
     try {
-      const blockArray = fields.map((field) => ({
-        key: field.key,
-        value: form[field.key] ?? '',
-        value_type: field.type,
-      }));
+      const blockArray: { key: string; value: string; value_type: string }[] = [];
+      for (const field of fields) {
+        blockArray.push({
+          key: field.key,
+          value: form[field.key] ?? '',
+          value_type: field.type,
+        });
+        if (field.type === 'image_url') {
+          blockArray.push({
+            key: `${field.key}_alt`,
+            value: form[`${field.key}_alt`] ?? '',
+            value_type: 'text',
+          });
+        }
+      }
 
       const res = await adminFetch(`/api/admin/content/${activePage}`, {
         method: 'PUT',
@@ -165,6 +183,14 @@ export default function AdminContentPage() {
                   aspectRatio="16/9"
                   folder={`content/${activePage}`}
                   publicId={field.key}
+                  acceptVideo={field.key.includes('video') || field.key === 'hero_image_url'}
+                  altText={form[`${field.key}_alt`] || ''}
+                  onAltTextChange={(alt) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      [`${field.key}_alt`]: alt,
+                    }))
+                  }
                 />
               ) : (
                 <input

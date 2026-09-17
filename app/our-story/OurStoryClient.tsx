@@ -3,11 +3,15 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
+import { useCartStore } from '@/lib/cartStore';
+import type { SamplerVariantData } from './page';
 
 export default function OurStoryClient({
   content = {},
+  samplerVariant = null,
 }: {
   content?: Record<string, string>;
+  samplerVariant?: SamplerVariantData | null;
 }) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -245,7 +249,10 @@ export default function OurStoryClient({
                 <div
                   className="cimg"
                   style={{
-                    backgroundImage: `url('https://images.pexels.com/photos/29122091/pexels-photo-29122091.jpeg?auto=compress&cs=tinysrgb&w=1600')`,
+                    backgroundImage: `url('${
+                      content.story_image_1 ||
+                      'https://images.pexels.com/photos/29122091/pexels-photo-29122091.jpeg?auto=compress&cs=tinysrgb&w=1600'
+                    }')`,
                   }}
                 />
               </div>
@@ -253,7 +260,10 @@ export default function OurStoryClient({
                 <div
                   className="cimg"
                   style={{
-                    backgroundImage: `url('https://images.pexels.com/photos/30297034/pexels-photo-30297034.png?auto=compress&cs=tinysrgb&w=1600')`,
+                    backgroundImage: `url('${
+                      content.story_image_2 ||
+                      'https://images.pexels.com/photos/30297034/pexels-photo-30297034.png?auto=compress&cs=tinysrgb&w=1600'
+                    }')`,
                   }}
                 />
               </div>
@@ -261,7 +271,10 @@ export default function OurStoryClient({
                 <div
                   className="cimg"
                   style={{
-                    backgroundImage: `url('https://images.pexels.com/photos/27400770/pexels-photo-27400770.jpeg?auto=compress&cs=tinysrgb&w=1600')`,
+                    backgroundImage: `url('${
+                      content.story_image_3 ||
+                      'https://images.pexels.com/photos/27400770/pexels-photo-27400770.jpeg?auto=compress&cs=tinysrgb&w=1600'
+                    }')`,
                   }}
                 />
               </div>
@@ -462,12 +475,32 @@ export default function OurStoryClient({
                   'Start small. One sampler tray, different ways to use it, zero commitment.'}
               </p>
               <div>
-                <Link
-                  href="/products?category=bundle"
-                  className="inline-flex items-center gap-2 bg-[#151F19] text-[#FFFDF8] font-bold text-xs sm:text-[13.5px] tracking-wider uppercase px-5 py-3 sm:px-6 sm:py-3.5 rounded-full hover:-translate-y-1 transition-transform shadow-lg"
-                >
-                  {content.sampler_banner_cta_text || 'Try the sampler pack →'}
-                </Link>
+                {samplerVariant ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      useCartStore.getState().addItem({
+                        variantId: samplerVariant.variantId,
+                        productSlug: samplerVariant.productSlug,
+                        productName: samplerVariant.productName,
+                        variantLabel: samplerVariant.variantLabel,
+                        pricePaise: samplerVariant.pricePaise,
+                        maxStock: samplerVariant.maxStock,
+                      });
+                      useCartStore.getState().setIsOpen(true);
+                    }}
+                    className="inline-flex items-center gap-2 bg-[#151F19] text-[#FFFDF8] font-bold text-xs sm:text-[13.5px] tracking-wider uppercase px-5 py-3 sm:px-6 sm:py-3.5 rounded-full hover:-translate-y-1 transition-transform shadow-lg"
+                  >
+                    {content.sampler_banner_cta_text || 'Try the sampler pack →'}
+                  </button>
+                ) : (
+                  <Link
+                    href="/products?category=bundle"
+                    className="inline-flex items-center gap-2 bg-[#151F19] text-[#FFFDF8] font-bold text-xs sm:text-[13.5px] tracking-wider uppercase px-5 py-3 sm:px-6 sm:py-3.5 rounded-full hover:-translate-y-1 transition-transform shadow-lg"
+                  >
+                    {content.sampler_banner_cta_text || 'Try the sampler pack →'}
+                  </Link>
+                )}
               </div>
             </div>
           </div>

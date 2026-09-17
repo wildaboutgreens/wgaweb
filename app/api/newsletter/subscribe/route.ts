@@ -28,12 +28,23 @@ export async function POST(request: NextRequest) {
     const safeSource = typeof source === 'string' ? source.slice(0, 100) : null;
 
     // Insert with ON CONFLICT to silently handle re-subscriptions.
+    // Use RETURNING to detect if this was a new signup (for welcome email).
     // Don't reveal whether the email was already subscribed (privacy).
-    await sql`
+    const result = await sql`
       INSERT INTO newsletter_subscribers (email, source)
       VALUES (${email.toLowerCase().trim()}, ${safeSource})
       ON CONFLICT (email) DO NOTHING
+      RETURNING id
     `;
+
+    // Send welcome email only for genuinely new signups, fire-and-forget
+    if (result.length > 0) {
+      // Import at top of file
+      const { sendNewsletterWelcome } = await import('@/lib/email');
+      sendNewsletterWelcome(email.toLowerCase().trim()).catch(() => {
+        // Silently ignore — email failure shouldn't affect the signup response
+      });
+    }
 
     // TODO: The design mentions "15% off" for signing up, but there's no
     // coupon/discount system built yet. When a discount code mechanism is

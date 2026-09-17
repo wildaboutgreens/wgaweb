@@ -13,16 +13,16 @@ export async function GET(request: NextRequest) {
     let products;
     if (category) {
       products = await sql`
-        SELECT id, slug, name, category, description, nutrition_notes,
-               thumbnail_url, tags, is_bundle, is_active, created_at
+        SELECT id, slug, name, categories, badge_label, highlight_1, highlight_2, description, nutrition_notes,
+               thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at
         FROM products
-        WHERE is_active = true AND category = ${category}
+        WHERE is_active = true AND ${category} = ANY(categories)
         ORDER BY created_at DESC
       `;
     } else {
       products = await sql`
-        SELECT id, slug, name, category, description, nutrition_notes,
-               thumbnail_url, tags, is_bundle, is_active, created_at
+        SELECT id, slug, name, categories, badge_label, highlight_1, highlight_2, description, nutrition_notes,
+               thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at
         FROM products
         WHERE is_active = true
         ORDER BY created_at DESC

@@ -10,7 +10,7 @@ export async function PUT(
     const sql = getSQL();
     const { id } = params;
     const body = await request.json();
-    const { group_key, icon, title, description, display_order, is_active } = body;
+    const { group_key, icon, title, description, display_order, is_active, image_url, link_url } = body;
 
     const result = await sql`
       UPDATE content_pins
@@ -19,6 +19,8 @@ export async function PUT(
         icon          = COALESCE(${icon ?? null}, icon),
         title         = COALESCE(${title ?? null}, title),
         description   = COALESCE(${description ?? null}, description),
+        image_url     = CASE WHEN ${image_url !== undefined} THEN ${image_url ?? null} ELSE image_url END,
+        link_url      = CASE WHEN ${link_url !== undefined} THEN ${link_url ?? null} ELSE link_url END,
         display_order = COALESCE(${display_order ?? null}, display_order),
         is_active     = COALESCE(${is_active ?? null}, is_active)
       WHERE id = ${id}

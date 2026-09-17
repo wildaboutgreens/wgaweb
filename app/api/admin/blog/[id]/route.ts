@@ -12,7 +12,7 @@ export async function PUT(
     const sql = getSQL();
     const { id } = params;
     const body = await request.json();
-    const { slug, title, excerpt, content, cover_image_url, is_published, post_type } = body;
+    const { slug, title, excerpt, content, cover_image_url, cover_image_alt_text, is_published, post_type, show_on_homepage } = body;
 
     if (is_published === true) {
       // Set published_at only if not already set
@@ -24,9 +24,11 @@ export async function PUT(
           excerpt         = COALESCE(${excerpt ?? null}, excerpt),
           content         = COALESCE(${content ?? null}, content),
           cover_image_url = COALESCE(${cover_image_url ?? null}, cover_image_url),
+          cover_image_alt_text = CASE WHEN ${cover_image_alt_text !== undefined} THEN ${cover_image_alt_text ?? null} ELSE cover_image_alt_text END,
           post_type       = COALESCE(${post_type ?? null}, post_type),
           is_published    = true,
-          published_at    = COALESCE(published_at, now())
+          published_at    = COALESCE(published_at, now()),
+          show_on_homepage = COALESCE(${show_on_homepage ?? null}, show_on_homepage)
         WHERE id = ${id}
         RETURNING *
       `;
@@ -43,8 +45,10 @@ export async function PUT(
           excerpt         = COALESCE(${excerpt ?? null}, excerpt),
           content         = COALESCE(${content ?? null}, content),
           cover_image_url = COALESCE(${cover_image_url ?? null}, cover_image_url),
+          cover_image_alt_text = CASE WHEN ${cover_image_alt_text !== undefined} THEN ${cover_image_alt_text ?? null} ELSE cover_image_alt_text END,
           post_type       = COALESCE(${post_type ?? null}, post_type),
-          is_published    = COALESCE(${is_published ?? null}, is_published)
+          is_published    = COALESCE(${is_published ?? null}, is_published),
+          show_on_homepage = COALESCE(${show_on_homepage ?? null}, show_on_homepage)
         WHERE id = ${id}
         RETURNING *
       `;

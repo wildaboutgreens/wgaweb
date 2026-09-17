@@ -7,6 +7,15 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Blog & Nutrition Journal · Wild About Greens',
   description: 'Explore microgreens growing guides, science backed wellness tips, and farm updates from Wild About Greens.',
+  openGraph: {
+    title: 'Blog & Nutrition Journal · Wild About Greens',
+    description: 'Explore microgreens growing guides, science backed wellness tips, and farm updates from Wild About Greens.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Blog & Nutrition Journal · Wild About Greens',
+    description: 'Microgreens growing guides, wellness tips, and farm updates.',
+  },
 };
 
 interface BlogPost {
@@ -15,6 +24,7 @@ interface BlogPost {
   title: string;
   excerpt: string | null;
   cover_image_url: string | null;
+  cover_image_alt_text?: string | null;
   post_type: string;
   published_at: string | null;
 }
@@ -23,7 +33,7 @@ async function getArticles(): Promise<BlogPost[]> {
   try {
     const sql = getSQL();
     const posts = await sql`
-      SELECT id, slug, title, excerpt, cover_image_url, post_type, published_at
+      SELECT id, slug, title, excerpt, cover_image_url, cover_image_alt_text, post_type, published_at
       FROM blog_posts
       WHERE is_published = true AND post_type = 'article'
       ORDER BY published_at DESC
@@ -82,7 +92,7 @@ export default async function BlogPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={post.cover_image_url}
-                      alt={post.title}
+                      alt={post.cover_image_alt_text || post.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (

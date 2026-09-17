@@ -12,6 +12,7 @@ interface Slide {
   is_active: boolean;
   carousel_key: string;
   cloudinary_public_id?: string | null;
+  alt_text?: string | null;
   created_at: string;
 }
 
@@ -22,6 +23,7 @@ const emptySlide = {
   is_active: true,
   carousel_key: '',
   cloudinary_public_id: '',
+  alt_text: '',
 };
 
 export default function AdminCarouselPage() {
@@ -146,6 +148,8 @@ export default function AdminCarouselPage() {
               label="Slide Image"
               aspectRatio="16/9"
               folder={`carousel/${form.carousel_key?.trim() || activeKey || 'homepage'}`}
+              altText={form.alt_text || ''}
+              onAltTextChange={(val) => setForm({ ...form, alt_text: val })}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -288,6 +292,7 @@ export default function AdminCarouselPage() {
                           is_active: s.is_active,
                           carousel_key: s.carousel_key,
                           cloudinary_public_id: s.cloudinary_public_id || '',
+                          alt_text: s.alt_text || '',
                         });
                       }}
                       className="text-blue-600 hover:text-blue-800 text-sm"

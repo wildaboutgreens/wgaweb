@@ -175,3 +175,58 @@ export async function sendInquiryNotification(
     return false;
   }
 }
+
+// ─── Newsletter Welcome Email ────────────────────────────────────────────────
+
+/**
+ * Send a welcome email to a new newsletter subscriber.
+ * Reads subject/body from content_blocks (page: 'emails') at send time.
+ * Returns true if email was sent, false if skipped or failed.
+ */
+export async function sendNewsletterWelcome(
+  email: string
+): Promise<boolean> {
+  const fromEmail = process.env.FROM_EMAIL || 'orders@wildaboutgreens.com';
+
+  try {
+    const sql = getSQL();
+    const blocks = await sql`
+      SELECT key, value
+      FROM content_blocks
+      WHERE page = 'emails' AND key IN ('newsletter_thankyou_subject', 'newsletter_thankyou_body')
+    `;
+
+    const contentMap: Record<string, string> = {};
+    for (const b of blocks as unknown as { key: string; value: string }[]) {
+      contentMap[b.key] = b.value;
+    }
+
+    const subject = contentMap.newsletter_thankyou_subject || 'Welcome to Wild About Greens! 🌱';
+    const bodyText = contentMap.newsletter_thankyou_body || 'Welcome to Wild About Greens! We\'re glad you\'re here.';
+
+    // Convert plain text body to simple HTML
+    const bodyHtml = bodyText
+      .split('\n')
+      .map((line: string) => line.trim() === '' ? '<br />' : `<p>${line}</p>`)
+      .join('\n');
+
+    await getResend().emails.send({
+      from: fromEmail,
+      to: email,
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; color: #333;">
+          ${bodyHtml}
+          <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+          <p style="color: #888; font-size: 12px;">Wild About Greens — Fresh living harvest in Chandigarh, Mohali &amp; Panchkula</p>
+        </div>
+      `,
+    });
+
+    console.log(`Newsletter welcome email sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to send newsletter welcome email to ${email}:`, error);
+    return false;
+  }
+}
