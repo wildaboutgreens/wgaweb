@@ -6,10 +6,10 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Shop Living Microgreens · Wild About Greens',
-  description: 'Browse our range of living microgreen trays — broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning in Chandigarh, Mohali & Panchkula.',
+  description: 'Browse our range of living microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning in Chandigarh, Mohali & Panchkula.',
   openGraph: {
     title: 'Shop Living Microgreens · Wild About Greens',
-    description: 'Browse our range of living microgreen trays — broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning.',
+    description: 'Browse our range of living microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning.',
   },
   twitter: {
     card: 'summary_large_image',
@@ -165,6 +165,61 @@ export interface WhyChoosePin {
   display_order: number;
 }
 
+export interface Review {
+  id: string;
+  product_id: string | null;
+  reviewer_name: string;
+  reviewer_location: string | null;
+  review_text: string;
+  rating: number;
+  display_order: number;
+  is_active: boolean;
+}
+
+export interface SamplerVariantData {
+  variantId: string;
+  productSlug: string;
+  productName: string;
+  variantLabel: string;
+  pricePaise: number;
+  maxStock: number;
+}
+
+async function getSamplerVariant(): Promise<SamplerVariantData | null> {
+  try {
+    const sql = getSQL();
+    const rows = await sql`
+      SELECT pv.id AS variant_id, p.slug AS product_slug, p.name AS product_name,
+             pv.label AS variant_label, pv.price_paise, pv.stock_qty
+      FROM products p
+      JOIN product_variants pv ON pv.product_id = p.id AND pv.is_active = true
+      WHERE p.slug = 'classic-trio-bundle' AND p.is_active = true
+      ORDER BY pv.price_paise ASC
+      LIMIT 1
+    `;
+    if (rows.length === 0) return null;
+    const r = rows[0] as unknown as {
+      variant_id: string;
+      product_slug: string;
+      product_name: string;
+      variant_label: string;
+      price_paise: number;
+      stock_qty: number;
+    };
+    return {
+      variantId: r.variant_id,
+      productSlug: r.product_slug,
+      productName: r.product_name,
+      variantLabel: r.variant_label,
+      pricePaise: r.price_paise,
+      maxStock: r.stock_qty,
+    };
+  } catch (err) {
+    console.error('Error fetching sampler variant:', err);
+    return null;
+  }
+}
+
 async function getWhyChoosePins(): Promise<WhyChoosePin[]> {
   try {
     const sql = getSQL();
@@ -182,12 +237,30 @@ async function getWhyChoosePins(): Promise<WhyChoosePin[]> {
   }
 }
 
+async function getGlobalReviews(): Promise<Review[]> {
+  try {
+    const sql = getSQL();
+    const reviews = await sql`
+      SELECT id, product_id, reviewer_name, reviewer_location, review_text, rating, display_order, is_active
+      FROM product_reviews
+      WHERE is_active = true AND product_id IS NULL
+      ORDER BY display_order ASC, created_at ASC
+    `;
+    return reviews as unknown as Review[];
+  } catch (err) {
+    console.error('Error fetching reviews for PLP:', err);
+    return [];
+  }
+}
+
 export default async function ProductsPage() {
-  const [products, categories, content, whyChoosePins] = await Promise.all([
+  const [products, categories, content, whyChoosePins, reviews, samplerVariant] = await Promise.all([
     getProducts(),
     getCategories(),
     getContentMap(),
     getWhyChoosePins(),
+    getGlobalReviews(),
+    getSamplerVariant(),
   ]);
 
   return (
@@ -196,7 +269,10 @@ export default async function ProductsPage() {
       initialCategories={categories}
       content={content}
       initialWhyChoosePins={whyChoosePins}
+      reviews={reviews}
+      samplerVariant={samplerVariant}
     />
   );
 }
+
 

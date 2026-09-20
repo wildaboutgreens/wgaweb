@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
-// GET /api/admin/carousel — all slides, optionally filter by ?carousel_key=
+// GET /api/admin/carousel: all slides, optionally filter by ?carousel_key=
 export async function GET(request: NextRequest) {
   try {
     const sql = getSQL();
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/carousel — create a slide
+// POST /api/admin/carousel: create a slide
 export async function POST(request: NextRequest) {
   try {
     const sql = getSQL();

@@ -1,6 +1,6 @@
 /**
  * Serviceable pincodes for the Chandigarh-Mohali-Panchkula tricity area.
- * This is a hardcoded MVP list — replace with a DB/API lookup later.
+ * This is a hardcoded MVP list; replace with a DB/API lookup later.
  */
 
 // Chandigarh: 160001–160036, plus a few additional sectors

@@ -42,7 +42,7 @@ export default function StoryModal() {
         }}
       >
         <div
-          className={`bg-[#FFFDF8] max-w-[940px] w-full max-h-[88vh] overflow-y-auto rounded-[26px] p-6 sm:p-12 relative shadow-2xl transition-transform duration-400 ease-out ${
+          className={`bg-[#FFFDF8] max-w-[940px] w-full max-h-[88vh] overflow-y-auto rounded-[26px] p-6 sm:p-12 relative shadow-2xl transition-transform duration-400 ease-out text-left ${
             isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-6'
           }`}
         >
@@ -55,10 +55,10 @@ export default function StoryModal() {
             ✕
           </button>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-8 lg:gap-10 items-start md:items-center">
             {/* Title column */}
-            <div className="md:col-span-5 flex flex-col justify-center pt-2">
-              <h2 className="font-display uppercase text-4xl sm:text-5xl lg:text-6xl text-[#151F19] leading-[1.05]">
+            <div className="w-fit flex flex-col justify-center md:self-center">
+              <h2 className="font-display uppercase text-4xl sm:text-5xl lg:text-6xl text-[#151F19] leading-[1.05] tracking-tight">
                 Short<br />
                 Story<br />
                 of Why<br />
@@ -69,11 +69,11 @@ export default function StoryModal() {
             </div>
 
             {/* Story text columns */}
-            <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6 text-[#3B4A40] font-serif text-[14.5px] leading-[1.65]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 text-[#3B4A40] font-serif text-[14.5px] leading-[1.65] text-left">
               <div className="space-y-4">
                 <p>
                   When you buy a head of broccoli or a bunch of spinach from your local vendor or a
-                  quick delivery app, you feel good about making a healthy choice. We did too.
+                  quick-delivery app, you feel good about making a healthy choice. We did too.
                 </p>
                 <p>
                   But then we looked closer. We looked at the heavy{' '}
@@ -96,7 +96,7 @@ export default function StoryModal() {
 
               <div className="space-y-4">
                 <p>
-                  So we started a micro enterprise right here in our city. Vertical indoor racks where we
+                  So we started a micro-enterprise right here in our city. Vertical indoor racks where we
                   control everything. No soil, no pests, no chemicals. Pure mineral RO water under
                   pristine LED lights.
                 </p>
@@ -113,7 +113,7 @@ export default function StoryModal() {
                   <u className="decoration-[#B7E23F] decoration-[3px] underline-offset-2 font-semibold text-[#122A1F]">
                     nutritional insurance policy
                   </u>{' '}
-                  for your family. No marketing gimmicks, no pseudo science. Just the bare, honest truth.
+                  for your family. No marketing gimmicks, no pseudo-science. Just the bare, honest truth.
                 </p>
               </div>
             </div>

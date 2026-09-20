@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// PUT /api/admin/blog/[id] — update a post
+// PUT /api/admin/blog/[id]: update a post
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -12,7 +12,34 @@ export async function PUT(
     const sql = getSQL();
     const { id } = params;
     const body = await request.json();
-    const { slug, title, excerpt, content, cover_image_url, cover_image_alt_text, is_published, post_type, show_on_homepage } = body;
+    const {
+      slug,
+      title,
+      excerpt,
+      content,
+      cover_image_url,
+      cover_image_alt_text,
+      is_published,
+      post_type,
+      show_on_homepage,
+      recipe_ingredients,
+      recipe_method_steps,
+      recipe_prep_time,
+      recipe_cook_time,
+      recipe_difficulty,
+      recipe_serves,
+      recipe_categories,
+    } = body;
+
+    const ingredientsJson = recipe_ingredients !== undefined
+      ? (Array.isArray(recipe_ingredients) ? JSON.stringify(recipe_ingredients) : null)
+      : undefined;
+    const stepsJson = recipe_method_steps !== undefined
+      ? (Array.isArray(recipe_method_steps) ? JSON.stringify(recipe_method_steps) : null)
+      : undefined;
+    const categoriesArr = recipe_categories !== undefined
+      ? (Array.isArray(recipe_categories) ? recipe_categories : [])
+      : undefined;
 
     if (is_published === true) {
       // Set published_at only if not already set
@@ -28,7 +55,14 @@ export async function PUT(
           post_type       = COALESCE(${post_type ?? null}, post_type),
           is_published    = true,
           published_at    = COALESCE(published_at, now()),
-          show_on_homepage = COALESCE(${show_on_homepage ?? null}, show_on_homepage)
+          show_on_homepage = COALESCE(${show_on_homepage ?? null}, show_on_homepage),
+          recipe_ingredients = CASE WHEN ${ingredientsJson !== undefined} THEN ${ingredientsJson ?? null}::jsonb ELSE recipe_ingredients END,
+          recipe_method_steps = CASE WHEN ${stepsJson !== undefined} THEN ${stepsJson ?? null}::jsonb ELSE recipe_method_steps END,
+          recipe_prep_time = CASE WHEN ${recipe_prep_time !== undefined} THEN ${recipe_prep_time ?? null} ELSE recipe_prep_time END,
+          recipe_cook_time = CASE WHEN ${recipe_cook_time !== undefined} THEN ${recipe_cook_time ?? null} ELSE recipe_cook_time END,
+          recipe_difficulty = CASE WHEN ${recipe_difficulty !== undefined} THEN ${recipe_difficulty ?? null} ELSE recipe_difficulty END,
+          recipe_serves = CASE WHEN ${recipe_serves !== undefined} THEN ${recipe_serves ?? null} ELSE recipe_serves END,
+          recipe_categories = CASE WHEN ${categoriesArr !== undefined} THEN ${categoriesArr}::text[] ELSE recipe_categories END
         WHERE id = ${id}
         RETURNING *
       `;
@@ -48,7 +82,14 @@ export async function PUT(
           cover_image_alt_text = CASE WHEN ${cover_image_alt_text !== undefined} THEN ${cover_image_alt_text ?? null} ELSE cover_image_alt_text END,
           post_type       = COALESCE(${post_type ?? null}, post_type),
           is_published    = COALESCE(${is_published ?? null}, is_published),
-          show_on_homepage = COALESCE(${show_on_homepage ?? null}, show_on_homepage)
+          show_on_homepage = COALESCE(${show_on_homepage ?? null}, show_on_homepage),
+          recipe_ingredients = CASE WHEN ${ingredientsJson !== undefined} THEN ${ingredientsJson ?? null}::jsonb ELSE recipe_ingredients END,
+          recipe_method_steps = CASE WHEN ${stepsJson !== undefined} THEN ${stepsJson ?? null}::jsonb ELSE recipe_method_steps END,
+          recipe_prep_time = CASE WHEN ${recipe_prep_time !== undefined} THEN ${recipe_prep_time ?? null} ELSE recipe_prep_time END,
+          recipe_cook_time = CASE WHEN ${recipe_cook_time !== undefined} THEN ${recipe_cook_time ?? null} ELSE recipe_cook_time END,
+          recipe_difficulty = CASE WHEN ${recipe_difficulty !== undefined} THEN ${recipe_difficulty ?? null} ELSE recipe_difficulty END,
+          recipe_serves = CASE WHEN ${recipe_serves !== undefined} THEN ${recipe_serves ?? null} ELSE recipe_serves END,
+          recipe_categories = CASE WHEN ${categoriesArr !== undefined} THEN ${categoriesArr}::text[] ELSE recipe_categories END
         WHERE id = ${id}
         RETURNING *
       `;
@@ -64,7 +105,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/blog/[id] — hard delete a post
+// DELETE /api/admin/blog/[id]: hard delete a post
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }
@@ -90,7 +131,7 @@ export async function DELETE(
   }
 }
 
-// GET /api/admin/blog/[id] — get a single post for editing
+// GET /api/admin/blog/[id]: get a single post for editing
 export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } }

@@ -71,7 +71,7 @@ export default function TrackOrderPage() {
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-  // Called by <Script onReady> — guaranteed window.turnstile exists
+  // Called by <Script onReady>; guaranteed window.turnstile exists
   const handleTurnstileScriptReady = useCallback(() => {
     setTurnstileReady(true);
   }, []);
@@ -148,7 +148,7 @@ export default function TrackOrderPage() {
 
   return (
     <>
-      {/* Turnstile script — Next.js <Script> ensures proper loading */}
+      {/* Turnstile script: Next.js <Script> ensures proper loading */}
       {siteKey && (
         <Script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"

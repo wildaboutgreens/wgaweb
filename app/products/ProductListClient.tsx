@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
-import { Product, WhyChoosePin } from './page';
+import { Product, WhyChoosePin, Review, SamplerVariantData } from './page';
 
 interface ProductMeta {
   photo: string;
@@ -13,53 +13,153 @@ interface ProductMeta {
   sleeveDesc: string;
 }
 
-const WHY_CHOOSE_STYLES = [
-  { bg: 'bg-[#DCF5A8]/60', border: 'border-[#DCF5A8]' },
-  { bg: 'bg-[#BEE3F5]/60', border: 'border-[#BEE3F5]' },
-  { bg: 'bg-[#FFE0B2]/60', border: 'border-[#FFE0B2]' },
-  { bg: 'bg-[#E9D8F2]/60', border: 'border-[#E9D8F2]' },
+const WHY_CHOOSE_COLORS = ['#F3DFE4', '#D6E6EF', '#E4DDC8', '#F6C7B3'];
+
+const DEFAULT_WHY_CHOOSE_BLOCKS = [
+  {
+    title: 'Grown,\nnot made.',
+    description: 'seed → sprout · 7-10 days',
+    image_url: '/right%20choice/grown-not-made.png',
+  },
+  {
+    title: 'RO water as\nprimary source.',
+    description: 'no heaviness · easy on your gut',
+    image_url: '/right%20choice/ro-water.png',
+  },
+  {
+    title: 'Coco-Peat is\nwhere it starts.',
+    description: 'soil-free · sustainable',
+    image_url: '/right%20choice/coco-peat.png',
+  },
+  {
+    title: 'No Pesticides:\nnever ever.',
+    description: 'zero spray · zero residue',
+    image_url: '/right%20choice/no-pest.png',
+  },
 ];
 
-const DEFAULT_WHY_CHOOSE_PINS: WhyChoosePin[] = [
+const DEFAULT_REVIEWS: Review[] = [
   {
-    id: 'wc-1',
-    group_key: 'product_listing_why_choose',
-    icon: '01 Purity',
-    title: 'Soil Free & Clean',
-    description: 'Zero compost pathogens, pests, or dirt grit',
-    image_url: '/images/why-choose/soil-free-clean.jpg',
-    link_url: null,
+    id: 'rev-1',
+    product_id: null,
+    reviewer_name: 'Siddhant Tewari',
+    reviewer_location: null,
+    review_text:
+      "It's <strong>very light</strong> like almost drinking water and <strong>no heaviness</strong> on stomach. It's very light to drink with almost no taste because sweetness is negligible. It cocoa taste which is good",
+    rating: 5,
     display_order: 1,
+    is_active: true,
   },
   {
-    id: 'wc-2',
-    group_key: 'product_listing_why_choose',
-    icon: '02 Water',
-    title: 'Mineral RO Water',
-    description: 'Pure drinking-grade reverse osmosis supply',
-    image_url: '/images/why-choose/mineral-ro-water.jpg',
-    link_url: null,
+    id: 'rev-2',
+    product_id: null,
+    reviewer_name: 'Avi Dayal',
+    reviewer_location: null,
+    review_text:
+      '<strong>Clean and easy on gut.</strong> I love you guys added dates and monk fruit for sweetness and also it <strong>felt light</strong> after consuming it. There were no burps and protein farts 🤙',
+    rating: 5,
     display_order: 2,
+    is_active: true,
   },
   {
-    id: 'wc-3',
-    group_key: 'product_listing_why_choose',
-    icon: '03 Timing',
-    title: '10 Day Peak',
-    description: 'Maximum biological micronutrient density',
-    image_url: '/images/why-choose/10-day-peak.jpg',
-    link_url: null,
+    id: 'rev-3',
+    product_id: null,
+    reviewer_name: 'Abhishek Nair',
+    reviewer_location: null,
+    review_text: 'Perfect. The taste which was very neutral is what I liked.',
+    rating: 4,
     display_order: 3,
+    is_active: true,
   },
   {
-    id: 'wc-4',
-    group_key: 'product_listing_why_choose',
-    icon: '04 Freshness',
-    title: 'Cut to Order',
-    description: 'Living tray still breathing in your kitchen',
-    image_url: '/images/why-choose/cut-to-order.jpg',
-    link_url: null,
+    id: 'rev-4',
+    product_id: null,
+    reviewer_name: 'Hrishikesh',
+    reviewer_location: null,
+    review_text: 'Perfect Mixability',
+    rating: 5,
     display_order: 4,
+    is_active: true,
+  },
+  {
+    id: 'rev-5',
+    product_id: null,
+    reviewer_name: 'Synthia Nathan',
+    reviewer_location: null,
+    review_text:
+      'This is a <strong>good protein powder.</strong> From a taste perspective it is tasteless and that is ok because you are using <strong>all natural ingredients.</strong> It keeps me filling for a long time and I did not feel any discomfort after...',
+    rating: 4,
+    display_order: 5,
+    is_active: true,
+  },
+  {
+    id: 'rev-6',
+    product_id: null,
+    reviewer_name: 'Dr Thanvi',
+    reviewer_location: null,
+    review_text: "Best till date that I've tried. Taste, <strong>non-bloating</strong>",
+    rating: 5,
+    display_order: 6,
+    is_active: true,
+  },
+  {
+    id: 'rev-7',
+    product_id: null,
+    reviewer_name: 'Dinesh Choithani',
+    reviewer_location: null,
+    review_text: 'Light on stomach. It is not unnecessarily sweet',
+    rating: 4,
+    display_order: 7,
+    is_active: true,
+  },
+  {
+    id: 'rev-8',
+    product_id: null,
+    reviewer_name: 'Meera Kapoor',
+    reviewer_location: null,
+    review_text:
+      "No jitters, no crash. Just <strong>steady energy</strong> through my whole workday. Didn't expect that from a greens mix.",
+    rating: 5,
+    display_order: 8,
+    is_active: true,
+  },
+];
+
+const DEFAULT_FAQS = [
+  {
+    qKey: 'faq_q1',
+    aKey: 'faq_a1',
+    defaultQ: 'How fresh are the greens when they arrive?',
+    defaultA:
+      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+  },
+  {
+    qKey: 'faq_q2',
+    aKey: 'faq_a2',
+    defaultQ: 'How long do they stay fresh at home?',
+    defaultA:
+      "Refrigerated and unwashed, most varieties hold up well for 5–7 days. We'll include specific care instructions with every order.",
+  },
+  {
+    qKey: 'faq_q3',
+    aKey: 'faq_a3',
+    defaultQ: 'Are these actually pesticide-free?',
+    defaultA:
+      "Yes, grown indoors on soil-free racks, with nothing sprayed at any stage. We're working toward publishing third-party lab results as we scale.",
+  },
+  {
+    qKey: 'faq_q4',
+    aKey: 'faq_a4',
+    defaultQ: 'Do you deliver outside the tricity?',
+    defaultA:
+      "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+  },
+  {
+    qKey: 'faq_q5',
+    aKey: 'faq_a5',
+    defaultQ: 'Can restaurants order in bulk?',
+    defaultA:
+      'Yes, reach out via our restaurants page for standing orders and bulk pricing.',
   },
 ];
 
@@ -107,18 +207,50 @@ export default function ProductListClient({
   initialCategories,
   content = {},
   initialWhyChoosePins = [],
+  reviews = [],
+  samplerVariant = null,
 }: {
   initialProducts: Product[];
   initialCategories: string[];
   content?: Record<string, string>;
   initialWhyChoosePins?: WhyChoosePin[];
+  reviews?: Review[];
+  samplerVariant?: SamplerVariantData | null;
 }) {
   const [selectedCat, setSelectedCat] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
-  const [whyChoosePins, setWhyChoosePins] = useState<WhyChoosePin[]>(
-    initialWhyChoosePins.length > 0 ? initialWhyChoosePins : DEFAULT_WHY_CHOOSE_PINS
-  );
+  const [whyChoosePins, setWhyChoosePins] = useState<WhyChoosePin[]>(initialWhyChoosePins);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [newsletterMessage, setNewsletterMessage] = useState('');
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const handleNewsletterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    setNewsletterStatus('loading');
+    setNewsletterMessage('');
+    try {
+      const res = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail.trim(), source: 'product_listing' }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNewsletterStatus('success');
+        setNewsletterMessage(data.message || 'Thanks for signing up! Check your inbox for your 15% off code. 🌱');
+        setNewsletterEmail('');
+      } else {
+        setNewsletterStatus('error');
+        setNewsletterMessage(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch {
+      setNewsletterStatus('error');
+      setNewsletterMessage('Failed to connect. Please check your internet connection.');
+    }
+  };
 
   useEffect(() => {
     fetch('/api/pins/product_listing_why_choose')
@@ -131,7 +263,7 @@ export default function ProductListClient({
       .catch(() => {});
   }, []);
 
-  const activeWhyChoose = whyChoosePins.length > 0 ? whyChoosePins : DEFAULT_WHY_CHOOSE_PINS;
+  const effectiveReviews = reviews && reviews.length > 0 ? reviews : DEFAULT_REVIEWS;
 
   const addItem = useCartStore((s) => s.addItem);
 
@@ -502,61 +634,94 @@ export default function ProductListClient({
       </div>
 
       {/* ================= SECTION 4: TRUST HERO ================= */}
-      <section className="relative overflow-hidden bg-[#0F1C12] text-[#FFFDF8] py-16 sm:py-20">
+      <section className="relative overflow-hidden bg-[#0F1C12] text-[#FFFDF8] min-h-[340px] flex items-center">
         {/* Background Photo with Scrim */}
         <div
-          className="absolute inset-0 z-0 bg-cover bg-center opacity-40"
+          className="absolute inset-0 z-0 bg-cover bg-center"
           style={{
             backgroundImage:
               "url('https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=85&w=1600&auto=format&fit=crop')",
           }}
         />
-        <div className="absolute inset-0 z-1 bg-gradient-to-r from-[#0A140D]/95 via-[#0A140D]/75 to-transparent" />
+        <div
+          className="absolute inset-0 z-1"
+          style={{
+            background:
+              'linear-gradient(100deg, rgba(10,20,13,.74) 0%, rgba(10,20,13,.5) 42%, rgba(10,20,13,.14) 70%, rgba(10,20,13,0) 100%)',
+          }}
+        />
 
-        <div className="relative z-10 max-w-[1180px] mx-auto px-4 sm:px-8">
-          <div className="max-w-xl">
-            <h2 className="font-serif font-medium text-3xl sm:text-4xl lg:text-5xl leading-[1.08] tracking-tight mb-3">
-              Grown for your gut,{' '}
-              <em className="italic text-[#CFFA57] font-normal">not the supermarket shelf.</em>
+        <div className="relative z-10 max-w-[1180px] mx-auto px-4 sm:px-8 w-full py-[54px]">
+          <div className="max-w-2xl">
+            <h2 className="font-serif font-medium text-[clamp(30px,4.5vw,52px)] leading-[1.06] tracking-tight mb-4 text-[#FFFDF8]">
+              {content.trust_title ? (
+                content.trust_title.includes('\n') ? (
+                  <>
+                    {content.trust_title.split('\n')[0]}
+                    <br />
+                    <em className="italic text-[#CFFA57] font-normal">
+                      {content.trust_title.split('\n').slice(1).join('\n')}
+                    </em>
+                  </>
+                ) : (
+                  content.trust_title
+                )
+              ) : (
+                <>
+                  Each tray harvested,
+                  <br />
+                  <em className="italic text-[#CFFA57] font-normal">near you.</em>
+                </>
+              )}
             </h2>
 
-            {/* Handwritten Caveat Accent */}
-            <div className="flex items-center gap-3 mb-8 ml-2">
+            {/* Handwritten Caveat Accent Line */}
+            <div className="flex items-center gap-3 mb-7">
               <svg
-                className="w-8 h-6 text-[#CFFA57] flex-shrink-0"
+                className="w-[34px] h-[26px] text-[#CFFA57] flex-shrink-0"
                 fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                viewBox="0 0 34 26"
               >
                 <path
+                  d="M4 3C4 12 6 21 15 21c7 0 11-7 15-9"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M26 9l4 3-2 5"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
                 />
               </svg>
-              <span className="font-handwriting font-bold text-2xl text-[#CFFA57]">
-                freshly harvested in the Tricity
+              <span className="font-handwriting font-bold text-[25px] text-[#CFFA57] leading-none">
+                {content.trust_tagline || 'Grown 10 min away. Cut to order.'}
               </span>
             </div>
 
-            {/* 4 Bullets Grid */}
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-sm text-white/90">
+            {/* 5 Bullets Grid */}
+            <ul className="grid grid-cols-1 min-[560px]:grid-cols-2 gap-x-[26px] gap-y-[14px] text-[14px] text-white/[0.92]">
               <li className="flex items-start gap-2.5">
-                <span className="text-[#CFFA57] text-base leading-none mt-0.5">✦</span>
-                <span>100% Reverse Osmosis mineral drinking water</span>
+                <span className="text-[#CFFA57] text-base leading-none mt-0.5 select-none">✦</span>
+                <span>{content.trust_bullet_1 || 'Harvested the day you order, never pulled from cold storage.'}</span>
               </li>
               <li className="flex items-start gap-2.5">
-                <span className="text-[#CFFA57] text-base leading-none mt-0.5">✦</span>
-                <span>Zero soil, zero compost pathogens or grit</span>
+                <span className="text-[#CFFA57] text-base leading-none mt-0.5 select-none">✦</span>
+                <span>{content.trust_bullet_2 || 'Zero pesticides, ever. Grown indoors on soil-free racks.'}</span>
               </li>
               <li className="flex items-start gap-2.5">
-                <span className="text-[#CFFA57] text-base leading-none mt-0.5">✦</span>
-                <span>10 day biological harvest peak density</span>
+                <span className="text-[#CFFA57] text-base leading-none mt-0.5 select-none">✦</span>
+                <span>{content.trust_bullet_3 || 'Non-GMO seeds only, sourced and verified before sowing.'}</span>
               </li>
               <li className="flex items-start gap-2.5">
-                <span className="text-[#CFFA57] text-base leading-none mt-0.5">✦</span>
-                <span>Delivered within hours of harvest</span>
+                <span className="text-[#CFFA57] text-base leading-none mt-0.5 select-none">✦</span>
+                <span>{content.trust_bullet_4 || 'Zero days in transit, grown right here in the tricity.'}</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <span className="text-[#CFFA57] text-base leading-none mt-0.5 select-none">✦</span>
+                <span>{content.trust_bullet_5 || 'You can come see the racks your greens grew on.'}</span>
               </li>
             </ul>
           </div>
@@ -671,80 +836,340 @@ export default function ProductListClient({
       <section className="bg-[#FFFDF8] py-16">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-8">
           <div className="mb-8">
-            <h2 className="font-serif font-medium text-2xl sm:text-3xl text-[#151F19]">
-              {content.why_choose_title || 'The Lesser Known Fact'}
+            <h2 className="font-serif font-medium text-[clamp(26px,3.5vw,36px)] text-[#151F19] leading-snug">
+              {content.why_choose_title ? (
+                content.why_choose_title.includes('right choice') ? (
+                  <>
+                    {content.why_choose_title.split('right choice')[0]}
+                    <span className="underline decoration-[#7BAE6E] decoration-2 underline-offset-4">
+                      right choice
+                    </span>
+                    {content.why_choose_title.split('right choice')[1]}
+                  </>
+                ) : (
+                  content.why_choose_title
+                )
+              ) : (
+                <>
+                  Why is this the{' '}
+                  <span className="underline decoration-[#7BAE6E] decoration-2 underline-offset-4">
+                    right choice
+                  </span>{' '}
+                  for you?
+                </>
+              )}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {activeWhyChoose.map((pin, idx) => {
-              const style = WHY_CHOOSE_STYLES[idx % WHY_CHOOSE_STYLES.length];
-              const cardContent = (
-                <>
-                  {pin.image_url ? (
-                    <div
-                      className={`${style.bg} rounded-2xl border ${style.border} flex flex-col justify-between shadow-sm overflow-hidden min-h-[280px] h-full transition-transform duration-300 hover:-translate-y-1 hover:shadow-md`}
-                    >
-                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-black/5">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={pin.image_url}
-                          alt={pin.title}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                        {pin.icon && (
-                          <span className="absolute top-3 left-3 z-10 font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-[#FFFDF8]/95 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm">
-                            {pin.icon}
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-5 flex flex-col justify-end flex-1">
-                        <h4 className="font-serif font-bold text-lg text-[#151F19] leading-snug mb-1">
-                          {pin.title}
-                        </h4>
-                        {pin.description && (
-                          <p className="font-mono text-xs text-[#5C6B60] leading-relaxed">
-                            {pin.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className={`${style.bg} p-6 rounded-2xl border ${style.border} flex flex-col justify-between aspect-[1/1.2] min-h-[280px] h-full shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-md`}
-                    >
-                      <div className="flex justify-between items-start">
-                        {pin.icon && (
-                          <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/80 px-2.5 py-1 rounded-full">
-                            {pin.icon}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="font-serif font-bold text-xl text-[#151F19] leading-snug mb-1">
-                          {pin.title}
-                        </h4>
-                        {pin.description && (
-                          <p className="font-mono text-xs text-[#5C6B60]">
-                            {pin.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+          <div className="grid grid-cols-1 min-[480px]:grid-cols-2 min-[900px]:grid-cols-4 gap-[17px]">
+            {[0, 1, 2, 3].map((idx) => {
+              const defaultBlock = DEFAULT_WHY_CHOOSE_BLOCKS[idx];
+              const pin = whyChoosePins[idx];
+              const title = pin?.title || defaultBlock.title;
+              const description = pin?.description || defaultBlock.description;
+              const bgColor = WHY_CHOOSE_COLORS[idx % WHY_CHOOSE_COLORS.length];
+
+              const imageUrl = pin ? pin.image_url : defaultBlock.image_url;
+              const isCocoPeat = idx === 2 || title.toLowerCase().includes('coco-peat');
+
+              const cardContent = imageUrl ? (
+                <div
+                  style={{ backgroundColor: bgColor }}
+                  className="aspect-[1/1.32] rounded-none border-0 flex flex-col justify-between overflow-hidden transition-transform duration-300 hover:-translate-y-1 relative"
+                >
+                  <div className="p-[22px] pb-0 relative z-10">
+                    <h3 className="font-sans font-extrabold text-[20px] sm:text-[22px] lg:text-[24px] leading-tight tracking-[-0.01em] text-[#151F19] whitespace-pre-line">
+                      {title}
+                    </h3>
+                    {description && (
+                      <p className="font-mono text-[10px] text-[#5C6B60] tracking-[0.03em] mt-2">
+                        {description}
+                      </p>
+                    )}
+                  </div>
+                  <div className={`w-full mt-auto ${isCocoPeat ? 'overflow-visible relative' : 'overflow-hidden'}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imageUrl}
+                      alt={title.replace('\n', ' ')}
+                      style={
+                        isCocoPeat
+                          ? { transform: 'translate(1.5%, -11.5%) scale(1.5)', transformOrigin: 'center' }
+                          : undefined
+                      }
+                      className={`w-full aspect-[4/3] object-contain object-bottom block ${
+                        isCocoPeat ? 'scale-[1.5] translate-x-[1.5%] -translate-y-[11.5%] origin-center' : ''
+                      }`}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{ backgroundColor: bgColor }}
+                  className="aspect-[1/1.32] p-[22px] rounded-none border-0 flex flex-col justify-between transition-transform duration-300 hover:-translate-y-1"
+                >
+                  <h3 className="font-sans font-extrabold text-[20px] sm:text-[22px] lg:text-[24px] leading-tight tracking-[-0.01em] text-[#151F19] whitespace-pre-line">
+                    {title}
+                  </h3>
+                  {description && (
+                    <p className="font-mono text-[10px] text-[#5C6B60] tracking-[0.03em]">
+                      {description}
+                    </p>
                   )}
-                </>
+                </div>
               );
 
-              return pin.link_url ? (
-                <Link key={pin.id || idx} href={pin.link_url} className="block group h-full">
+              return pin?.link_url ? (
+                <Link key={pin?.id || idx} href={pin.link_url} className="block group h-full">
                   {cardContent}
                 </Link>
               ) : (
-                <div key={pin.id || idx} className="block group h-full">
+                <div key={pin?.id || idx} className="block group h-full">
                   {cardContent}
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= SECTION 7: REVIEWS ("STRAIGHT FROM THE GUT") ================= */}
+      <section className="bg-[#E4DDC8] pt-[36px] pb-[80px]">
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-8">
+          <div className="mb-8">
+            <h2 className="font-serif font-medium text-[clamp(28px,4vw,40px)] text-[#151F19] leading-tight">
+              {content.reviews_title || 'Straight from the gut.'}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 min-[560px]:grid-cols-2 min-[900px]:grid-cols-4 gap-[22px]">
+            {effectiveReviews.map((rev, i) => (
+              <div
+                key={rev.id || i}
+                className="bg-[#FFFDF8] rounded-[10px] pt-[22px] px-[24px] pb-[6px] h-[150px] flex flex-col justify-between shadow-sm"
+              >
+                <div
+                  className="font-sans text-[9px] leading-[1.53] text-[#151F19] line-clamp-5"
+                  dangerouslySetInnerHTML={{ __html: rev.review_text }}
+                />
+                <div className="border-t border-[#E4DDC8] mt-[14px] mb-[4px] pt-1 flex items-center justify-between">
+                  <span className="font-sans font-bold text-[11px] text-[#151F19] truncate pr-2">
+                    {rev.reviewer_name}
+                  </span>
+                  <span className="text-[10px] tracking-[3px] flex-shrink-0">
+                    <span className="text-[#FF9F5A]">{'★'.repeat(rev.rating || 5)}</span>
+                    <span className="text-[#D1D5DB]">
+                      {'★'.repeat(Math.max(0, 5 - (rev.rating || 5)))}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= SECTION 7b: NEW TO MICROGREENS? (MID-CTA BANNER) ================= */}
+      <section className="bg-[#E4DDC8] p-0 overflow-hidden">
+        <div className="mband">
+          <div className="row">
+            <div className="slice">
+              <div
+                className="cimg"
+                style={{
+                  backgroundImage: `url('https://images.pexels.com/photos/8515766/pexels-photo-8515766.jpeg?auto=compress&cs=tinysrgb&w=1600')`,
+                }}
+              />
+            </div>
+            <div className="slice">
+              <div
+                className="cimg"
+                style={{
+                  backgroundImage: `url('https://images.pexels.com/photos/30270630/pexels-photo-30270630.jpeg?auto=compress&cs=tinysrgb&w=1600')`,
+                }}
+              />
+            </div>
+            <div className="slice wide">
+              <div
+                className="cimg"
+                style={{
+                  backgroundImage: `url('https://images.pexels.com/photos/27400770/pexels-photo-27400770.jpeg?auto=compress&cs=tinysrgb&w=1600')`,
+                }}
+              />
+            </div>
+            <div className="slice">
+              <div
+                className="cimg"
+                style={{
+                  backgroundImage: `url('https://images.unsplash.com/photo-1612927601601-6638404737ce?q=80&w=1600&auto=format&fit=crop')`,
+                }}
+              />
+            </div>
+            <div className="slice tight">
+              <div
+                className="cimg"
+                style={{
+                  backgroundImage: `url('https://images.pexels.com/photos/27969848/pexels-photo-27969848.jpeg?auto=compress&cs=tinysrgb&w=1600')`,
+                }}
+              />
+            </div>
+          </div>
+          <div
+            className="absolute inset-0 pointer-events-none z-[1]"
+            style={{
+              background:
+                'linear-gradient(100deg, rgba(18,26,17,.75) 0%, rgba(18,26,17,.45) 38%, rgba(18,26,17,0) 68%)',
+            }}
+          />
+          <div className="relative z-[2] flex flex-col justify-center h-full px-6 sm:px-12 md:px-16 max-w-xl text-[#FFFDF8]">
+            <h2 className="font-serif font-medium text-3xl sm:text-4xl md:text-5xl leading-[1.06] mb-2 sm:mb-3">
+              {content.sampler_banner_title ? (
+                content.sampler_banner_title
+              ) : (
+                <>
+                  New to<br />microgreens?
+                </>
+              )}
+            </h2>
+            <p className="text-xs sm:text-sm md:text-[15px] text-[#FFFDF8]/90 mb-5 sm:mb-6 max-w-xs sm:max-w-sm leading-relaxed">
+              {content.sampler_banner_subtitle ||
+                'Start small. One sampler tray, different ways to use it, zero commitment.'}
+            </p>
+            <div>
+              {samplerVariant ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    useCartStore.getState().addItem({
+                      variantId: samplerVariant.variantId,
+                      productSlug: samplerVariant.productSlug,
+                      productName: samplerVariant.productName,
+                      variantLabel: samplerVariant.variantLabel,
+                      pricePaise: samplerVariant.pricePaise,
+                      maxStock: samplerVariant.maxStock,
+                    });
+                    useCartStore.getState().setIsOpen(true);
+                  }}
+                  className="inline-flex items-center gap-2 bg-[#151F19] text-[#FFFDF8] font-bold text-xs sm:text-[13.5px] tracking-wider uppercase px-5 py-3 sm:px-6 sm:py-3.5 rounded-full hover:-translate-y-1 transition-transform shadow-lg"
+                >
+                  {content.sampler_banner_cta_text || 'Try the sampler pack →'}
+                </button>
+              ) : (
+                <Link
+                  href="/products?category=bundle"
+                  className="inline-flex items-center gap-2 bg-[#151F19] text-[#FFFDF8] font-bold text-xs sm:text-[13.5px] tracking-wider uppercase px-5 py-3 sm:px-6 sm:py-3.5 rounded-full hover:-translate-y-1 transition-transform shadow-lg"
+                >
+                  {content.sampler_banner_cta_text || 'Try the sampler pack →'}
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= SECTION 8: FAQ ACCORDION ================= */}
+      <section className="bg-[#F3EEE0] py-20 sm:py-24">
+        <div className="max-w-[940px] mx-auto px-4 sm:px-8">
+          <h2 className="font-serif font-bold text-[clamp(32px,4vw,40px)] text-center text-[#151F19] mb-12">
+            {content.faq_title || 'Frequently Asked Questions'}
+          </h2>
+
+          <div className="divide-y divide-[#151F19]/15 border-y border-[#151F19]/15">
+            {DEFAULT_FAQS.map((faq, idx) => {
+              const isOpen = openFaqIndex === idx;
+              const question = content[faq.qKey] || faq.defaultQ;
+              const answer = content[faq.aKey] || faq.defaultA;
+
+              return (
+                <div key={idx} className="transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                    className="w-full py-5 flex items-center justify-between text-left gap-4 focus:outline-none cursor-pointer group"
+                    aria-expanded={isOpen}
+                  >
+                    <span className="font-serif font-bold text-[17px] text-[#151F19] group-hover:text-[#1C3F2D] transition-colors">
+                      {question}
+                    </span>
+                    <span
+                      className={`w-7 h-7 rounded-full border border-[#151F19]/25 flex items-center justify-center font-mono text-sm text-[#151F19] flex-shrink-0 transition-all duration-200 ${
+                        isOpen ? 'bg-[#151F19] text-[#CFFA57] border-[#151F19]' : 'bg-transparent'
+                      }`}
+                    >
+                      {isOpen ? '−' : '+'}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="pb-6 text-[14px] text-[#5C6B60] leading-relaxed font-sans pr-8">
+                      {answer}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ================= SECTION 9: WANT 15% OFF & INSIDE SCOOP (NEWSLETTER) ================= */}
+      <section className="bg-[#122A1F] py-16 sm:py-20 text-[#FFFDF8]">
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-[1.2fr_1fr] gap-10 items-center">
+          <div>
+            <h2 className="font-serif text-3xl sm:text-4xl font-medium leading-[1.15] mb-3 text-[#FFFDF8]">
+              {content.newsletter_title ? (
+                content.newsletter_title.includes('inside scoop?') ? (
+                  <>
+                    {content.newsletter_title.split('inside scoop?')[0]}
+                    <em className="italic text-[#CFFA57] font-normal">inside scoop?</em>
+                    {content.newsletter_title.split('inside scoop?')[1]}
+                  </>
+                ) : (
+                  content.newsletter_title
+                )
+              ) : (
+                <>
+                  Want 15% off and<br />
+                  the <em className="italic text-[#CFFA57] font-normal">inside scoop?</em>
+                </>
+              )}
+            </h2>
+            <p className="text-[#FFFDF8]/65 text-sm sm:text-base max-w-md leading-relaxed">
+              {content.newsletter_subtitle ||
+                'Get 15% off your first order, plus early access to new varieties, growing tips and tricity-only drops.'}
+            </p>
+          </div>
+
+          <div>
+            <form onSubmit={handleNewsletterSubscribe} className="flex flex-col sm:flex-row gap-2.5">
+              <input
+                type="email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                placeholder="your@email.com"
+                required
+                disabled={newsletterStatus === 'loading'}
+                className="flex-1 min-w-[200px] bg-[#FFFDF8]/10 border border-[#FFFDF8]/25 rounded-full px-5 py-3.5 text-[#FFFDF8] text-sm outline-none placeholder:text-[#FFFDF8]/45 focus:border-[#CFFA57] transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={newsletterStatus === 'loading'}
+                className="bg-[#CFFA57] text-[#122A1F] font-bold text-sm px-7 py-3.5 rounded-full whitespace-nowrap hover:-translate-y-0.5 transition-transform disabled:opacity-50 shadow-md"
+              >
+                {newsletterStatus === 'loading' ? 'Signing Up...' : 'Sign Up'}
+              </button>
+            </form>
+            {newsletterMessage && (
+              <p
+                className={`text-xs mt-2.5 ${
+                  newsletterStatus === 'success' ? 'text-[#CFFA57]' : 'text-red-400'
+                }`}
+              >
+                {newsletterMessage}
+              </p>
+            )}
+            <p className="text-[11px] text-[#FFFDF8]/40 mt-2.5">
+              No spam. Unsubscribe anytime.
+            </p>
           </div>
         </div>
       </section>

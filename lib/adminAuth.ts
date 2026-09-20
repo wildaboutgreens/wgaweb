@@ -46,7 +46,7 @@ export function useAdminAuth(panelKey?: string) {
   return { isAuthed, loading };
 }
 
-/** Wrapper for admin fetch calls — returns the response or redirects on 401 */
+/** Wrapper for admin fetch calls: returns the response or redirects on 401 */
 export async function adminFetch(url: string, options?: RequestInit): Promise<Response> {
   const res = await fetch(url, { ...options, credentials: 'include' });
   if (res.status === 401 && typeof window !== 'undefined') {

@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/pins/[groupKey] — returns active pins for a group, ordered by display_order
+// GET /api/pins/[groupKey]: returns active pins for a group, ordered by display_order
 export async function GET(
   _request: NextRequest,
   { params }: { params: { groupKey: string } }

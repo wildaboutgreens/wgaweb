@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
-// GET /api/blog/[slug] — public: single published post
+// GET /api/blog/[slug]: public: single published post
 export async function GET(
   _request: NextRequest,
   { params }: { params: { slug: string } }

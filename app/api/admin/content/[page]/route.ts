@@ -4,7 +4,7 @@ import { getSQL } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// GET /api/admin/content/[page] — read all blocks for a page (with full metadata)
+// GET /api/admin/content/[page]: read all blocks for a page (with full metadata)
 export async function GET(
   _request: NextRequest,
   { params }: { params: { page: string } }
@@ -31,7 +31,7 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/content/[page] — upsert content_blocks for a page
+// PUT /api/admin/content/[page]: upsert content_blocks for a page
 // Body: { blocks: [{ key, value, value_type? }] }
 export async function PUT(
   request: NextRequest,

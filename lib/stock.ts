@@ -11,7 +11,7 @@ import { getSQL } from '@/lib/db';
 export async function decrementStock(orderId: string): Promise<boolean> {
   const sql = getSQL();
 
-  // Atomically claim the decrement — only one caller wins this UPDATE
+  // Atomically claim the decrement: only one caller wins this UPDATE
   const claimed = await sql`
     UPDATE orders
     SET stock_decremented = true

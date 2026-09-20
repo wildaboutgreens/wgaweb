@@ -53,10 +53,11 @@ export async function PUT(
     const { id } = params;
     const body = await request.json();
 
-    const { slug, name, categories, badge_label, highlight_1, highlight_2, description, nutrition_notes, is_bundle, is_active, thumbnail_url, thumbnail_alt_text, tags, detail_highlight_badges } = body;
+    const { slug, name, categories, badge_label, highlight_1, highlight_2, description, nutrition_notes, is_bundle, is_active, thumbnail_url, thumbnail_alt_text, tags, detail_highlight_badges, faqs } = body;
 
     const formattedTags = tags !== undefined ? (Array.isArray(tags) ? tags : []) : null;
     const badgesJson = detail_highlight_badges !== undefined && detail_highlight_badges !== null ? JSON.stringify(detail_highlight_badges) : null;
+    const faqsJson = faqs !== undefined && faqs !== null ? JSON.stringify(faqs) : null;
 
     const result = await sql`
       UPDATE products
@@ -74,7 +75,8 @@ export async function PUT(
         thumbnail_url   = CASE WHEN ${thumbnail_url !== undefined} THEN ${thumbnail_url ?? null} ELSE thumbnail_url END,
         thumbnail_alt_text = CASE WHEN ${thumbnail_alt_text !== undefined} THEN ${thumbnail_alt_text ?? null} ELSE thumbnail_alt_text END,
         tags            = CASE WHEN ${tags !== undefined} THEN ${formattedTags} ELSE tags END,
-        detail_highlight_badges = CASE WHEN ${detail_highlight_badges !== undefined} THEN ${badgesJson}::jsonb ELSE detail_highlight_badges END
+        detail_highlight_badges = CASE WHEN ${detail_highlight_badges !== undefined} THEN ${badgesJson}::jsonb ELSE detail_highlight_badges END,
+        faqs            = CASE WHEN ${faqs !== undefined} THEN ${faqsJson}::jsonb ELSE faqs END
       WHERE id = ${id}
       RETURNING *
     `;

@@ -29,7 +29,7 @@ export default function AdminLayoutClient({
     { href: `/${currentKey}/inquiries`, label: 'Inquiries', icon: '💬' },
   ];
 
-  // Login page — no sidebar, no auth check blocking
+  // Login page: no sidebar, no auth check blocking
   if (pathname === `/${currentKey}/login` || pathname.endsWith('/login')) {
     return <>{children}</>;
   }

@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/products/categories — distinct category values from active products
+// GET /api/products/categories: distinct category values from active products
 export async function GET() {
   try {
     const sql = getSQL();

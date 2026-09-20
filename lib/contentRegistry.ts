@@ -249,10 +249,161 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
         'Real nutrient density measured at harvest hour, not after a week in cold transport.',
     },
     {
+      key: 'trust_title',
+      label: 'Trust Hero Headline',
+      type: 'text',
+      defaultValue: 'Each tray harvested,\nnear you.',
+    },
+    {
+      key: 'trust_tagline',
+      label: 'Trust Hero Handwritten Tagline',
+      type: 'text',
+      defaultValue: 'Grown 10 min away. Cut to order.',
+    },
+    {
+      key: 'trust_bullet_1',
+      label: 'Trust Hero Bullet 1',
+      type: 'text',
+      defaultValue: 'Harvested the day you order, never pulled from cold storage.',
+    },
+    {
+      key: 'trust_bullet_2',
+      label: 'Trust Hero Bullet 2',
+      type: 'text',
+      defaultValue: 'Zero pesticides, ever. Grown indoors on soil-free racks.',
+    },
+    {
+      key: 'trust_bullet_3',
+      label: 'Trust Hero Bullet 3',
+      type: 'text',
+      defaultValue: 'Non-GMO seeds only, sourced and verified before sowing.',
+    },
+    {
+      key: 'trust_bullet_4',
+      label: 'Trust Hero Bullet 4',
+      type: 'text',
+      defaultValue: 'Zero days in transit, grown right here in the tricity.',
+    },
+    {
+      key: 'trust_bullet_5',
+      label: 'Trust Hero Bullet 5',
+      type: 'text',
+      defaultValue: 'You can come see the racks your greens grew on.',
+    },
+    {
       key: 'why_choose_title',
       label: 'Why Choose Us Title',
       type: 'text',
-      defaultValue: 'The Lesser Known Fact',
+      defaultValue: 'Why is this the right choice for you?',
+    },
+    {
+      key: 'reviews_title',
+      label: 'Reviews Section Title',
+      type: 'text',
+      defaultValue: 'Straight from the gut.',
+    },
+    {
+      key: 'sampler_banner_title',
+      label: 'Sampler Banner Title',
+      type: 'text',
+      defaultValue: 'New to microgreens?',
+    },
+    {
+      key: 'sampler_banner_subtitle',
+      label: 'Sampler Banner Subtitle',
+      type: 'textarea',
+      defaultValue:
+        'Start small. One sampler tray, different ways to use it, zero commitment.',
+    },
+    {
+      key: 'sampler_banner_cta_text',
+      label: 'Sampler Banner CTA Text',
+      type: 'text',
+      defaultValue: 'Try the sampler pack →',
+    },
+    {
+      key: 'faq_title',
+      label: 'FAQ Section Title',
+      type: 'text',
+      defaultValue: 'Frequently Asked Questions',
+    },
+    {
+      key: 'faq_q1',
+      label: 'FAQ Question 1',
+      type: 'text',
+      defaultValue: 'How fresh are the greens when they arrive?',
+    },
+    {
+      key: 'faq_a1',
+      label: 'FAQ Answer 1',
+      type: 'textarea',
+      defaultValue:
+        'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+    },
+    {
+      key: 'faq_q2',
+      label: 'FAQ Question 2',
+      type: 'text',
+      defaultValue: 'How long do they stay fresh at home?',
+    },
+    {
+      key: 'faq_a2',
+      label: 'FAQ Answer 2',
+      type: 'textarea',
+      defaultValue:
+        "Refrigerated and unwashed, most varieties hold up well for 5–7 days. We'll include specific care instructions with every order.",
+    },
+    {
+      key: 'faq_q3',
+      label: 'FAQ Question 3',
+      type: 'text',
+      defaultValue: 'Are these actually pesticide-free?',
+    },
+    {
+      key: 'faq_a3',
+      label: 'FAQ Answer 3',
+      type: 'textarea',
+      defaultValue:
+        "Yes, grown indoors on soil-free racks, with nothing sprayed at any stage. We're working toward publishing third-party lab results as we scale.",
+    },
+    {
+      key: 'faq_q4',
+      label: 'FAQ Question 4',
+      type: 'text',
+      defaultValue: 'Do you deliver outside the tricity?',
+    },
+    {
+      key: 'faq_a4',
+      label: 'FAQ Answer 4',
+      type: 'textarea',
+      defaultValue:
+        "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+    },
+    {
+      key: 'faq_q5',
+      label: 'FAQ Question 5',
+      type: 'text',
+      defaultValue: 'Can restaurants order in bulk?',
+    },
+    {
+      key: 'faq_a5',
+      label: 'FAQ Answer 5',
+      type: 'textarea',
+      defaultValue:
+        'Yes, reach out via our restaurants page for standing orders and bulk pricing.',
+    },
+    {
+      key: 'newsletter_title',
+      label: 'Newsletter Title',
+      type: 'text',
+      defaultValue: 'Want 15% off and the inside scoop?',
+    },
+    {
+      key: 'newsletter_subtitle',
+      label: 'Newsletter Subtitle',
+      type: 'textarea',
+      defaultValue:
+        'Get 15% off your first order, plus early access to new varieties, growing tips and tricity-only drops.',
     },
   ],
 
@@ -472,15 +623,61 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'newsletter_thankyou_subject',
       label: 'Newsletter Thank-You Email Subject',
       type: 'text',
-      defaultValue: 'Welcome to Wild About Greens! [placeholder — replace with real copy]',
+      defaultValue: 'Welcome to Wild About Greens! [placeholder: replace with real copy]',
       description: 'Subject line for the welcome email sent after newsletter signup.',
     },
     {
       key: 'newsletter_thankyou_body',
       label: 'Newsletter Thank-You Email Body',
       type: 'textarea',
-      defaultValue: 'Hi there!\n\nWelcome to Wild About Greens — we\'re so glad you\'re here. 🌱\n\n[placeholder — replace with real copy]\n\nStay fresh,\nThe Wild About Greens Team',
+      defaultValue: 'Hi there!\n\nWelcome to Wild About Greens, we\'re so glad you\'re here. 🌱\n\n[placeholder: replace with real copy]\n\nStay fresh,\nThe Wild About Greens Team',
       description: 'Body content for the welcome email. Use plain text with line breaks.',
+    },
+  ],
+  'recipe-khazana': [
+    {
+      key: 'hero_image_url',
+      label: 'Hero Banner Image',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Upload a wide hero banner photo for the Recipe Khazana listing page.',
+    },
+    {
+      key: 'hero_title',
+      label: 'Hero Title',
+      type: 'text',
+      defaultValue: 'All Recipes',
+      description: 'Main page heading below or in the hero banner.',
+    },
+    {
+      key: 'hero_subtitle',
+      label: 'Hero Subtitle',
+      type: 'textarea',
+      defaultValue: 'Explore delicious and nutritious recipes made with fresh microgreens.',
+      description: 'Short introduction text.',
+    },
+  ],
+  'blog': [
+    {
+      key: 'hero_image_url',
+      label: 'Hero Banner Image',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Upload a wide hero banner photo for the Blog listing page.',
+    },
+    {
+      key: 'hero_title',
+      label: 'Hero Title',
+      type: 'text',
+      defaultValue: 'The Journal',
+      description: 'Main page heading below or in the hero banner.',
+    },
+    {
+      key: 'hero_subtitle',
+      label: 'Hero Subtitle',
+      type: 'textarea',
+      defaultValue: 'Articles, insights, and stories about fresh eating, nutrition, and urban farming.',
+      description: 'Short introduction text.',
     },
   ],
 };

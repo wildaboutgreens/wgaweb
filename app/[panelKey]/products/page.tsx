@@ -29,11 +29,49 @@ interface HighlightBadge {
   label: string;
 }
 
+export interface ProductFAQ {
+  question: string;
+  answer: string;
+}
+
 const defaultBadges: HighlightBadge[] = [
   { icon: '⚡', label: '40x Sulforaphane' },
   { icon: '🛡️', label: 'Zero Pesticides' },
   { icon: '💧', label: 'Mineral RO Grown' },
   { icon: '✂️', label: 'Cut to Order' },
+];
+
+const defaultProductFaqs: ProductFAQ[] = [
+  {
+    question: 'How fresh are the greens when they arrive?',
+    answer:
+      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+  },
+  {
+    question: 'How long do they stay fresh at home?',
+    answer:
+      'Refrigerated and unwashed, most varieties hold up well for 5–7 days. We include specific care instructions with every order.',
+  },
+  {
+    question: 'Are these actually pesticide-free?',
+    answer:
+      "Yes, grown indoors on soil-free racks, with nothing sprayed at any stage. We're working toward publishing third-party lab results as we scale.",
+  },
+  {
+    question: 'Do you deliver outside the tricity?',
+    answer:
+      "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+  },
+  {
+    question: 'Can restaurants order in bulk?',
+    answer:
+      'Yes, reach out via our restaurants page for standing orders and bulk pricing.',
+  },
+  {
+    question: 'What if a tray shows up wilted or damaged?',
+    answer:
+      "Send us a quick photo on WhatsApp within 12 hours of delivery, and we'll replace the tray on our next delivery run or refund it immediately, no questions asked.",
+  },
 ];
 
 interface Product {
@@ -54,6 +92,7 @@ interface Product {
   variants?: Variant[];
   images?: ProductImage[];
   detail_highlight_badges?: HighlightBadge[] | null;
+  faqs?: ProductFAQ[] | null;
 }
 
 const emptyProduct = {
@@ -95,6 +134,7 @@ export default function AdminProductsPage() {
   const [catInput, setCatInput] = useState('');
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [badges, setBadges] = useState<HighlightBadge[]>(defaultBadges);
+  const [faqs, setFaqs] = useState<ProductFAQ[]>(defaultProductFaqs);
 
   const handleBadgeChange = (index: number, field: 'icon' | 'label', value: string) => {
     setBadges((prev) => {
@@ -111,6 +151,39 @@ export default function AdminProductsPage() {
 
   const handleRemoveBadge = (index: number) => {
     setBadges((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleFaqChange = (index: number, field: 'question' | 'answer', value: string) => {
+    setFaqs((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddFaq = () => {
+    setFaqs((prev) => [...prev, { question: '', answer: '' }]);
+  };
+
+  const handleRemoveFaq = (index: number) => {
+    setFaqs((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleMoveFaq = (index: number, direction: 'up' | 'down') => {
+    setFaqs((prev) => {
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+      const next = [...prev];
+      const temp = next[index];
+      next[index] = next[targetIndex];
+      next[targetIndex] = temp;
+      return next;
+    });
+  };
+
+  const handleLoadDefaultFaqs = () => {
+    if (faqs.length > 0 && !confirm('Replace current FAQs with the 6 standard default questions?')) return;
+    setFaqs(defaultProductFaqs);
   };
 
   const loadProducts = async () => {
@@ -154,6 +227,11 @@ export default function AdminProductsPage() {
       } else {
         setBadges(defaultBadges);
       }
+      if (Array.isArray(data.faqs) && data.faqs.length > 0) {
+        setFaqs(data.faqs);
+      } else {
+        setFaqs(defaultProductFaqs);
+      }
     }
   };
 
@@ -169,6 +247,7 @@ export default function AdminProductsPage() {
         ...form,
         tags: parsedTags,
         detail_highlight_badges: badges,
+        faqs: faqs.filter((f) => f.question.trim() || f.answer.trim()),
       };
 
       if (isNew) {
@@ -440,6 +519,112 @@ export default function AdminProductsPage() {
             )}
           </div>
 
+          {/* Product FAQs Section */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900">
+                  Product FAQs ({faqs.length})
+                </label>
+                <p className="text-xs text-gray-500">
+                  Variable questions and answers specific to this product, shown in the FAQ section above the footer.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleLoadDefaultFaqs}
+                  className="px-2.5 py-1 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  title="Reset to 6 standard FAQ templates"
+                >
+                  Load Defaults
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddFaq}
+                  className="px-3 py-1 text-xs font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  + Add FAQ
+                </button>
+              </div>
+            </div>
+
+            {faqs.length === 0 ? (
+              <div className="text-center py-6 bg-white border border-dashed rounded-lg">
+                <p className="text-xs text-gray-400 mb-2">No FAQs added for this product yet.</p>
+                <button
+                  type="button"
+                  onClick={handleAddFaq}
+                  className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium"
+                >
+                  + Add First Question
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {faqs.map((faq, idx) => (
+                  <div key={idx} className="bg-white border rounded-lg p-3.5 space-y-2 shadow-sm">
+                    <div className="flex items-center justify-between gap-2 border-b pb-1.5">
+                      <span className="text-xs font-mono font-bold text-gray-500">
+                        FAQ #{idx + 1}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {idx > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleMoveFaq(idx, 'up')}
+                            className="px-1.5 py-0.5 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
+                            title="Move Up"
+                          >
+                            ↑
+                          </button>
+                        )}
+                        {idx < faqs.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleMoveFaq(idx, 'down')}
+                            className="px-1.5 py-0.5 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
+                            title="Move Down"
+                          >
+                            ↓
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFaq(idx)}
+                          className="text-red-500 hover:text-red-700 text-xs font-semibold px-1.5 py-0.5 hover:bg-red-50 rounded ml-1"
+                          title="Remove this question"
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-600 mb-1">Question</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. How long do they stay fresh at home?"
+                        value={faq.question}
+                        onChange={(e) => handleFaqChange(idx, 'question', e.target.value)}
+                        className="w-full px-3 py-1.5 border rounded-lg text-sm bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-600 mb-1">Answer</label>
+                      <textarea
+                        rows={2}
+                        placeholder="e.g. Refrigerated and unwashed, most varieties hold up well for 5–7 days..."
+                        value={faq.answer}
+                        onChange={(e) => handleFaqChange(idx, 'answer', e.target.value)}
+                        className="w-full px-3 py-1.5 border rounded-lg text-sm bg-white"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Thumbnail upload field */}
           <div>
             <ImageField
@@ -492,7 +677,7 @@ export default function AdminProductsPage() {
           <div className="flex gap-2">
             {isNew && (
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 w-full">
-                💡 <strong>Image Gallery</strong> will appear here right after you save — it needs a product ID first.
+                💡 <strong>Image Gallery</strong> will appear here right after you save; it needs a product ID first.
               </p>
             )}
           </div>
@@ -725,6 +910,7 @@ export default function AdminProductsPage() {
             setIsNew(true);
             setForm(emptyProduct);
             setBadges(defaultBadges);
+            setFaqs(defaultProductFaqs);
           }}
           className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800"
         >
@@ -776,7 +962,7 @@ export default function AdminProductsPage() {
                         </span>
                       ))
                     ) : (
-                      <span className="text-xs text-gray-400">—</span>
+                      <span className="text-xs text-gray-400">-</span>
                     )}
                   </div>
                 </td>

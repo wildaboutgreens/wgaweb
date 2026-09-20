@@ -148,7 +148,7 @@ export default function ImageField({
       }
     } catch (err) {
       console.error('ImageField upload error:', err);
-      setError('Upload failed — check your connection and try again');
+      setError('Upload failed. Check your connection and try again.');
     } finally {
       setUploading(false);
       // Reset so the same file can be re-selected

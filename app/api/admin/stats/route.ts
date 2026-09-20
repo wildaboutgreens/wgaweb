@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/admin/stats — dashboard summary in a single call
+// GET /api/admin/stats: dashboard summary in a single call
 export async function GET() {
   try {
     const sql = getSQL();

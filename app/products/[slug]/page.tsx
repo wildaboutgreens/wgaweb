@@ -28,6 +28,17 @@ export interface HighlightBadge {
   label: string;
 }
 
+export interface WhyChoosePin {
+  id: string;
+  group_key: string;
+  icon: string | null;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  link_url: string | null;
+  display_order: number;
+}
+
 export interface Review {
   id: string;
   product_id: string | null;
@@ -37,6 +48,11 @@ export interface Review {
   rating: number;
   display_order: number;
   is_active: boolean;
+}
+
+export interface ProductFAQ {
+  question: string;
+  answer: string;
 }
 
 export interface Product {
@@ -56,6 +72,7 @@ export interface Product {
   variants: Variant[];
   images: ProductImage[];
   detail_highlight_badges?: HighlightBadge[] | null;
+  faqs?: ProductFAQ[] | null;
 }
 
 export interface RelatedProduct {
@@ -68,6 +85,10 @@ export interface RelatedProduct {
   thumbnail_alt_text?: string | null;
   price_paise: number;
   variant_id: string;
+  highlight_1?: string | null;
+  highlight_2?: string | null;
+  badge_label?: string | null;
+  is_bundle?: boolean;
 }
 
 async function getProduct(slug: string): Promise<Product | null> {
@@ -76,7 +97,7 @@ async function getProduct(slug: string): Promise<Product | null> {
     const products = await sql`
       SELECT id, slug, name, categories, description, nutrition_notes,
              thumbnail_url, thumbnail_alt_text, tags, badge_label, highlight_1, highlight_2,
-             is_bundle, is_active, detail_highlight_badges
+             is_bundle, is_active, detail_highlight_badges, faqs
       FROM products
       WHERE slug = ${slug} AND is_active = true
     `;
@@ -112,14 +133,21 @@ async function getRelatedProducts(currentSlug: string): Promise<RelatedProduct[]
   try {
     const sql = getSQL();
     const products = await sql`
-      SELECT p.id, p.slug, p.name, p.categories, p.description, p.thumbnail_url,
+      SELECT p.id, p.slug, p.name, p.categories, p.description,
+             COALESCE(
+               p.thumbnail_url,
+               (SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY pi.display_order ASC LIMIT 1)
+             ) as thumbnail_url,
+             p.thumbnail_alt_text,
+             p.highlight_1, p.highlight_2, p.badge_label, p.is_bundle,
              COALESCE(MIN(v.price_paise), 9900) as price_paise,
              COALESCE(MIN(v.id::text), '') as variant_id
       FROM products p
       LEFT JOIN product_variants v ON v.product_id = p.id AND v.is_active = true
       WHERE p.slug != ${currentSlug} AND p.is_active = true
-      GROUP BY p.id, p.slug, p.name, p.categories, p.description, p.thumbnail_url
-      LIMIT 8
+      GROUP BY p.id, p.slug, p.name, p.categories, p.description, p.thumbnail_url, p.thumbnail_alt_text, p.highlight_1, p.highlight_2, p.badge_label, p.is_bundle, p.created_at
+      ORDER BY p.created_at ASC
+      LIMIT 20
     `;
     return products as unknown as RelatedProduct[];
   } catch (err) {
@@ -134,7 +162,8 @@ async function getContentMap(): Promise<Record<string, string>> {
     const blocks = await sql`
       SELECT key, value
       FROM content_blocks
-      WHERE page = 'product-detail'
+      WHERE page = 'product-detail' OR page = 'product-listing'
+      ORDER BY (CASE WHEN page = 'product-detail' THEN 1 ELSE 0 END) ASC
     `;
     const map: Record<string, string> = {};
     for (const b of blocks as unknown as { key: string; value: string }[]) {
@@ -142,9 +171,26 @@ async function getContentMap(): Promise<Record<string, string>> {
     }
     return map;
   } catch (err) {
-    console.error('Error fetching product-detail content blocks:', err);
+    console.error('Error fetching content blocks:', err);
     return {};
+  }
 }
+
+async function getWhyChoosePins(): Promise<WhyChoosePin[]> {
+  try {
+    const sql = getSQL();
+    const pins = await sql`
+      SELECT id, group_key, icon, title, description, image_url, link_url, display_order
+      FROM content_pins
+      WHERE group_key = 'product_listing_why_choose'
+        AND is_active = true
+      ORDER BY display_order ASC
+    `;
+    return pins as unknown as WhyChoosePin[];
+  } catch (err) {
+    console.error('Error fetching why choose pins:', err);
+    return [];
+  }
 }
 
 async function getProductReviews(productId: string): Promise<Review[]> {
@@ -154,7 +200,7 @@ async function getProductReviews(productId: string): Promise<Review[]> {
       SELECT id, product_id, reviewer_name, reviewer_location, review_text, rating, display_order, is_active
       FROM product_reviews
       WHERE is_active = true AND (product_id = ${productId} OR product_id IS NULL)
-      ORDER BY display_order ASC, created_at ASC
+      ORDER BY (CASE WHEN product_id = ${productId} THEN 0 ELSE 1 END), display_order ASC, created_at ASC
     `;
     return reviews as unknown as Review[];
   } catch (err) {
@@ -169,7 +215,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return { title: 'Product Not Found · Wild About Greens' };
   }
   const title = `${product.name} · Wild About Greens`;
-  const description = product.description || `Shop ${product.name} — fresh living microgreens delivered in Chandigarh, Mohali & Panchkula.`;
+  const description = product.description || `Shop ${product.name}: fresh living microgreens delivered in Chandigarh, Mohali & Panchkula.`;
   return {
     title,
     description,
@@ -191,10 +237,11 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const product = await getProduct(params.slug);
   if (!product) notFound();
 
-  const [relatedProducts, content, reviews] = await Promise.all([
+  const [relatedProducts, content, reviews, whyChoosePins] = await Promise.all([
     getRelatedProducts(params.slug),
     getContentMap(),
     getProductReviews(product.id),
+    getWhyChoosePins(),
   ]);
 
   return (
@@ -203,6 +250,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
       relatedProducts={relatedProducts}
       content={content}
       reviews={reviews}
+      initialWhyChoosePins={whyChoosePins}
     />
   );
 }

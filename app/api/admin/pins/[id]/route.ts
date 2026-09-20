@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
-// PUT /api/admin/pins/[id] — update a pin
+// PUT /api/admin/pins/[id]: update a pin
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -19,8 +19,8 @@ export async function PUT(
         icon          = COALESCE(${icon ?? null}, icon),
         title         = COALESCE(${title ?? null}, title),
         description   = COALESCE(${description ?? null}, description),
-        image_url     = CASE WHEN ${image_url !== undefined} THEN ${image_url ?? null} ELSE image_url END,
-        link_url      = CASE WHEN ${link_url !== undefined} THEN ${link_url ?? null} ELSE link_url END,
+        image_url     = CASE WHEN ${image_url !== undefined} THEN ${image_url ? image_url : null} ELSE image_url END,
+        link_url      = CASE WHEN ${link_url !== undefined} THEN ${link_url ? link_url : null} ELSE link_url END,
         display_order = COALESCE(${display_order ?? null}, display_order),
         is_active     = COALESCE(${is_active ?? null}, is_active)
       WHERE id = ${id}
@@ -39,7 +39,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/pins/[id] — delete a pin
+// DELETE /api/admin/pins/[id]: delete a pin
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }

@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 const VALID_STATUSES = ['new', 'contacted', 'closed'];
 
-// PUT /api/admin/inquiries/[id] — update inquiry status
+// PUT /api/admin/inquiries/[id]: update inquiry status
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }

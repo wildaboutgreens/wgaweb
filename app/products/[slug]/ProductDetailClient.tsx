@@ -5,78 +5,247 @@ import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
-import { Product, Variant, RelatedProduct, Review, HighlightBadge } from './page';
+import { Product, Variant, RelatedProduct, Review, HighlightBadge, WhyChoosePin, ProductFAQ } from './page';
 
-const REVIEWS = [
+const DEFAULT_PRODUCT_FAQS: ProductFAQ[] = [
   {
-    name: 'Dr. Neha Verma',
-    loc: 'Sector 8, Chandigarh',
-    text: 'I recommend these to all my clinical nutrition patients. The sulforaphane density in living broccoli microgreens is incomparable to anything in a polythene bag at the store.',
-    rating: 5,
+    question: 'How fresh are the greens when they arrive?',
+    answer:
+      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
   },
   {
-    name: 'Vikramjit Singh',
-    loc: 'Phase 7, Mohali',
-    text: 'They arrive completely alive in their tray! We snip a handful every morning over our eggs and dal. It stays crunchy in the kitchen for over a week.',
-    rating: 5,
+    question: 'How long do they stay fresh at home?',
+    answer:
+      'Refrigerated and unwashed, most varieties hold up well for 5–7 days. We include specific care instructions with every order.',
   },
   {
-    name: 'Ananya Sharma',
-    loc: 'Sector 14, Panchkula',
-    text: 'My kids actually ask for “the baby trees” with their sandwiches. Knowing it is grown with RO mineral water and zero chemicals gives me total peace of mind.',
-    rating: 5,
+    question: 'Are these actually pesticide-free?',
+    answer:
+      "Yes, grown indoors on soil-free racks, with nothing sprayed at any stage. We're working toward publishing third-party lab results as we scale.",
   },
   {
-    name: 'Chef Kabir Grover',
-    loc: 'Sector 26, Chandigarh',
-    text: 'The texture, color intensity, and peppery punch are on par with international vertical farms. Absolute game changer for the Tricity.',
+    question: 'Do you deliver outside the tricity?',
+    answer:
+      "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+  },
+  {
+    question: 'Can restaurants order in bulk?',
+    answer:
+      'Yes, reach out via our restaurants page for standing orders and bulk pricing.',
+  },
+  {
+    question: 'What if a tray shows up wilted or damaged?',
+    answer:
+      "Send us a quick photo on WhatsApp within 12 hours of delivery, and we'll replace the tray on our next delivery run or refund it immediately, no questions asked.",
+  },
+];
+
+const WHY_CHOOSE_COLORS = ['#F3DFE4', '#D6E6EF', '#E4DDC8', '#F6C7B3'];
+
+const DEFAULT_WHY_CHOOSE_BLOCKS = [
+  {
+    title: 'Grown,\nnot made.',
+    description: 'seed → sprout · 7-10 days',
+    image_url: '/right%20choice/grown-not-made.png',
+  },
+  {
+    title: 'RO water as\nprimary source.',
+    description: 'no heaviness · easy on your gut',
+    image_url: '/right%20choice/ro-water.png',
+  },
+  {
+    title: 'Coco-Peat is\nwhere it starts.',
+    description: 'soil-free · sustainable',
+    image_url: '/right%20choice/coco-peat.png',
+  },
+  {
+    title: 'No Pesticides:\nnever ever.',
+    description: 'zero spray · zero residue',
+    image_url: '/right%20choice/no-pest.png',
+  },
+];
+
+const DEFAULT_REVIEWS: Review[] = [
+  {
+    id: 'rev-1',
+    product_id: null,
+    reviewer_name: 'Siddhant Tewari',
+    reviewer_location: null,
+    review_text:
+      "It's <strong>very light</strong> like almost drinking water and <strong>no heaviness</strong> on stomach. It's very light to drink with almost no taste because sweetness is negligible. It cocoa taste which is good",
     rating: 5,
+    display_order: 1,
+    is_active: true,
+  },
+  {
+    id: 'rev-2',
+    product_id: null,
+    reviewer_name: 'Avi Dayal',
+    reviewer_location: null,
+    review_text:
+      '<strong>Clean and easy on gut.</strong> I love you guys added dates and monk fruit for sweetness and also it <strong>felt light</strong> after consuming it. There were no burps and protein farts 🤙',
+    rating: 5,
+    display_order: 2,
+    is_active: true,
+  },
+  {
+    id: 'rev-3',
+    product_id: null,
+    reviewer_name: 'Abhishek Nair',
+    reviewer_location: null,
+    review_text: 'Perfect. The taste which was very neutral is what I liked.',
+    rating: 4,
+    display_order: 3,
+    is_active: true,
+  },
+  {
+    id: 'rev-4',
+    product_id: null,
+    reviewer_name: 'Hrishikesh',
+    reviewer_location: null,
+    review_text: 'Perfect Mixability',
+    rating: 5,
+    display_order: 4,
+    is_active: true,
+  },
+  {
+    id: 'rev-5',
+    product_id: null,
+    reviewer_name: 'Synthia Nathan',
+    reviewer_location: null,
+    review_text:
+      'This is a <strong>good protein powder.</strong> From a taste perspective it is tasteless and that is ok because you are using <strong>all natural ingredients.</strong> It keeps me filling for a long time and I did not feel any discomfort after...',
+    rating: 4,
+    display_order: 5,
+    is_active: true,
+  },
+  {
+    id: 'rev-6',
+    product_id: null,
+    reviewer_name: 'Dr Thanvi',
+    reviewer_location: null,
+    review_text: "Best till date that I've tried. Taste, <strong>non-bloating</strong>",
+    rating: 5,
+    display_order: 6,
+    is_active: true,
+  },
+  {
+    id: 'rev-7',
+    product_id: null,
+    reviewer_name: 'Dinesh Choithani',
+    reviewer_location: null,
+    review_text: 'Light on stomach. It is not unnecessarily sweet',
+    rating: 4,
+    display_order: 7,
+    is_active: true,
+  },
+  {
+    id: 'rev-8',
+    product_id: null,
+    reviewer_name: 'Meera Kapoor',
+    reviewer_location: null,
+    review_text:
+      "No jitters, no crash. Just <strong>steady energy</strong> through my whole workday. Didn't expect that from a greens mix.",
+    rating: 5,
+    display_order: 8,
+    is_active: true,
   },
 ];
 
 const REASONS = [
   {
-    icon: '🌿',
-    title: 'Living on Delivery',
-    desc: 'Never wilted in cold storage. Cut right into your bowl at the exact moment of eating.',
+    icon: '🥬',
+    title: 'Nutrient Density',
+    desc: 'Microgreens can carry several times the vitamins and antioxidants of the mature vegetable, gram for gram¹. A small daily habit with an outsized return.',
   },
   {
-    icon: '🚫',
-    title: 'Zero Pesticides',
-    desc: 'Grown indoor in HEPA filtered air. No chemical sprays, pesticides, or weedkillers ever.',
+    icon: '🛡️',
+    title: 'Everyday Antioxidants',
+    desc: 'Compounds like sulforaphane and vitamin C help your body stand up to daily free-radical wear and tear², especially when the rest of your plate is processed.',
   },
   {
-    icon: '⚡',
-    title: '10 Day Peak Density',
-    desc: 'Harvested at the exact biological apex when vitamins and antioxidants reach up to 40x mature greens.',
+    icon: '🌾',
+    title: 'Better Digestion',
+    desc: 'A quiet dose of fibre in every handful — most adults fall short here³ — keeps digestion moving without any extra effort.',
   },
   {
-    icon: '📍',
-    title: 'Tricity Local Radius',
-    desc: 'Cultivated right here in our city, 10 minutes from your kitchen. Zero long distance freight.',
+    icon: '✅',
+    title: 'Genuinely Clean',
+    desc: 'Grown indoors on soil-free racks with mineral RO water. Nothing sprayed, ever — food you can actually trust for the whole family.',
   },
   {
-    icon: '💧',
-    title: 'Mineral RO Water',
-    desc: 'Irrigated exclusively with pure potable drinking water, free of industrial runoff or heavy metals.',
+    icon: '⏱️',
+    title: 'Peak Freshness',
+    desc: 'Cut to order and delivered within hours, so nutrients reach your table instead of fading in a warehouse for a week.',
   },
   {
-    icon: '🥥',
-    title: 'Sterile Coco Peat',
-    desc: 'Grown on clean, soil free coco peat medium ensuring grit free, pristine stems and roots.',
+    icon: '🥄',
+    title: 'Effortlessly Good',
+    desc: 'One handful upgrades a toast, poha, salad or smoothie. No cooking, no fuss — just sprinkle and eat.',
   },
 ];
+
+const RELATED_FALLBACKS: Record<string, { photo: string; subtitle: string }> = {
+  'radish-microgreens': {
+    photo: 'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=600&auto=format&fit=crop',
+    subtitle: 'Peppery bite · purple stems',
+  },
+  'sunflower-microgreens': {
+    photo: 'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=80&w=600&auto=format&fit=crop',
+    subtitle: 'Nutty · protein-forward crunch',
+  },
+  'pea-shoots': {
+    photo: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?fm=jpg&q=80&w=600&auto=format&fit=crop',
+    subtitle: 'Sweet & mild · great for kids',
+  },
+  'carrot-microgreens': {
+    photo: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?fm=jpg&q=80&w=600&auto=format&fit=crop',
+    subtitle: 'Sweet & mild · great for kids',
+  },
+  'broccoli-microgreens': {
+    photo: 'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=600&auto=format&fit=crop',
+    subtitle: 'Sulforaphane dense · rich crunch',
+  },
+  'classic-trio-bundle': {
+    photo: 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=600&auto=format&fit=crop',
+    subtitle: 'Broccoli, Radish & Sunflower trio',
+  },
+};
+
+function formatCleanPrice(paise: number): string {
+  const rupees = paise / 100;
+  return `₹${paise % 100 === 0 ? rupees : rupees.toFixed(2)}`;
+}
+
+export interface OtherGreenItem {
+  id: string;
+  slug: string;
+  name: string;
+  badge: string;
+  typeNote: string;
+  shelfNote: string;
+  price_paise: number;
+  bgColor: string;
+  photo: string;
+  isBundle: boolean;
+  categories: string[];
+  description: string;
+  thumbnail_url?: string | null;
+  variant_id?: string;
+}
 
 export default function ProductDetailClient({
   product,
   relatedProducts,
   content = {},
   reviews = [],
+  initialWhyChoosePins = [],
 }: {
   product: Product;
   relatedProducts: RelatedProduct[];
   content?: Record<string, string>;
   reviews?: Review[];
+  initialWhyChoosePins?: WhyChoosePin[];
 }) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -91,18 +260,7 @@ export default function ProductDetailClient({
         ];
 
   const effectiveReviews: Review[] =
-    reviews && reviews.length > 0
-      ? reviews
-      : REVIEWS.map((r, i) => ({
-          id: `seed-${i}`,
-          product_id: null,
-          reviewer_name: r.name,
-          reviewer_location: r.loc,
-          review_text: r.text,
-          rating: r.rating,
-          display_order: i + 1,
-          is_active: true,
-        }));
+    reviews && reviews.length > 0 ? reviews : DEFAULT_REVIEWS;
   const activeVariants = product.variants.filter((v) => v.is_active);
   const [selectedVariant, setSelectedVariant] = useState<Variant>(
     activeVariants[0] || {
@@ -139,7 +297,91 @@ export default function ProductDetailClient({
 
   const buyBoxRef = useRef<HTMLDivElement>(null);
   const reasonsTrackRef = useRef<HTMLDivElement>(null);
+  const [activeReasonsSet, setActiveReasonsSet] = useState(0);
   const ogTrackRef = useRef<HTMLDivElement>(null);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  const effectiveFaqs: ProductFAQ[] =
+    Array.isArray(product.faqs) && product.faqs.length > 0
+      ? product.faqs
+      : DEFAULT_PRODUCT_FAQS;
+
+  const [whyChoosePins, setWhyChoosePins] = useState<WhyChoosePin[]>(initialWhyChoosePins);
+
+  useEffect(() => {
+    fetch('/api/pins/product_listing_why_choose')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setWhyChoosePins(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Build the list of actual products fetched from backend (administered via admin panel)
+  const displayOtherGreens: OtherGreenItem[] = (() => {
+    const currentSlug = product.slug;
+    const CARD_PALETTE = ['#EBE5D8', '#F5E1E6', '#D9E4D5', '#EBE0D2', '#DDE7D4', '#EDE7DC'];
+
+    if (!relatedProducts || relatedProducts.length === 0) return [];
+
+    return relatedProducts
+      .filter((rel) => rel.slug !== currentSlug)
+      .map((rel, index) => {
+        const fallbackPhoto = RELATED_FALLBACKS[rel.slug]?.photo || '';
+        const photoUrl = rel.thumbnail_url || fallbackPhoto || '';
+
+        // Format category label
+        const primaryCategory =
+          Array.isArray(rel.categories) && rel.categories.length > 0
+            ? rel.categories[0].replace(/-/g, ' ')
+            : 'Living greens';
+
+        // Subtitle line 1: Prefer admin panel highlight_1, else format type · category
+        const typeNote =
+          rel.highlight_1 && rel.highlight_1.trim().length > 0
+            ? rel.highlight_1
+            : `${rel.is_bundle ? 'Bundle' : 'Microgreen'} · ${primaryCategory}`;
+
+        // Subtitle line 2: Prefer admin panel highlight_2, else fallback to description or 7-day shelf guarantee
+        const shelfNote =
+          rel.highlight_2 && rel.highlight_2.trim().length > 0
+            ? rel.highlight_2
+            : rel.is_bundle
+              ? rel.description || '3 fresh living trays'
+              : '7-day shelf · zero pesticide';
+
+        // Badge label: Use admin panel badge_label
+        const badge = rel.badge_label
+          ? rel.badge_label.toUpperCase()
+          : rel.is_bundle
+            ? 'BUNDLE'
+            : '';
+
+        // Media background hue
+        const bgColor = rel.is_bundle
+          ? '#1C372A'
+          : CARD_PALETTE[index % CARD_PALETTE.length];
+
+        return {
+          id: rel.id,
+          slug: rel.slug,
+          name: rel.name, // Actual product name from backend / admin panel
+          badge,
+          typeNote,
+          shelfNote,
+          price_paise: rel.price_paise || 9900,
+          bgColor,
+          photo: photoUrl,
+          thumbnail_url: rel.thumbnail_url,
+          isBundle: Boolean(rel.is_bundle),
+          categories: rel.categories || [],
+          description: rel.description || '',
+          variant_id: rel.variant_id,
+        };
+      });
+  })();
 
   const addItem = useCartStore((s) => s.addItem);
   const setIsOpen = useCartStore((s) => s.setIsOpen);
@@ -182,9 +424,9 @@ export default function ProductDetailClient({
     setTimeout(() => setAddedFeedback(false), 2200);
   };
 
-  const handleQuickAdd = (rel: RelatedProduct) => {
+  const handleQuickAdd = (rel: RelatedProduct | OtherGreenItem) => {
     addItem({
-      variantId: rel.variant_id || rel.id,
+      variantId: ('variant_id' in rel && rel.variant_id) ? rel.variant_id : rel.id,
       productSlug: rel.slug,
       productName: rel.name,
       variantLabel: 'Standard Tray',
@@ -194,15 +436,38 @@ export default function ProductDetailClient({
     setIsOpen(true);
   };
 
+  const handleReasonsScroll = () => {
+    if (!reasonsTrackRef.current) return;
+    const { scrollLeft, clientWidth } = reasonsTrackRef.current;
+    if (clientWidth > 0) {
+      const page = Math.round(scrollLeft / clientWidth);
+      if (page !== activeReasonsSet) {
+        setActiveReasonsSet(page);
+      }
+    }
+  };
+
   const scrollReasons = (dir: 'left' | 'right') => {
     if (!reasonsTrackRef.current) return;
-    const offset = dir === 'left' ? -320 : 320;
-    reasonsTrackRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    const { scrollLeft, clientWidth, scrollWidth } = reasonsTrackRef.current;
+    if (dir === 'right') {
+      if (scrollLeft + clientWidth >= scrollWidth - 10) {
+        reasonsTrackRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        reasonsTrackRef.current.scrollBy({ left: clientWidth, behavior: 'smooth' });
+      }
+    } else {
+      if (scrollLeft <= 10) {
+        reasonsTrackRef.current.scrollTo({ left: scrollWidth, behavior: 'smooth' });
+      } else {
+        reasonsTrackRef.current.scrollBy({ left: -clientWidth, behavior: 'smooth' });
+      }
+    }
   };
 
   const scrollOtherGreens = (dir: 'left' | 'right') => {
     if (!ogTrackRef.current) return;
-    const offset = dir === 'left' ? -260 : 260;
+    const offset = dir === 'left' ? -280 : 280;
     ogTrackRef.current.scrollBy({ left: offset, behavior: 'smooth' });
   };
 
@@ -666,32 +931,74 @@ export default function ProductDetailClient({
               {/* Pairs Well With / Upsell */}
               {relatedProducts.length > 0 && (
                 <div className="mt-8 pt-6 border-t border-[#E4DDC8]">
-                  <span className="font-mono text-[11px] tracking-wider uppercase text-[#5C6B60] block mb-3 font-semibold">
-                    🌱 Pairs Well With
-                  </span>
-                  <div className="space-y-2.5">
-                    {relatedProducts.slice(0, 2).map((rel) => (
-                      <div
-                        key={rel.id}
-                        className="flex items-center justify-between gap-3 p-3 bg-white rounded-xl border border-[#E4DDC8] hover:border-[#3E8F52] transition-all"
-                      >
-                        <div className="min-w-0">
-                          <h5 className="font-serif text-sm font-semibold text-[#122A1F] truncate">
-                            {rel.name}
-                          </h5>
-                          <span className="font-mono text-xs text-[#1C3F2D] font-bold">
-                            {formatPrice(rel.price_paise)}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleQuickAdd(rel)}
-                          className="w-8 h-8 rounded-full bg-[#F3EEE0] hover:bg-[#CFFA57] flex items-center justify-center text-sm font-bold transition-all text-[#122A1F]"
-                          title="Quick add to cart"
+                  <div className="flex items-center gap-2 mb-3.5">
+                    <span className="text-base sm:text-lg">🥗</span>
+                    <span className="font-mono text-[11px] sm:text-xs tracking-[0.14em] uppercase text-[#5C6B60] font-semibold">
+                      PAIRS WELL WITH
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 sm:space-y-3.5">
+                    {relatedProducts.slice(0, 3).map((rel) => {
+                      const fallback = RELATED_FALLBACKS[rel.slug];
+                      const photoUrl = rel.thumbnail_url || fallback?.photo || null;
+                      const subtitle =
+                        rel.highlight_1 ||
+                        fallback?.subtitle ||
+                        rel.description ||
+                        'Locally grown living microgreens';
+
+                      return (
+                        <div
+                          key={rel.id}
+                          className="flex items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-2xl border border-[#E4DDC8] hover:border-[#122A1F]/30 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-md transition-all group"
                         >
-                          +
-                        </button>
-                      </div>
-                    ))}
+                          {/* Thumbnail */}
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[14px] sm:rounded-2xl bg-[#E4DDC8]/60 flex-shrink-0 overflow-hidden flex items-center justify-center border border-black/5">
+                            {photoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={photoUrl}
+                                alt={rel.thumbnail_alt_text || rel.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            ) : (
+                              <span className="font-mono text-[11px] sm:text-xs text-[#5C6B60] font-semibold uppercase tracking-wider">
+                                Image
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0 pr-1">
+                            <Link href={`/products/${rel.slug}`} className="block">
+                              <h5 className="font-serif text-[17px] sm:text-[19px] font-bold text-[#151F19] truncate leading-tight group-hover:text-[#1C3F2D] transition-colors">
+                                {rel.name}
+                              </h5>
+                            </Link>
+                            <p className="font-sans text-[12px] sm:text-[13px] text-[#5C6B60] mt-1 truncate">
+                              {subtitle}
+                            </p>
+                          </div>
+
+                          {/* Price & Add Button */}
+                          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                            <span className="font-sans font-extrabold text-[16px] sm:text-[18px] text-[#151F19]">
+                              {formatCleanPrice(rel.price_paise)}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleQuickAdd(rel)}
+                              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#F3EEE0] hover:bg-[#122A1F] hover:text-[#CFFA57] active:scale-95 flex items-center justify-center text-lg sm:text-xl font-bold text-[#122A1F] transition-all shadow-sm"
+                              title={`Add ${rel.name} to cart`}
+                              aria-label={`Add ${rel.name} to cart`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -702,44 +1009,131 @@ export default function ProductDetailClient({
 
       {/* ================= SECTION 2a: FULL-BLEED "TRY THE TRICITY TRIO" BANNER ================= */}
       <section className="w-full bg-[#00A234] text-[#FFFDF8] overflow-hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 min-h-[420px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 md:h-[310px] lg:h-[330px]">
           {/* Media Side */}
-          <div className="relative bg-[#1C3F2D] min-h-[280px] overflow-hidden">
+          <div className="relative bg-[#1C3F2D] h-60 sm:h-72 md:h-full overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={
-                content.bundle_banner_image ||
-                'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=85&w=1200&auto=format&fit=crop'
-              }
-              alt={content.bundle_banner_image_alt || content.bundle_banner_title || 'Tricity Trio'}
+              src={content.bundle_banner_image || '/tricity-trio-banner.png'}
+              alt={content.bundle_banner_image_alt || content.bundle_banner_title || 'Tricity Trio - Go For All Three'}
               className="w-full h-full object-cover"
             />
           </div>
 
           {/* Copy Side */}
-          <div className="flex flex-col justify-center items-center text-center p-10 sm:p-14 lg:p-16 space-y-4">
-            <h2 className="font-display uppercase text-3xl sm:text-4xl lg:text-5xl tracking-wide leading-tight">
-              {content.bundle_banner_title || 'Go For All Three'}
+          <div className="flex flex-col justify-center items-center text-center px-6 py-8 sm:px-10 lg:px-12 space-y-3">
+            <h2 className="font-display uppercase text-2xl sm:text-3xl lg:text-4xl tracking-wide leading-tight text-white font-black">
+              {content.bundle_banner_title || 'GO FOR ALL THREE'}
             </h2>
-            <p className="text-sm sm:text-[15px] leading-relaxed text-white/90 max-w-md">
+            <p className="text-xs sm:text-sm leading-relaxed text-white/95 max-w-sm">
               {content.bundle_banner_subtitle ||
-                'Broccoli for sulforaphane, Radish for spice and zinc, Sunflower shoots for protein and crunch. Get our signature 3-tray variety pack delivered together.'}
+                'Grab the full lineup and save 25%. Three trays, one delivery, zero filler.'}
             </p>
             <Link
               href="/products?category=bundle"
-              className="inline-flex items-center justify-center bg-[#151F19] text-white font-bold text-xs uppercase tracking-wider px-7 py-3.5 rounded-full hover:-translate-y-0.5 hover:shadow-lg transition-all mt-2"
+              className="inline-flex items-center justify-center bg-[#111813] text-white font-bold text-[11px] sm:text-xs uppercase tracking-wider px-6 py-2.5 rounded-full hover:bg-black transition-all shadow-sm mt-1"
             >
-              {content.bundle_banner_cta_text || 'Try the Hat Trick Pack →'}
+              {content.bundle_banner_cta_text || 'TRY THE HAT TRICK 3-PACK'}
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ================= SECTION 2b: FULL-BLEED NUTRIENT STATS BANNER ================= */}
+      {/* ================= SECTION 2b: SIX REASONS CAROUSEL ================= */}
+      <section className="w-full bg-[#E4EFDC] py-12 sm:py-16">
+        <div className="max-w-[1140px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl mx-auto text-center mb-10 sm:mb-12">
+            <h2 className="font-serif font-bold text-2xl sm:text-3xl lg:text-[34px] text-[#151F19] mb-2 leading-snug">
+              {content.reasons_title || 'Six Reasons to Add Microgreens Daily'}
+            </h2>
+            <p className="font-sans text-xs sm:text-sm text-[#4A5C50] leading-relaxed">
+              {content.reasons_subtitle ||
+                "Regular salad greens are fine. They're just not doing enough. Here's why thousands of tricity households added a spoonful to every plate."}
+            </p>
+          </div>
+
+          <div className="relative flex items-center gap-3 sm:gap-6">
+            {/* Prev Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollReasons('left')}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-sm transition-all flex-shrink-0 ${
+                activeReasonsSet === 0
+                  ? 'bg-white text-stone-400 border border-stone-200/60'
+                  : 'bg-white text-[#151F19] border border-stone-200 hover:bg-[#1C3F2D] hover:text-white'
+              } cursor-pointer`}
+              aria-label="Previous reasons"
+            >
+              <svg className="w-4 h-4 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Horizontal Scroll Track (2 sets of information, hidden scrollbar) */}
+            <div
+              ref={reasonsTrackRef}
+              onScroll={handleReasonsScroll}
+              className="flex-1 min-w-0 flex overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {/* Set 1 */}
+              <div className="w-full min-w-full flex-shrink-0 snap-start grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+                {REASONS.slice(0, 3).map((r, i) => (
+                  <div key={i} className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg select-none leading-none">{r.icon}</span>
+                      <h3 className="font-serif font-bold text-base sm:text-lg text-[#151F19] tracking-tight">
+                        {r.title}
+                      </h3>
+                    </div>
+                    <p className="font-sans text-xs sm:text-[13px] text-[#4A5C50] leading-relaxed">
+                      {r.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Set 2 */}
+              <div className="w-full min-w-full flex-shrink-0 snap-start grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
+                {REASONS.slice(3, 6).map((r, i) => (
+                  <div key={i} className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg select-none leading-none">{r.icon}</span>
+                      <h3 className="font-serif font-bold text-base sm:text-lg text-[#151F19] tracking-tight">
+                        {r.title}
+                      </h3>
+                    </div>
+                    <p className="font-sans text-xs sm:text-[13px] text-[#4A5C50] leading-relaxed">
+                      {r.desc}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Next Arrow */}
+            <button
+              type="button"
+              onClick={() => scrollReasons('right')}
+              className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center shadow-sm transition-all flex-shrink-0 ${
+                activeReasonsSet === 1
+                  ? 'bg-[#1C3F2D] text-white hover:bg-[#151F19]'
+                  : 'bg-white text-[#151F19] border border-stone-200/60 hover:bg-[#1C3F2D] hover:text-white'
+              } cursor-pointer`}
+              aria-label="Next reasons"
+            >
+              <svg className="w-4 h-4 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= SECTION 2c: FULL-BLEED NUTRIENT STATS BANNER ================= */}
       <section className="w-full bg-white border-y border-[#E4DDC8]">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] min-h-[440px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_1fr] md:min-h-[385px] lg:h-[395px] xl:h-[410px]">
           {/* Copy Side */}
-          <div className="p-8 sm:p-12 lg:p-16 flex flex-col justify-center">
+          <div className="p-8 sm:p-10 lg:p-12 flex flex-col justify-center">
             <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#151F19] leading-tight mb-3">
               {content.stats_banner_title ? (
                 content.stats_banner_title
@@ -782,8 +1176,8 @@ export default function ProductDetailClient({
             </div>
           </div>
 
-          {/* Media Side */}
-          <div className="relative bg-[#E4DDC8] min-h-[260px] overflow-hidden">
+          {/* Media Side (Height locked to section height, photo cropped cleanly) */}
+          <div className="relative bg-[#E4DDC8] min-h-[260px] lg:h-full overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={
@@ -791,115 +1185,50 @@ export default function ProductDetailClient({
                 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=85&w=1200&auto=format&fit=crop'
               }
               alt="Fresh Microgreens Harvest"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover lg:absolute lg:inset-0"
             />
           </div>
         </div>
       </section>
 
-      {/* ================= SECTION 2c: SIX REASONS CAROUSEL ================= */}
-      <section className="bg-[#E4EFDC] py-14 border-b border-[#E4DDC8]">
-        <div className="wrap">
-          <div className="max-w-xl mx-auto text-center mb-8">
-            <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#151F19] mb-2">
-              {content.reasons_title || 'Six reasons why we grow this way.'}
-            </h2>
-            <p className="text-sm text-[#1C3F2D]">
-              {content.reasons_subtitle || 'Clean agriculture engineered for urban nutrition.'}
-            </p>
-          </div>
-
-          <div className="relative flex items-center gap-3">
-            <button
-              onClick={() => scrollReasons('left')}
-              className="hidden sm:flex flex-shrink-0 w-9 h-9 rounded-full bg-white border border-[#1C3F2D]/20 items-center justify-center text-[#1C3F2D] hover:bg-[#1C3F2D] hover:text-white transition-all shadow-sm"
-              aria-label="Scroll left"
-            >
-              ‹
-            </button>
-
-            <div
-              ref={reasonsTrackRef}
-              className="flex-1 flex gap-6 overflow-x-auto scrollbar-none scroll-smooth pb-2"
-            >
-              {REASONS.map((r, i) => (
-                <div
-                  key={i}
-                  className="flex-shrink-0 w-72 sm:w-80 bg-white/70 backdrop-blur-sm p-6 rounded-2xl border border-[#1C3F2D]/10 space-y-2"
-                >
-                  <span className="text-3xl block">{r.icon}</span>
-                  <h4 className="font-serif text-base font-semibold text-[#151F19]">{r.title}</h4>
-                  <p className="text-xs text-[#3B4A40] leading-relaxed">{r.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => scrollReasons('right')}
-              className="hidden sm:flex flex-shrink-0 w-9 h-9 rounded-full bg-white border border-[#1C3F2D]/20 items-center justify-center text-[#1C3F2D] hover:bg-[#1C3F2D] hover:text-white transition-all shadow-sm"
-              aria-label="Scroll right"
-            >
-              ›
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* ================= SECTION 3: REVIEWS ("STRAIGHT FROM THE GUT") ================= */}
-      <section className="bg-[#E4DDC8] py-16">
-        <div className="wrap">
+      <section className="bg-[#E4DDC8] pt-[36px] pb-[80px]">
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-8">
           <div className="mb-8">
-            <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#151F19]">
+            <h2 className="font-serif font-medium text-[clamp(28px,4vw,40px)] text-[#151F19] leading-tight">
               {content.reviews_title || 'Straight from the gut.'}
             </h2>
-            <p className="font-mono text-xs uppercase tracking-wider text-[#5C6B60] mt-1">
-              {content.reviews_subtitle || 'Verified reviews from our Tricity community'}
-            </p>
+            {content.reviews_subtitle && (
+              <p className="font-mono text-xs uppercase tracking-wider text-[#5C6B60] mt-1">
+                {content.reviews_subtitle}
+              </p>
+            )}
           </div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-40px' }}
-            variants={{
-              visible: {
-                transition: {
-                  staggerChildren: shouldReduceMotion ? 0 : 0.08,
-                },
-              },
-              hidden: {},
-            }}
-          >
+          <div className="grid grid-cols-1 min-[560px]:grid-cols-2 min-[900px]:grid-cols-4 gap-[22px]">
             {effectiveReviews.map((rev, i) => (
-              <motion.div
+              <div
                 key={rev.id || i}
-                variants={{
-                  hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 16 },
-                  visible: {
-                    opacity: 1,
-                    y: 0,
-                    transition: { duration: shouldReduceMotion ? 0 : 0.25, ease: 'easeOut' },
-                  },
-                }}
-                className="bg-white rounded-2xl p-5 flex flex-col justify-between shadow-sm border border-black/5"
+                className="bg-[#FFFDF8] rounded-[10px] pt-[22px] px-[24px] pb-[6px] h-[150px] flex flex-col justify-between shadow-sm"
               >
-                <p className="text-xs leading-relaxed text-[#151F19] italic mb-4">
-                  &ldquo;{rev.review_text}&rdquo;
-                </p>
-                <div className="pt-3 border-t border-[#E4DDC8]">
-                  <div className="font-bold text-xs text-[#151F19]">{rev.reviewer_name}</div>
-                  {rev.reviewer_location && (
-                    <div className="font-mono text-[10px] text-[#5C6B60]">{rev.reviewer_location}</div>
-                  )}
-                  <div className="text-[#FF9F5A] text-xs tracking-wider mt-1">
-                    {'★'.repeat(rev.rating || 5)}
-                    {'☆'.repeat(5 - (rev.rating || 5))}
-                  </div>
+                <div
+                  className="font-sans text-[9px] leading-[1.53] text-[#151F19] line-clamp-5"
+                  dangerouslySetInnerHTML={{ __html: rev.review_text }}
+                />
+                <div className="border-t border-[#E4DDC8] mt-[14px] mb-[4px] pt-1 flex items-center justify-between">
+                  <span className="font-sans font-bold text-[11px] text-[#151F19] truncate pr-2">
+                    {rev.reviewer_name}
+                  </span>
+                  <span className="text-[10px] tracking-[3px] flex-shrink-0">
+                    <span className="text-[#FF9F5A]">{'★'.repeat(rev.rating || 5)}</span>
+                    <span className="text-[#D1D5DB]">
+                      {'★'.repeat(Math.max(0, 5 - (rev.rating || 5)))}
+                    </span>
+                  </span>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -979,126 +1308,300 @@ export default function ProductDetailClient({
       </section>
 
       {/* ================= SECTION 4b: OTHER GREENS YOU'LL LOVE ================= */}
-      {relatedProducts.length > 0 && (
-        <section className="bg-white py-16 border-b border-[#E4DDC8]">
+      {displayOtherGreens.length > 0 && (
+        <section className="bg-[#FFFDF8] py-14 sm:py-16 border-b border-[#E4DDC8]">
           <div className="wrap">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="font-display uppercase text-2xl tracking-wide text-[#151F19]">
-                Other Greens You&apos;ll Love
-              </h2>
-              <div className="hidden sm:flex gap-2">
-                <button
-                  onClick={() => scrollOtherGreens('left')}
-                  className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center hover:bg-black hover:text-white transition-all text-sm font-bold"
-                >
-                  ‹
-                </button>
-                <button
-                  onClick={() => scrollOtherGreens('right')}
-                  className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center hover:bg-black hover:text-white transition-all text-sm font-bold"
-                >
-                  ›
-                </button>
-              </div>
-            </div>
+            <h2 className="font-display font-black text-2xl sm:text-3xl text-[#151F19] tracking-tight uppercase mb-6 sm:mb-8">
+              OTHER GREENS YOU&apos;LL LOVE
+            </h2>
 
-            <div
-              ref={ogTrackRef}
-              className="flex gap-5 overflow-x-auto scrollbar-none scroll-smooth pb-3"
-            >
-              {relatedProducts.map((rel) => (
-                <div
-                  key={rel.id}
-                  className="flex-shrink-0 w-56 sm:w-60 bg-[#F3EEE0]/50 rounded-2xl p-4 border border-[#E4DDC8] flex flex-col justify-between"
-                >
-                  <div className="aspect-square bg-gradient-to-br from-[#EDE7D6] to-[#DED7BF] rounded-xl mb-3 flex items-center justify-center text-4xl overflow-hidden relative">
-                    {rel.thumbnail_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={rel.thumbnail_url}
-                        alt={rel.thumbnail_alt_text || rel.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      '🌿'
-                    )}
-                  </div>
-                  <div>
-                    <span className="font-mono text-[9px] uppercase tracking-wider text-[#5C6B60] block mb-1">
-                      {(rel.categories || []).map(c => c.replace(/-/g, ' ')).join(', ')}
-                    </span>
-                    <h4 className="font-serif text-base font-semibold text-[#122A1F] leading-snug mb-1">
-                      {rel.name}
-                    </h4>
-                    <p className="font-mono text-xs font-bold text-[#1C3F2D] mb-3">
-                      {formatPrice(rel.price_paise)}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t border-[#E4DDC8]">
-                    <Link
-                      href={`/products/${rel.slug}`}
-                      className="flex-1 text-center py-2 bg-white hover:bg-gray-100 text-xs font-bold text-[#151F19] rounded-lg border border-gray-300 transition-colors"
+            {/* Carousel Container */}
+            <div className="relative">
+              {/* Left Arrow Button */}
+              <button
+                type="button"
+                onClick={() => scrollOtherGreens('left')}
+                className="absolute -left-3 sm:-left-5 top-[115px] sm:top-[128px] -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white border border-[#D5CEC0] shadow-[0_4px_14px_rgba(0,0,0,0.12)] flex items-center justify-center text-[#151F19] hover:bg-[#151F19] hover:text-white transition-all cursor-pointer"
+                aria-label="Previous greens"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              {/* Product Cards Track */}
+              <div
+                ref={ogTrackRef}
+                className="flex gap-4 sm:gap-6 overflow-x-auto scrollbar-none scroll-smooth pb-2 pt-1 px-1"
+              >
+                {displayOtherGreens.map((item) => {
+                  return (
+                    <div
+                      key={item.slug || item.id}
+                      className="w-[230px] sm:w-[255px] flex-shrink-0 flex flex-col justify-between group/card"
                     >
-                      View
-                    </Link>
-                    <button
-                      onClick={() => handleQuickAdd(rel)}
-                      className="px-3 py-2 bg-[#122A1F] hover:bg-[#1C3F2D] text-white text-xs font-bold rounded-lg transition-colors"
-                    >
-                      + Add
-                    </button>
-                  </div>
-                </div>
-              ))}
+                      <div>
+                        {/* Media Square */}
+                        <div
+                          style={{ backgroundColor: item.bgColor }}
+                          className="aspect-square w-full relative overflow-hidden rounded-none sm:rounded-sm mb-3.5 select-none"
+                        >
+                          {/* Badge */}
+                          {item.badge ? (
+                            <span className="absolute top-3 left-3 bg-[#112217] text-[#FFFDF8] text-[9.5px] font-mono font-bold uppercase tracking-wider px-2.5 py-1 rounded-[4px] shadow-sm pointer-events-none z-10">
+                              {item.badge}
+                            </span>
+                          ) : null}
+
+                          {/* Product Link / Image */}
+                          <Link
+                            href={`/products/${item.slug}`}
+                            className="block w-full h-full cursor-pointer"
+                          >
+                            {item.photo || item.thumbnail_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={item.photo || item.thumbnail_url || ''}
+                                alt={item.name}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center">
+                                <span className="text-3xl opacity-50 mb-1">🌱</span>
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-stone-500 opacity-70">
+                                  {item.name}
+                                </span>
+                              </div>
+                            )}
+                          </Link>
+                        </div>
+
+                        {/* Title & Subtitles */}
+                        <Link href={`/products/${item.slug}`} className="block mb-1">
+                          <h3 className="font-serif font-bold text-[16px] sm:text-[17px] text-[#151F19] leading-snug group-hover/card:text-[#285A35] transition-colors">
+                            {item.name}
+                          </h3>
+                        </Link>
+                        <p className="font-mono text-[10.5px] text-[#6E7B72] tracking-tight mb-0.5 leading-none">
+                          {item.typeNote}
+                        </p>
+                        <p className="font-sans text-[11px] text-[#7E8C83] mb-3.5 leading-snug">
+                          {item.shelfNote}
+                        </p>
+                      </div>
+
+                      {/* Action Button */}
+                      {item.isBundle ? (
+                        <button
+                          type="button"
+                          onClick={() => handleQuickAdd(item)}
+                          className="w-full py-2.5 px-4 rounded-full bg-[#1C372A] hover:bg-[#12241C] text-[#FFFDF8] font-mono text-[11.5px] font-bold uppercase tracking-wider transition-all text-center cursor-pointer shadow-sm active:scale-[0.98]"
+                        >
+                          SHOP SET · {formatCleanPrice(item.price_paise)}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleQuickAdd(item)}
+                          className="w-full py-2.5 px-4 rounded-full border border-[#151F19] bg-transparent text-[#151F19] font-mono text-[11.5px] font-bold uppercase tracking-wider hover:bg-[#151F19] hover:text-white transition-all text-center cursor-pointer active:scale-[0.98]"
+                        >
+                          ADD TO BOX · {formatCleanPrice(item.price_paise)}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Right Arrow Button */}
+              <button
+                type="button"
+                onClick={() => scrollOtherGreens('right')}
+                className="absolute -right-3 sm:-right-5 top-[115px] sm:top-[128px] -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white border border-[#D5CEC0] shadow-[0_4px_14px_rgba(0,0,0,0.12)] flex items-center justify-center text-[#151F19] hover:bg-[#151F19] hover:text-white transition-all cursor-pointer"
+                aria-label="Next greens"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
         </section>
       )}
 
-      {/* ================= SECTION 5a: WHY IS THIS THE RIGHT CHOICE ================= */}
-      <section className="bg-white py-14">
-        <div className="wrap">
-          <div className="mb-6">
-            <h2 className="font-serif text-2xl sm:text-3xl font-medium text-[#151F19]">
-              Why is this the <span className="underline decoration-[#3E8F52] decoration-2 underline-offset-4">right choice?</span>
+      {/* ================= SECTION 5a: WHY IS THIS THE RIGHT CHOICE (4 COLOR BLOCKS) ================= */}
+      <section className="bg-[#FFFDF8] py-16">
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-8">
+          <div className="mb-8">
+            <h2 className="font-serif font-medium text-[clamp(26px,3.5vw,36px)] text-[#151F19] leading-snug">
+              {content.why_choose_title ? (
+                content.why_choose_title.includes('right choice') ? (
+                  <>
+                    {content.why_choose_title.split('right choice')[0]}
+                    <span className="underline decoration-[#7BAE6E] decoration-2 underline-offset-4">
+                      right choice
+                    </span>
+                    {content.why_choose_title.split('right choice')[1]}
+                  </>
+                ) : (
+                  content.why_choose_title
+                )
+              ) : (
+                <>
+                  Why is this the{' '}
+                  <span className="underline decoration-[#7BAE6E] decoration-2 underline-offset-4">
+                    right choice
+                  </span>{' '}
+                  for you?
+                </>
+              )}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-[#DCF5A8]/50 p-6 rounded-2xl border border-[#DCF5A8] space-y-2">
-              <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/70 px-2.5 py-1 rounded-full inline-block">
-                01 Purity
-              </span>
-              <h4 className="text-xl font-extrabold text-[#151F19] leading-tight">Soil Free &amp; Clean</h4>
-              <p className="font-mono text-xs text-[#5C6B60]">Zero compost pathogens or grit</p>
-            </div>
+          <div className="grid grid-cols-1 min-[480px]:grid-cols-2 min-[900px]:grid-cols-4 gap-[17px]">
+            {[0, 1, 2, 3].map((idx) => {
+              const defaultBlock = DEFAULT_WHY_CHOOSE_BLOCKS[idx];
+              const pin = whyChoosePins[idx];
+              const title = pin?.title || defaultBlock.title;
+              const description = pin?.description || defaultBlock.description;
+              const bgColor = WHY_CHOOSE_COLORS[idx % WHY_CHOOSE_COLORS.length];
 
-            <div className="bg-[#BEE3F5]/50 p-6 rounded-2xl border border-[#BEE3F5] space-y-2">
-              <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/70 px-2.5 py-1 rounded-full inline-block">
-                02 Water
-              </span>
-              <h4 className="text-xl font-extrabold text-[#151F19] leading-tight">Mineral RO Water</h4>
-              <p className="font-mono text-xs text-[#5C6B60]">Pure drinking-grade water supply</p>
-            </div>
+              const imageUrl = pin ? pin.image_url : defaultBlock.image_url;
+              const isCocoPeat = idx === 2 || title.toLowerCase().includes('coco-peat');
 
-            <div className="bg-[#FFE0B2]/50 p-6 rounded-2xl border border-[#FFE0B2] space-y-2">
-              <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/70 px-2.5 py-1 rounded-full inline-block">
-                03 Timing
-              </span>
-              <h4 className="text-xl font-extrabold text-[#151F19] leading-tight">10 Day Peak</h4>
-              <p className="font-mono text-xs text-[#5C6B60]">Max biological nutrient concentration</p>
-            </div>
+              const cardContent = imageUrl ? (
+                <div
+                  style={{ backgroundColor: bgColor }}
+                  className="aspect-[1/1.32] rounded-none border-0 flex flex-col justify-between overflow-hidden transition-transform duration-300 hover:-translate-y-1 relative"
+                >
+                  <div className="p-[22px] pb-0 relative z-10">
+                    <h3 className="font-sans font-extrabold text-[20px] sm:text-[22px] lg:text-[24px] leading-tight tracking-[-0.01em] text-[#151F19] whitespace-pre-line">
+                      {title}
+                    </h3>
+                    {description && (
+                      <p className="font-mono text-[10px] text-[#5C6B60] tracking-[0.03em] mt-2">
+                        {description}
+                      </p>
+                    )}
+                  </div>
+                  <div className={`w-full mt-auto ${isCocoPeat ? 'overflow-visible relative' : 'overflow-hidden'}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imageUrl}
+                      alt={title.replace('\n', ' ')}
+                      style={
+                        isCocoPeat
+                          ? { transform: 'translate(1.5%, -11.5%) scale(1.5)', transformOrigin: 'center' }
+                          : undefined
+                      }
+                      className={`w-full aspect-[4/3] object-contain object-bottom block ${
+                        isCocoPeat ? 'scale-[1.5] translate-x-[1.5%] -translate-y-[11.5%] origin-center' : ''
+                      }`}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{ backgroundColor: bgColor }}
+                  className="aspect-[1/1.32] p-[22px] rounded-none border-0 flex flex-col justify-between transition-transform duration-300 hover:-translate-y-1"
+                >
+                  <h3 className="font-sans font-extrabold text-[20px] sm:text-[22px] lg:text-[24px] leading-tight tracking-[-0.01em] text-[#151F19] whitespace-pre-line">
+                    {title}
+                  </h3>
+                  {description && (
+                    <p className="font-mono text-[10px] text-[#5C6B60] tracking-[0.03em]">
+                      {description}
+                    </p>
+                  )}
+                </div>
+              );
 
-            <div className="bg-[#E9D8F2]/50 p-6 rounded-2xl border border-[#E9D8F2] space-y-2">
-              <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-[#1C3F2D] bg-white/70 px-2.5 py-1 rounded-full inline-block">
-                04 Freshness
-              </span>
-              <h4 className="text-xl font-extrabold text-[#151F19] leading-tight">Cut to Order</h4>
-              <p className="font-mono text-xs text-[#5C6B60]">Still living when it reaches your kitchen</p>
-            </div>
+              return pin?.link_url ? (
+                <Link key={pin?.id || idx} href={pin.link_url} className="block group h-full">
+                  {cardContent}
+                </Link>
+              ) : (
+                <div key={pin?.id || idx} className="block group h-full">
+                  {cardContent}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
+
+      {/* ================= SECTION 6: PRODUCT FAQS ACCORDION ================= */}
+      {effectiveFaqs.length > 0 && (
+        <section className="bg-[#F5EFE6] py-16 sm:py-24 border-t border-[#E4DDC8]">
+          <div className="max-w-[860px] mx-auto px-4 sm:px-6">
+            {/* Pill Badge */}
+            <div className="flex justify-center mb-4">
+              <span className="inline-block px-3.5 py-1 rounded-full bg-[#CFFA57] text-[#122A1F] font-mono text-[10.5px] font-bold uppercase tracking-wider shadow-sm">
+                FAQS
+              </span>
+            </div>
+
+            {/* Heading */}
+            <h2 className="font-serif text-[clamp(30px,4.5vw,44px)] text-center text-[#151F19] tracking-tight mb-12 sm:mb-14">
+              Got questions? <span className="italic font-normal">Let&apos;s dive in.</span>
+            </h2>
+
+            {/* Accordion List */}
+            <div className="divide-y divide-[#151F19]/15 border-y border-[#151F19]/15">
+              {effectiveFaqs.map((faq, idx) => {
+                const isOpen = openFaqIndex === idx;
+                return (
+                  <div key={idx} className="transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      className="w-full py-5 sm:py-6 flex items-center justify-between text-left gap-4 focus:outline-none cursor-pointer group"
+                      aria-expanded={isOpen}
+                    >
+                      <span className="font-serif font-bold text-[17.5px] sm:text-[19px] text-[#151F19] group-hover:text-[#285A35] transition-colors leading-snug">
+                        {faq.question}
+                      </span>
+                      <span
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 ${
+                          isOpen
+                            ? 'bg-[#183628] text-white shadow-sm'
+                            : 'border border-[#151F19]/30 bg-transparent text-[#151F19] group-hover:border-[#151F19]'
+                        }`}
+                      >
+                        {isOpen ? (
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M5 12h14" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <p className="pb-6 text-[14.5px] sm:text-[15.5px] text-[#5C6B60] leading-relaxed font-sans pr-6 sm:pr-12 whitespace-pre-line">
+                            {faq.answer}
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ================= STICKY ADD-TO-CART BAR ================= */}
       <div

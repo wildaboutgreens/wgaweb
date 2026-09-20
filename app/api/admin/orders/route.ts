@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/admin/orders — list orders with optional filters
+// GET /api/admin/orders: list orders with optional filters
 export async function GET(request: NextRequest) {
   try {
     const sql = getSQL();

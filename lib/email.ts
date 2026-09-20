@@ -78,7 +78,7 @@ export async function sendOrderConfirmation(
   // Build a simple plain-text + HTML email
   const itemLines = items.map(
     (item) =>
-      `${item.product_name} (${item.label}) × ${item.quantity} — ₹${(item.unit_price_paise * item.quantity / 100).toFixed(2)}`
+      `${item.product_name} (${item.label}) × ${item.quantity}: ₹${(item.unit_price_paise * item.quantity / 100).toFixed(2)}`
   );
 
   const totalFormatted = `₹${(order.total_paise / 100).toFixed(2)}`;
@@ -91,7 +91,7 @@ export async function sendOrderConfirmation(
     await getResend().emails.send({
       from: fromEmail,
       to: order.customer_email,
-      subject: `Wild About Greens — Order Confirmed! 🌱`,
+      subject: `Wild About Greens: Order Confirmed! 🌱`,
       html: `
         <h2>Thanks for your order, ${order.customer_name}!</h2>
         <div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0;">
@@ -110,7 +110,7 @@ export async function sendOrderConfirmation(
         <p>We'll deliver your fresh microgreens soon! 🌿</p>
         <p style="margin-top: 16px; font-size: 13px; color: #666;">Use your order number <strong>${order.order_number}</strong> to <a href="https://wildaboutgreens.com/track-order">track your order</a>.</p>
         <hr />
-        <p style="color: #888; font-size: 12px;">Wild About Greens — Fresh microgreens, delivered.</p>
+        <p style="color: #888; font-size: 12px;">Wild About Greens: Fresh microgreens, delivered.</p>
       `,
     });
 
@@ -118,7 +118,7 @@ export async function sendOrderConfirmation(
     return true;
   } catch (error) {
     console.error(`Order ${orderId}: failed to send confirmation email`, error);
-    // Don't throw — email failure shouldn't break the payment flow
+    // Don't throw: email failure shouldn't break the payment flow
     // Reset the flag so a retry can be attempted
     await sql`
       UPDATE orders SET confirmation_email_sent = false WHERE id = ${orderId}
@@ -218,7 +218,7 @@ export async function sendNewsletterWelcome(
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; color: #333;">
           ${bodyHtml}
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="color: #888; font-size: 12px;">Wild About Greens — Fresh living harvest in Chandigarh, Mohali &amp; Panchkula</p>
+          <p style="color: #888; font-size: 12px;">Wild About Greens: Fresh living harvest in Chandigarh, Mohali &amp; Panchkula</p>
         </div>
       `,
     });

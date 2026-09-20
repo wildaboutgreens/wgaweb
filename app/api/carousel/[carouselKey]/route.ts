@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/carousel/[carouselKey] — active slides for a specific carousel
+// GET /api/carousel/[carouselKey]: active slides for a specific carousel
 export async function GET(
   _request: NextRequest,
   { params }: { params: { carouselKey: string } }

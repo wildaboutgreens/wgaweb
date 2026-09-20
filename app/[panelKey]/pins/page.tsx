@@ -166,11 +166,22 @@ export default function AdminPinsPage() {
             />
           </div>
           <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">Image (optional)</label>
+              {form.image_url && (
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, image_url: '' }))}
+                  className="text-xs text-red-600 hover:text-red-800 font-medium"
+                >
+                  Remove photo
+                </button>
+              )}
+            </div>
             <ImageField
               value={form.image_url || null}
               onChange={(url) => setForm((prev) => ({ ...prev, image_url: url }))}
-              label="Image (optional)"
-              aspectRatio="1/1"
+              aspectRatio={(form.group_key || activeGroup) === 'homepage_shop_by_goal' ? '1/1' : '4/3'}
               folder={`pins/${form.group_key || activeGroup || 'general'}`}
             />
           </div>

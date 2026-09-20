@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       // Import at top of file
       const { sendNewsletterWelcome } = await import('@/lib/email');
       sendNewsletterWelcome(email.toLowerCase().trim()).catch(() => {
-        // Silently ignore — email failure shouldn't affect the signup response
+        // Silently ignore: email failure shouldn't affect the signup response
       });
     }
 

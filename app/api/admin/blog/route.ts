@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/admin/blog — list posts (published and drafts), optional ?type= filter
+// GET /api/admin/blog: list posts (published and drafts), optional ?type= filter
 export async function GET(request: NextRequest) {
   try {
     const sql = getSQL();
@@ -29,12 +29,29 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/blog — create a post (article or recipe)
+// POST /api/admin/blog: create a post (article or recipe)
 export async function POST(request: NextRequest) {
   try {
     const sql = getSQL();
     const body = await request.json();
-    const { slug, title, excerpt, content, cover_image_url, cover_image_alt_text, is_published, post_type, show_on_homepage } = body;
+    const {
+      slug,
+      title,
+      excerpt,
+      content,
+      cover_image_url,
+      cover_image_alt_text,
+      is_published,
+      post_type,
+      show_on_homepage,
+      recipe_ingredients,
+      recipe_method_steps,
+      recipe_prep_time,
+      recipe_cook_time,
+      recipe_difficulty,
+      recipe_serves,
+      recipe_categories,
+    } = body;
 
     if (!slug || !title || !content) {
       return NextResponse.json(
@@ -46,9 +63,33 @@ export async function POST(request: NextRequest) {
     const type = post_type === 'recipe' ? 'recipe' : 'article';
     const publishedAt = is_published ? new Date().toISOString() : null;
 
+    const ingredientsJson = type === 'recipe' && Array.isArray(recipe_ingredients)
+      ? JSON.stringify(recipe_ingredients)
+      : null;
+    const stepsJson = type === 'recipe' && Array.isArray(recipe_method_steps)
+      ? JSON.stringify(recipe_method_steps)
+      : null;
+    const categoriesArr = type === 'recipe' && Array.isArray(recipe_categories)
+      ? recipe_categories
+      : [];
+
     const result = await sql`
-      INSERT INTO blog_posts (slug, title, excerpt, content, cover_image_url, cover_image_alt_text, is_published, published_at, post_type, show_on_homepage)
-      VALUES (${slug}, ${title}, ${excerpt || null}, ${content}, ${cover_image_url || null}, ${cover_image_alt_text || null}, ${is_published || false}, ${publishedAt}, ${type}, ${show_on_homepage || false})
+      INSERT INTO blog_posts (
+        slug, title, excerpt, content, cover_image_url, cover_image_alt_text,
+        is_published, published_at, post_type, show_on_homepage,
+        recipe_ingredients, recipe_method_steps, recipe_prep_time, recipe_cook_time,
+        recipe_difficulty, recipe_serves, recipe_categories
+      )
+      VALUES (
+        ${slug}, ${title}, ${excerpt || null}, ${content}, ${cover_image_url || null}, ${cover_image_alt_text || null},
+        ${is_published || false}, ${publishedAt}, ${type}, ${show_on_homepage || false},
+        ${ingredientsJson}::jsonb, ${stepsJson}::jsonb,
+        ${type === 'recipe' ? (recipe_prep_time || null) : null},
+        ${type === 'recipe' ? (recipe_cook_time || null) : null},
+        ${type === 'recipe' ? (recipe_difficulty || null) : null},
+        ${type === 'recipe' ? (recipe_serves || null) : null},
+        ${categoriesArr}
+      )
       RETURNING *
     `;
 

@@ -22,6 +22,15 @@ export const metadata: Metadata = {
     title: 'Wild About Greens · Living Microgreens Delivered Fresh',
     description: 'Grown locally on vertical indoor racks across Chandigarh, Mohali & Panchkula. Pure mineral water, non GMO seeds, zero pesticides.',
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({

@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/blog — public: published posts only
+// GET /api/blog: public: published posts only
 // Supports optional ?type=article | recipe
 export async function GET(request: NextRequest) {
   try {

@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 const VALID_STATUSES = ['new', 'contacted', 'closed'];
 
-// GET /api/admin/inquiries — list inquiries, optionally filtered by status
+// GET /api/admin/inquiries: list inquiries, optionally filtered by status
 export async function GET(request: NextRequest) {
   try {
     const sql = getSQL();

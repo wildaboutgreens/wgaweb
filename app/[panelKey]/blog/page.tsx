@@ -17,6 +17,13 @@ interface Post {
   show_on_homepage: boolean;
   published_at: string | null;
   created_at: string;
+  recipe_ingredients?: string[] | null;
+  recipe_method_steps?: string[] | null;
+  recipe_prep_time?: string | null;
+  recipe_cook_time?: string | null;
+  recipe_difficulty?: string | null;
+  recipe_serves?: string | null;
+  recipe_categories?: string[] | null;
 }
 
 const emptyPost = {
@@ -29,12 +36,20 @@ const emptyPost = {
   post_type: 'article' as 'article' | 'recipe',
   is_published: false,
   show_on_homepage: false,
+  recipe_ingredients: [] as string[],
+  recipe_method_steps: [] as string[],
+  recipe_prep_time: '',
+  recipe_cook_time: '',
+  recipe_difficulty: '',
+  recipe_serves: '',
+  recipe_categories: [] as string[],
 };
 
 export default function AdminBlogPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [editing, setEditing] = useState<Post | null>(null);
   const [form, setForm] = useState(emptyPost);
+  const [newCatInput, setNewCatInput] = useState('');
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'article' | 'recipe'>('all');
@@ -64,6 +79,13 @@ export default function AdminBlogPage() {
         post_type: data.post_type || 'article',
         is_published: data.is_published,
         show_on_homepage: data.show_on_homepage || false,
+        recipe_ingredients: Array.isArray(data.recipe_ingredients) ? data.recipe_ingredients : [],
+        recipe_method_steps: Array.isArray(data.recipe_method_steps) ? data.recipe_method_steps : [],
+        recipe_prep_time: data.recipe_prep_time || '',
+        recipe_cook_time: data.recipe_cook_time || '',
+        recipe_difficulty: data.recipe_difficulty || '',
+        recipe_serves: data.recipe_serves || '',
+        recipe_categories: Array.isArray(data.recipe_categories) ? data.recipe_categories : [],
       });
     }
   };
@@ -71,23 +93,31 @@ export default function AdminBlogPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      const payload = {
+        ...form,
+        recipe_ingredients: form.post_type === 'recipe' ? form.recipe_ingredients.filter(s => s.trim().length > 0) : [],
+        recipe_method_steps: form.post_type === 'recipe' ? form.recipe_method_steps.filter(s => s.trim().length > 0) : [],
+        recipe_categories: form.post_type === 'recipe' ? form.recipe_categories.filter(s => s.trim().length > 0) : [],
+      };
       if (isNew) {
         const res = await adminFetch('/api/admin/blog', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
         if (res.ok) {
           setIsNew(false);
+          setEditing(null);
           loadPosts();
         }
       } else if (editing) {
         const res = await adminFetch(`/api/admin/blog/${editing.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
         if (res.ok) {
+          setEditing(null);
           loadPosts();
         }
       }
@@ -176,11 +206,13 @@ export default function AdminBlogPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {form.post_type === 'recipe' ? 'Introduction / Story' : 'Content'}
+            </label>
             <textarea
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
-              rows={10}
+              rows={form.post_type === 'recipe' ? 5 : 10}
               className="w-full px-3 py-2 border rounded-lg text-sm font-mono"
             />
           </div>
@@ -196,7 +228,224 @@ export default function AdminBlogPage() {
               onAltTextChange={(alt) => setForm({ ...form, cover_image_alt_text: alt })}
             />
           </div>
-          <label className="flex items-center gap-2 text-sm">
+
+          {/* Recipe-specific Fields */}
+          {form.post_type === 'recipe' && (
+            <div className="border-t pt-6 mt-6 space-y-6">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <span>🍳</span> Recipe Details
+              </h2>
+
+              {/* Prep / Cook / Difficulty / Serves */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Prep Time</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 15 mins"
+                    value={form.recipe_prep_time}
+                    onChange={(e) => setForm({ ...form, recipe_prep_time: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Cook Time</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 20 mins"
+                    value={form.recipe_cook_time}
+                    onChange={(e) => setForm({ ...form, recipe_cook_time: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Difficulty</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Easy"
+                    value={form.recipe_difficulty}
+                    onChange={(e) => setForm({ ...form, recipe_difficulty: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Serves</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 2-4"
+                    value={form.recipe_serves}
+                    onChange={(e) => setForm({ ...form, recipe_serves: e.target.value })}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Recipe Categories */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  Recipe Categories (press Enter to add)
+                </label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {form.recipe_categories.map((cat, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 text-xs font-medium rounded-full border border-amber-200"
+                    >
+                      {cat}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = form.recipe_categories.filter((_, i) => i !== idx);
+                          setForm({ ...form, recipe_categories: next });
+                        }}
+                        className="hover:text-red-600 font-bold ml-1 text-sm leading-none"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="e.g. Breakfast, Salads, Lunch"
+                    value={newCatInput}
+                    onChange={(e) => setNewCatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = newCatInput.trim();
+                        if (val && !form.recipe_categories.includes(val)) {
+                          setForm({
+                            ...form,
+                            recipe_categories: [...form.recipe_categories, val],
+                          });
+                          setNewCatInput('');
+                        }
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const val = newCatInput.trim();
+                      if (val && !form.recipe_categories.includes(val)) {
+                        setForm({
+                          ...form,
+                          recipe_categories: [...form.recipe_categories, val],
+                        });
+                        setNewCatInput('');
+                      }
+                    }}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium rounded-lg"
+                  >
+                    Add Category
+                  </button>
+                </div>
+              </div>
+
+              {/* Ingredients List */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                  Ingredients (You Will Need)
+                </label>
+                <div className="space-y-2">
+                  {form.recipe_ingredients.map((ing, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 font-mono w-6 text-right">•</span>
+                      <input
+                        type="text"
+                        placeholder="e.g. 2 skinless chicken breasts"
+                        value={ing}
+                        onChange={(e) => {
+                          const next = [...form.recipe_ingredients];
+                          next[idx] = e.target.value;
+                          setForm({ ...form, recipe_ingredients: next });
+                        }}
+                        className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = form.recipe_ingredients.filter((_, i) => i !== idx);
+                          setForm({ ...form, recipe_ingredients: next });
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded text-sm"
+                        title="Remove ingredient"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm({
+                      ...form,
+                      recipe_ingredients: [...form.recipe_ingredients, ''],
+                    });
+                  }}
+                  className="mt-2 text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
+                >
+                  + Add Ingredient
+                </button>
+              </div>
+
+              {/* Method Steps List */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                  Method Steps
+                </label>
+                <div className="space-y-3">
+                  {form.recipe_method_steps.map((step, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2.5 py-1.5 rounded mt-1">
+                        {idx + 1}
+                      </span>
+                      <textarea
+                        rows={2}
+                        placeholder={`Step ${idx + 1} instructions...`}
+                        value={step}
+                        onChange={(e) => {
+                          const next = [...form.recipe_method_steps];
+                          next[idx] = e.target.value;
+                          setForm({ ...form, recipe_method_steps: next });
+                        }}
+                        className="flex-1 px-3 py-2 border rounded-lg text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = form.recipe_method_steps.filter((_, i) => i !== idx);
+                          setForm({ ...form, recipe_method_steps: next });
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded text-sm mt-1"
+                        title="Remove step"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForm({
+                      ...form,
+                      recipe_method_steps: [...form.recipe_method_steps, ''],
+                    });
+                  }}
+                  className="mt-2 text-xs font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1"
+                >
+                  + Add Step
+                </button>
+              </div>
+            </div>
+          )}
+
+          <label className="flex items-center gap-2 text-sm pt-2">
             <input
               type="checkbox"
               checked={form.is_published}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 import { cloudinary, extractPublicIdFromUrl } from '@/lib/cloudinary';
 
-// PUT /api/admin/carousel/[id] — update a slide
+// PUT /api/admin/carousel/[id]: update a slide
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -52,7 +52,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/admin/carousel/[id] — delete a slide
+// DELETE /api/admin/carousel/[id]: delete a slide
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }

@@ -4,7 +4,7 @@ import { getSQL } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// GET /api/content/[page] — returns all content_blocks for a page as { key: value }
+// GET /api/content/[page]: returns all content_blocks for a page as { key: value }
 export async function GET(
   _request: NextRequest,
   { params }: { params: { page: string } }

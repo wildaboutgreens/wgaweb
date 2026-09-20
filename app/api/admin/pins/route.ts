@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
-// GET /api/admin/pins — list all pins, optionally filter by ?group_key=
+// GET /api/admin/pins: list all pins, optionally filter by ?group_key=
 export async function GET(request: NextRequest) {
   try {
     const sql = getSQL();
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/pins — create a pin
+// POST /api/admin/pins: create a pin
 export async function POST(request: NextRequest) {
   try {
     const sql = getSQL();

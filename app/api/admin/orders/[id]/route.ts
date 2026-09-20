@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 const VALID_FULFILLMENT_STATUSES = ['unfulfilled', 'shipped', 'delivered', 'cancelled'];
 
-// GET /api/admin/orders/[id] — full order detail with line items + product names
+// GET /api/admin/orders/[id]: full order detail with line items + product names
 export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } }
@@ -39,7 +39,7 @@ export async function GET(
   }
 }
 
-// PUT /api/admin/orders/[id] — update fulfillment_status only
+// PUT /api/admin/orders/[id]: update fulfillment_status only
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }

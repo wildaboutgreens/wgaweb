@@ -3,7 +3,7 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/carousel — public: active slides sorted by display_order
+// GET /api/carousel: public: active slides sorted by display_order
 export async function GET() {
   try {
     const sql = getSQL();
