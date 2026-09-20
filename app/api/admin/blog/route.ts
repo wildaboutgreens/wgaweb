@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
     const stepsJson = type === 'recipe' && Array.isArray(recipe_method_steps)
       ? JSON.stringify(recipe_method_steps)
       : null;
-    const categoriesArr = type === 'recipe' && Array.isArray(recipe_categories)
-      ? recipe_categories
+    const categoriesArr = Array.isArray(recipe_categories)
+      ? recipe_categories.filter((c: string) => typeof c === 'string' && c.trim().length > 0)
       : [];
 
     const result = await sql`

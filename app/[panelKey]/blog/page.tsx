@@ -97,7 +97,7 @@ export default function AdminBlogPage() {
         ...form,
         recipe_ingredients: form.post_type === 'recipe' ? form.recipe_ingredients.filter(s => s.trim().length > 0) : [],
         recipe_method_steps: form.post_type === 'recipe' ? form.recipe_method_steps.filter(s => s.trim().length > 0) : [],
-        recipe_categories: form.post_type === 'recipe' ? form.recipe_categories.filter(s => s.trim().length > 0) : [],
+        recipe_categories: form.recipe_categories.filter(s => s.trim().length > 0),
       };
       if (isNew) {
         const res = await adminFetch('/api/admin/blog', {
@@ -229,11 +229,151 @@ export default function AdminBlogPage() {
             />
           </div>
 
+          {/* Categories for Both Recipes and Articles */}
+          <div className="border-t pt-5">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-gray-700">
+                {form.post_type === 'recipe' ? 'Recipe Categories' : 'Article Categories / Topics'} (press Enter to add)
+              </label>
+              <span className="text-[11px] text-gray-400">
+                Shows in &ldquo;Found in ...&rdquo; line
+              </span>
+            </div>
+
+            {/* Active Categories */}
+            <div className="flex flex-wrap gap-2 mb-2 min-h-[28px]">
+              {form.recipe_categories.map((cat, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#F0F7E8] text-[#1C3F2D] text-xs font-medium rounded-full border border-[#74A832]/40"
+                >
+                  {cat}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = form.recipe_categories.filter((_, i) => i !== idx);
+                      setForm({ ...form, recipe_categories: next });
+                    }}
+                    className="hover:text-red-600 font-bold ml-1 text-sm leading-none"
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))}
+              {form.recipe_categories.length === 0 && (
+                <span className="text-xs text-gray-400 italic">No categories added yet</span>
+              )}
+            </div>
+
+            {/* Add Category Input */}
+            <div className="flex gap-2 mb-2">
+              <input
+                type="text"
+                placeholder={form.post_type === 'recipe' ? 'e.g. Salads, Breakfast, Pea Shoots...' : 'e.g. Nutrition, Science, Antioxidants...'}
+                value={newCatInput}
+                onChange={(e) => setNewCatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const val = newCatInput.trim();
+                    if (val && !form.recipe_categories.includes(val)) {
+                      setForm({
+                        ...form,
+                        recipe_categories: [...form.recipe_categories, val],
+                      });
+                      setNewCatInput('');
+                    }
+                  }
+                }}
+                className="flex-1 px-3 py-2 border rounded-lg text-sm"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const val = newCatInput.trim();
+                  if (val && !form.recipe_categories.includes(val)) {
+                    setForm({
+                      ...form,
+                      recipe_categories: [...form.recipe_categories, val],
+                    });
+                    setNewCatInput('');
+                  }
+                }}
+                className="px-4 py-2 bg-[#1C3F2D] hover:bg-[#122A1F] text-white text-xs font-medium rounded-lg"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Quick Suggestion Pills */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1">
+              <span className="text-[11px] text-gray-500 font-medium mr-1">Quick Add:</span>
+              {(form.post_type === 'recipe'
+                ? ['Salads', 'Breakfast', 'Lunch', 'Dinner', 'Quick Bites', 'Mains', 'Smoothies', 'Microgreens', 'Pea Shoots', 'Salad Cress']
+                : ['Nutrition', 'Antioxidants', 'Science', 'Farm Stories', 'Growing Guides', 'Living Nutrition']
+              ).map((preset) => {
+                const isSelected = form.recipe_categories.includes(preset);
+                return (
+                  <button
+                    key={preset}
+                    type="button"
+                    disabled={isSelected}
+                    onClick={() => {
+                      if (!isSelected) {
+                        setForm({
+                          ...form,
+                          recipe_categories: [...form.recipe_categories, preset],
+                        });
+                      }
+                    }}
+                    className={`text-[11px] px-2.5 py-0.5 rounded-full border transition-colors ${
+                      isSelected
+                        ? 'opacity-40 bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white text-[#2C3E2D] border-gray-300 hover:border-[#74A832] hover:bg-[#F0F7E8]'
+                    }`}
+                  >
+                    + {preset}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Live Card Preview in W S Bentley Style */}
+          <div className="bg-[#FAF9F6] border border-[#E4DDC8] rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-bold text-[#1C3F2D] uppercase tracking-wider">
+                Live Card Preview (Editorial Design Language)
+              </span>
+              <span className="text-[11px] text-gray-500 font-mono">
+                W S Bentley 4-Col Grid Style
+              </span>
+            </div>
+            <div className="max-w-[260px] bg-white border border-gray-200 p-2 text-center flex flex-col items-center">
+              <div className="w-full aspect-[16/10] bg-gray-100 overflow-hidden mb-2.5">
+                {form.cover_image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={form.cover_image_url} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs font-mono">
+                    Cover Photo
+                  </div>
+                )}
+              </div>
+              <div className="text-xs font-semibold uppercase tracking-[0.06em] text-[#74A832] line-clamp-2 leading-snug">
+                {form.title.trim() || 'UNTITLED POST'}
+              </div>
+              <div className="text-[11px] text-[#555555] tracking-wide mt-1">
+                Found in {form.recipe_categories.length > 0 ? form.recipe_categories.join(', ') : 'All'} {form.post_type === 'recipe' ? 'Recipes' : 'Articles'}
+              </div>
+            </div>
+          </div>
+
           {/* Recipe-specific Fields */}
           {form.post_type === 'recipe' && (
             <div className="border-t pt-6 mt-6 space-y-6">
               <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <span>🍳</span> Recipe Details
+                <span>🍳</span> Recipe Cooking Details
               </h2>
 
               {/* Prep / Cook / Difficulty / Serves */}
@@ -277,71 +417,6 @@ export default function AdminBlogPage() {
                     onChange={(e) => setForm({ ...form, recipe_serves: e.target.value })}
                     className="w-full px-3 py-2 border rounded-lg text-sm"
                   />
-                </div>
-              </div>
-
-              {/* Recipe Categories */}
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Recipe Categories (press Enter to add)
-                </label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {form.recipe_categories.map((cat, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 text-amber-900 text-xs font-medium rounded-full border border-amber-200"
-                    >
-                      {cat}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = form.recipe_categories.filter((_, i) => i !== idx);
-                          setForm({ ...form, recipe_categories: next });
-                        }}
-                        className="hover:text-red-600 font-bold ml-1 text-sm leading-none"
-                      >
-                        &times;
-                      </button>
-                    </span>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder="e.g. Breakfast, Salads, Lunch"
-                    value={newCatInput}
-                    onChange={(e) => setNewCatInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const val = newCatInput.trim();
-                        if (val && !form.recipe_categories.includes(val)) {
-                          setForm({
-                            ...form,
-                            recipe_categories: [...form.recipe_categories, val],
-                          });
-                          setNewCatInput('');
-                        }
-                      }
-                    }}
-                    className="flex-1 px-3 py-2 border rounded-lg text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const val = newCatInput.trim();
-                      if (val && !form.recipe_categories.includes(val)) {
-                        setForm({
-                          ...form,
-                          recipe_categories: [...form.recipe_categories, val],
-                        });
-                        setNewCatInput('');
-                      }
-                    }}
-                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-medium rounded-lg"
-                  >
-                    Add Category
-                  </button>
                 </div>
               </div>
 
@@ -547,9 +622,25 @@ export default function AdminBlogPage() {
             </tr>
           </thead>
           <tbody>
-            {posts.map((p) => (
+            {posts.map((p) => {
+              const cats = Array.isArray(p.recipe_categories) ? p.recipe_categories.filter((c) => c && c.trim().length > 0) : [];
+              return (
               <tr key={p.id} className="border-b last:border-0 hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium">{p.title}</td>
+                <td className="px-4 py-3">
+                  <div className="font-medium text-gray-900">{p.title}</div>
+                  {cats.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {cats.map((c, i) => (
+                        <span
+                          key={i}
+                          className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 border border-gray-200"
+                        >
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <span
                     className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
@@ -588,7 +679,8 @@ export default function AdminBlogPage() {
                   </button>
                 </td>
               </tr>
-            ))}
+            );
+          })}
           </tbody>
         </table>
         {posts.length === 0 && <p className="p-6 text-center text-gray-400">No posts found</p>}

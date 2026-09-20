@@ -132,7 +132,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 {categories.map((cat, idx) => (
                   <span
                     key={idx}
-                    className="inline-block px-3 py-1 rounded-full bg-white border border-[#E4DDC8] text-[#1C3F2D] font-mono text-[11px] font-bold uppercase tracking-wider"
+                    className="inline-block px-3 py-1 bg-[#F0F7E8] border border-[#74A832]/50 text-[#1C3F2D] font-mono text-[11px] font-bold uppercase tracking-wider"
                   >
                     {cat}
                   </span>
@@ -285,8 +285,20 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
       {/* Article Header */}
       <header className="mb-8">
+        {Array.isArray(post.recipe_categories) && post.recipe_categories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {post.recipe_categories.filter((c) => c && c.trim().length > 0).map((cat, idx) => (
+              <span
+                key={idx}
+                className="inline-block px-3 py-1 bg-[#F0F7E8] border border-[#74A832]/50 text-[#1C3F2D] font-mono text-[11px] font-bold uppercase tracking-wider"
+              >
+                {cat}
+              </span>
+            ))}
+          </div>
+        )}
         {post.published_at && (
-          <p className="text-xs sm:text-sm font-semibold text-green-700 uppercase tracking-wider mb-3">
+          <p className="text-xs sm:text-sm font-semibold text-[#6CA030] uppercase tracking-wider mb-3">
             Published on{' '}
             {new Date(post.published_at).toLocaleDateString('en-IN', {
               day: 'numeric',
