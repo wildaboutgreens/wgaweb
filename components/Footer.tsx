@@ -100,7 +100,7 @@ export default function Footer() {
               Why Microgreens
             </Link>
             <Link href="/blog" className="block text-[14.5px] text-[#FFFDF8]/75 hover:text-[#CFFA57] transition-colors">
-              Blog &amp; Journal
+              Pathshala
             </Link>
             <Link href="/track-order" className="block text-[14.5px] text-[#FFFDF8]/75 hover:text-[#CFFA57] transition-colors">
               Track Order
@@ -149,7 +149,7 @@ export default function Footer() {
           <div>© {new Date().getFullYear()} Wild About Greens · Fresh living harvest in Chandigarh, Mohali &amp; Panchkula</div>
           <div className="flex items-center gap-5">
             <Link href="/blog" className="text-[#FFFDF8]/60 hover:text-[#CFFA57] transition-colors">
-              Blog
+              Pathshala
             </Link>
             <Link href="/track-order" className="text-[#FFFDF8]/60 hover:text-[#CFFA57] transition-colors">
               Track Order

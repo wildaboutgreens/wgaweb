@@ -5,15 +5,15 @@ import BlogClient, { ArticleItem } from './BlogClient';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Blog & Nutrition Journal · Wild About Greens',
+  title: 'Pathshala · Wild About Greens',
   description: 'Explore microgreens growing guides, science backed wellness tips, and farm updates from Wild About Greens.',
   openGraph: {
-    title: 'Blog & Nutrition Journal · Wild About Greens',
+    title: 'Pathshala · Wild About Greens',
     description: 'Explore microgreens growing guides, science backed wellness tips, and farm updates from Wild About Greens.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Blog & Nutrition Journal · Wild About Greens',
+    title: 'Pathshala · Wild About Greens',
     description: 'Microgreens growing guides, wellness tips, and farm updates.',
   },
 };

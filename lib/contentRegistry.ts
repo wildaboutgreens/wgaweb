@@ -663,13 +663,13 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Hero Banner Image (Full-Width Panoramic)',
       type: 'image_url',
       defaultValue: '',
-      description: 'Upload a wide edge-to-edge panoramic banner photo (~1920x600px recommended) for The Journal / Blog page. Displayed full-bleed with no overlay text.',
+      description: 'Upload a wide edge-to-edge panoramic banner photo (~1920x600px recommended) for the Pathshala page. Displayed full-bleed with no overlay text.',
     },
     {
       key: 'hero_title',
       label: 'Page Heading',
       type: 'text',
-      defaultValue: 'The Journal',
+      defaultValue: 'Pathshala',
       description: 'Page title displayed centered in crisp uppercase tracked editorial styling below the banner.',
     },
     {

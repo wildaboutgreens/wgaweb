@@ -41,7 +41,6 @@ export default function AdminDashboard() {
     { label: 'Pending Fulfillment', value: stats.pending_fulfillment_count, color: 'bg-amber-50 text-amber-700' },
     { label: 'Low Stock Variants', value: stats.low_stock_variants.length, color: 'bg-red-50 text-red-700' },
     { label: 'Newsletter Subscribers', value: stats.newsletter_subscriber_count, color: 'bg-purple-50 text-purple-700' },
-    { label: 'New Inquiries', value: stats.new_inquiry_count, color: 'bg-teal-50 text-teal-700' },
     { label: 'Stale Pending Orders', value: stats.stale_pending_orders_count, color: 'bg-orange-50 text-orange-700' },
   ];
 

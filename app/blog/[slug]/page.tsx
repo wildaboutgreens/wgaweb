@@ -279,7 +279,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           href="/blog"
           className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-green-700 transition-colors"
         >
-          <span>&larr;</span> Back to All Articles
+          <span>&larr;</span> Back to Pathshala
         </Link>
       </div>
 

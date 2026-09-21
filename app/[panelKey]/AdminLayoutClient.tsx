@@ -24,9 +24,7 @@ export default function AdminLayoutClient({
     { href: `/${currentKey}/reviews`, label: 'Reviews', icon: '⭐' },
     { href: `/${currentKey}/content`, label: 'Content', icon: '✏️' },
     { href: `/${currentKey}/pins`, label: 'Pins', icon: '📌' },
-    { href: `/${currentKey}/blog`, label: 'Blog', icon: '📝' },
-    { href: `/${currentKey}/carousel`, label: 'Carousel', icon: '🎠' },
-    { href: `/${currentKey}/inquiries`, label: 'Inquiries', icon: '💬' },
+    { href: `/${currentKey}/blog`, label: 'Pathshala & Recipes', icon: '📝' },
   ];
 
   // Login page: no sidebar, no auth check blocking

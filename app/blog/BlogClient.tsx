@@ -30,7 +30,7 @@ export default function BlogClient({
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
   const heroImage = content.hero_image_url?.trim() || DEFAULT_BLOG_HERO;
-  const heroTitle = content.hero_title?.trim() || 'The Journal';
+  const heroTitle = content.hero_title?.trim() || 'Pathshala';
   const heroSubtitle = content.hero_subtitle?.trim() || '';
 
   const filteredPosts = posts.filter((post) => {

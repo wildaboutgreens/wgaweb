@@ -16,6 +16,8 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
   const exploreRef = useRef<HTMLDivElement>(null);
+  const [recipesOpen, setRecipesOpen] = useState(false);
+  const recipesRef = useRef<HTMLDivElement>(null);
 
   const [mounted, setMounted] = useState(false);
   const totalItems = useCartStore((s) => s.totalItems());
@@ -34,11 +36,14 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close explore dropdown on outside click
+  // Close explore and recipes dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (exploreRef.current && !exploreRef.current.contains(e.target as Node)) {
         setExploreOpen(false);
+      }
+      if (recipesRef.current && !recipesRef.current.contains(e.target as Node)) {
+        setRecipesOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -47,6 +52,7 @@ export default function Header() {
 
   const handleNavToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     setExploreOpen(false);
+    setRecipesOpen(false);
     setMobileMenuOpen(false);
     if (pathname === '/') {
       e.preventDefault();
@@ -137,20 +143,70 @@ export default function Header() {
               </AnimatePresence>
             </div>
 
-            {/* Recipe Khazana Link */}
-            <Link
-              href="/recipe-khazana"
-              className={`text-[13.5px] font-medium tracking-wide transition-colors relative group py-1 ${
-                pathname === '/recipe-khazana'
-                  ? 'font-bold text-[#1C3F2D]'
-                  : showSolidNav
-                  ? 'text-[#151F19]'
-                  : 'text-[#FFFDF8]/90 hover:text-white'
-              }`}
+            {/* Recipes and Pathshala Dropdown */}
+            <div
+              ref={recipesRef}
+              className="relative"
+              onMouseEnter={() => setRecipesOpen(true)}
+              onMouseLeave={() => setRecipesOpen(false)}
             >
-              Recipe Khazana
-              <span className="absolute left-0 bottom-0 w-0 h-[1.5px] bg-current transition-all duration-200 group-hover:w-full" />
-            </Link>
+              <button
+                onClick={() => setRecipesOpen(!recipesOpen)}
+                className={`text-[13.5px] font-medium tracking-wide transition-colors flex items-center gap-1.5 py-1 ${
+                  pathname === '/recipe-khazana' || pathname.startsWith('/blog')
+                    ? 'font-bold text-[#1C3F2D]'
+                    : showSolidNav
+                    ? 'text-[#151F19]'
+                    : 'text-[#FFFDF8]/90 hover:text-white'
+                }`}
+                aria-expanded={recipesOpen}
+                aria-haspopup="true"
+              >
+                <span>Recipes and Pathshala</span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    recipesOpen ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {recipesOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    className="absolute top-full left-0 pt-2 z-50 w-60"
+                  >
+                    <div className="bg-[#FFFDF8] rounded-2xl p-2 shadow-2xl border border-[#E4DDC8] text-[#151F19] space-y-1">
+                      <Link
+                        href="/recipe-khazana"
+                        onClick={() => setRecipesOpen(false)}
+                        className="block px-3.5 py-2.5 rounded-xl text-[13px] font-medium hover:bg-[#F3EEE0] transition-colors"
+                      >
+                        <span className="block font-semibold">Enter Recipe Khazana</span>
+                        <span className="text-[11px] text-[#5C6B60]">Curated microgreens culinary recipes</span>
+                      </Link>
+                      <Link
+                        href="/blog"
+                        onClick={() => setRecipesOpen(false)}
+                        className="block px-3.5 py-2.5 rounded-xl text-[13px] font-medium hover:bg-[#F3EEE0] transition-colors"
+                      >
+                        <span className="block font-semibold">Enter Pathshala</span>
+                        <span className="text-[11px] text-[#5C6B60]">Growing guides, science &amp; farm insights</span>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Nav Center Logo */}
@@ -296,12 +352,22 @@ export default function Header() {
               Shop by Goal
             </Link>
 
+            <div className="font-mono text-[10px] tracking-wider uppercase text-[#5C6B60] px-1 font-semibold pt-1">
+              Recipes and Pathshala
+            </div>
             <Link
               href="/recipe-khazana"
               onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 px-2 font-medium hover:bg-white/50 rounded-lg"
+            >
+              Enter Recipe Khazana
+            </Link>
+            <Link
+              href="/blog"
+              onClick={() => setMobileMenuOpen(false)}
               className="block py-2 px-2 font-medium hover:bg-white/50 rounded-lg border-b border-[#E4DDC8]/60"
             >
-              Recipe Khazana
+              Enter Pathshala
             </Link>
             <Link
               href="/our-story"

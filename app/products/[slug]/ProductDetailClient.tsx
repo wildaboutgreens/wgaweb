@@ -166,12 +166,12 @@ const REASONS = [
   {
     icon: '🌾',
     title: 'Better Digestion',
-    desc: 'A quiet dose of fibre in every handful — most adults fall short here³ — keeps digestion moving without any extra effort.',
+    desc: 'A quiet dose of fibre in every handful, most adults fall short here³, keeps digestion moving without any extra effort.',
   },
   {
     icon: '✅',
     title: 'Genuinely Clean',
-    desc: 'Grown indoors on soil-free racks with mineral RO water. Nothing sprayed, ever — food you can actually trust for the whole family.',
+    desc: 'Grown indoors on soil-free racks with mineral RO water. Nothing sprayed, ever. Food you can actually trust for the whole family.',
   },
   {
     icon: '⏱️',

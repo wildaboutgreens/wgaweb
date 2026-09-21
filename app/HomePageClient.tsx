@@ -6,6 +6,7 @@ import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import SprigDefs, { Sprig } from '@/components/SprigDefs';
 import StoryModal from '@/components/StoryModal';
 import WhyMicrogreensChart from '@/components/WhyMicrogreensChart';
+import { Instagram, ShoppingBag, Subscription } from '@/components/icons';
 
 export interface ContentPin {
   id: string;
@@ -614,9 +615,6 @@ export default function HomePageClient({
           >
             {activeGoals.map((pin, index) => {
               const bgColor = GOAL_BG_COLORS[index % GOAL_BG_COLORS.length];
-              const isHeart =
-                pin.icon?.toLowerCase() === 'heart' ||
-                pin.title?.toLowerCase().includes('heart');
 
               return (
                 <motion.div key={pin.id || index} variants={scrollItemVariants}>
@@ -634,11 +632,7 @@ export default function HomePageClient({
                         <img
                           src={pin.image_url}
                           alt={pin.title}
-                          className={
-                            isHeart
-                              ? 'w-[78%] h-[78%] object-cover heart-clip drop-shadow-[0_10px_14px_rgba(21,31,25,0.28)] group-hover:scale-105 transition-transform duration-500'
-                              : 'w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
-                          }
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
                         <span className="text-4xl">🌱</span>
@@ -908,19 +902,22 @@ export default function HomePageClient({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 border border-[#FFFDF8]/30 px-5 py-3 rounded-full text-sm font-semibold text-white hover:bg-[#CFFA57] hover:border-[#CFFA57] hover:text-[#151F19] hover:-translate-y-0.5 transition-all duration-200"
             >
-              📷 Instagram
+              <Instagram className="w-4 h-4 shrink-0" />
+              <span>Instagram</span>
             </a>
             <Link
               href="/products"
               className="inline-flex items-center gap-2 border border-[#FFFDF8]/30 px-5 py-3 rounded-full text-sm font-semibold text-white hover:bg-[#CFFA57] hover:border-[#CFFA57] hover:text-[#151F19] hover:-translate-y-0.5 transition-all duration-200"
             >
-              🛒 Shop Products
+              <ShoppingBag className="w-4 h-4 shrink-0" />
+              <span>Shop Products</span>
             </Link>
             <Link
               href="/products?category=bundle"
               className="inline-flex items-center gap-2 border border-[#FFFDF8]/30 px-5 py-3 rounded-full text-sm font-semibold text-white hover:bg-[#CFFA57] hover:border-[#CFFA57] hover:text-[#151F19] hover:-translate-y-0.5 transition-all duration-200"
             >
-              🔁 Subscriptions
+              <Subscription className="w-4 h-4 shrink-0" />
+              <span>Subscriptions</span>
             </Link>
           </motion.div>
         </motion.div>

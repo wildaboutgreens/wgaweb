@@ -19,7 +19,7 @@ const PAGES = [
   { value: 'product-listing', label: 'Product Listing' },
   { value: 'product-detail', label: 'Product Detail' },
   { value: 'recipe-khazana', label: 'Recipe Khazana' },
-  { value: 'blog', label: 'Blog (Journal)' },
+  { value: 'blog', label: 'Pathshala' },
   { value: 'our-story', label: 'Our Story' },
   { value: 'emails', label: 'Emails' },
 ];
