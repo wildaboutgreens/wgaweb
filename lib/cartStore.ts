@@ -11,6 +11,21 @@ export interface CartItem {
   pricePaise: number;
   quantity: number;
   maxStock: number;
+  thumbnailUrl?: string | null;
+}
+
+export const PRODUCT_FALLBACK_IMAGES: Record<string, string> = {
+  'broccoli-microgreens': 'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=800&auto=format&fit=crop',
+  'sunflower-microgreens': 'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=80&w=800&auto=format&fit=crop',
+  'radish-microgreens': 'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=800&auto=format&fit=crop',
+  'classic-trio-bundle': 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=800&auto=format&fit=crop',
+};
+
+export const DEFAULT_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?fm=jpg&q=80&w=800&auto=format&fit=crop';
+
+export function getProductThumbnail(slug: string, currentUrl?: string | null): string {
+  if (currentUrl && currentUrl.trim() !== '') return currentUrl;
+  return PRODUCT_FALLBACK_IMAGES[slug] || DEFAULT_PRODUCT_IMAGE;
 }
 
 interface CartState {
@@ -35,19 +50,24 @@ export const useCartStore = create<CartState>()(
 
       addItem: (newItem) =>
         set((state) => {
+          const resolvedThumb = getProductThumbnail(newItem.productSlug, newItem.thumbnailUrl);
+          const itemWithThumb = { ...newItem, thumbnailUrl: resolvedThumb };
+
           const existing = state.items.find((i) => i.variantId === newItem.variantId);
           if (existing) {
             const newQty = Math.min(existing.quantity + (newItem.quantity || 1), newItem.maxStock);
             return {
               items: state.items.map((i) =>
-                i.variantId === newItem.variantId ? { ...i, quantity: newQty } : i
+                i.variantId === newItem.variantId
+                  ? { ...i, quantity: newQty, thumbnailUrl: i.thumbnailUrl || resolvedThumb }
+                  : i
               ),
             };
           }
           return {
             items: [
               ...state.items,
-              { ...newItem, quantity: Math.min(newItem.quantity || 1, newItem.maxStock) },
+              { ...itemWithThumb, quantity: Math.min(newItem.quantity || 1, newItem.maxStock) },
             ],
           };
         }),

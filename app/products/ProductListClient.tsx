@@ -319,6 +319,8 @@ export default function ProductListClient({
     const price = activeVar ? activeVar.price_paise : 9900;
     const variantId = activeVar ? activeVar.id : product.id;
     const label = activeVar ? activeVar.label : '100g tray';
+    const meta = getProductMeta(product);
+    const thumb = product.thumbnail_url || product.images?.[0]?.image_url || meta.photo;
 
     addItem({
       variantId,
@@ -327,6 +329,7 @@ export default function ProductListClient({
       variantLabel: label,
       pricePaise: price,
       maxStock: activeVar?.stock_qty || 20,
+      thumbnailUrl: thumb,
     });
 
     setAddedIds((prev) => ({ ...prev, [product.id]: true }));

@@ -408,6 +408,7 @@ export default function ProductDetailClient({
 
   const handleAddToCart = () => {
     if (!selectedVariant || selectedVariant.stock_qty === 0) return;
+    const thumb = product.thumbnail_url || product.images?.[0]?.image_url || null;
     for (let i = 0; i < qty; i++) {
       addItem({
         variantId: selectedVariant.id,
@@ -418,6 +419,7 @@ export default function ProductDetailClient({
         }`,
         pricePaise: effectivePrice,
         maxStock: selectedVariant.stock_qty,
+        thumbnailUrl: thumb,
       });
     }
     setAddedFeedback(true);
@@ -425,6 +427,12 @@ export default function ProductDetailClient({
   };
 
   const handleQuickAdd = (rel: RelatedProduct | OtherGreenItem) => {
+    const thumb =
+      ('thumbnail_url' in rel && rel.thumbnail_url)
+        ? rel.thumbnail_url
+        : ('photo' in rel && rel.photo)
+        ? rel.photo
+        : null;
     addItem({
       variantId: ('variant_id' in rel && rel.variant_id) ? rel.variant_id : rel.id,
       productSlug: rel.slug,
@@ -432,6 +440,7 @@ export default function ProductDetailClient({
       variantLabel: 'Standard Tray',
       pricePaise: rel.price_paise,
       maxStock: 20,
+      thumbnailUrl: thumb,
     });
     setIsOpen(true);
   };

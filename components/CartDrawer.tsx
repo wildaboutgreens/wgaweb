@@ -1,18 +1,103 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCartStore } from '@/lib/cartStore';
+import { useCartStore, getProductThumbnail } from '@/lib/cartStore';
 import { isAdminPath } from '@/lib/adminAuth';
 import { formatPrice } from '@/lib/format';
 import { X, Plus, Minus } from './icons';
+import CartMascot from './CartMascot';
+
+interface BestsellerProduct {
+  id: string;
+  slug: string;
+  name: string;
+  variantId: string;
+  variantLabel: string;
+  pricePaise: number;
+  mrpPaise: number;
+  discountOff: string;
+  badge: {
+    text: string;
+    bg: string;
+    color: string;
+  };
+  cardBg: string;
+  photo: string;
+  maxStock: number;
+}
+
+const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
+  {
+    id: 'broccoli-microgreens',
+    slug: 'broccoli-microgreens',
+    name: 'Broccoli Microgreens',
+    variantId: 'var-broccoli-50g',
+    variantLabel: '50g living tray',
+    pricePaise: 9900,
+    mrpPaise: 12000,
+    discountOff: '₹21 OFF',
+    badge: { text: '★ BESTSELLER', bg: '#1C3F2D', color: '#FFFDF8' },
+    cardBg: '#EEF5EF',
+    photo: 'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=800&auto=format&fit=crop',
+    maxStock: 25,
+  },
+  {
+    id: 'sunflower-microgreens',
+    slug: 'sunflower-microgreens',
+    name: 'Sunflower Microgreens',
+    variantId: 'var-sunflower-50g',
+    variantLabel: '50g living tray',
+    pricePaise: 8900,
+    mrpPaise: 11000,
+    discountOff: '₹21 OFF',
+    badge: { text: '☀ FAVORITE', bg: '#8C5815', color: '#FFFDF8' },
+    cardBg: '#FAF4EB',
+    photo: 'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=80&w=800&auto=format&fit=crop',
+    maxStock: 30,
+  },
+  {
+    id: 'radish-microgreens',
+    slug: 'radish-microgreens',
+    name: 'Radish Microgreens',
+    variantId: 'var-radish-50g',
+    variantLabel: '50g living tray',
+    pricePaise: 7900,
+    mrpPaise: 9900,
+    discountOff: '₹20 OFF',
+    badge: { text: '🌱 PEAK FLAVOUR', bg: '#2D7A4D', color: '#FFFDF8' },
+    cardBg: '#F0F6F1',
+    photo: 'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=800&auto=format&fit=crop',
+    maxStock: 35,
+  },
+  {
+    id: 'classic-trio-bundle',
+    slug: 'classic-trio-bundle',
+    name: 'Classic Trio Bundle',
+    variantId: 'var-trio-bundle',
+    variantLabel: '3 living trays',
+    pricePaise: 24900,
+    mrpPaise: 29900,
+    discountOff: '₹50 OFF',
+    badge: { text: '✦ VALUE PACK', bg: '#122A1F', color: '#CFFA57' },
+    cardBg: '#EEF2EE',
+    photo: 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=800&auto=format&fit=crop',
+    maxStock: 15,
+  },
+];
 
 export default function CartDrawer() {
   const pathname = usePathname();
-  const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPaise } = useCartStore();
+  const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPaise, addItem, totalItems } =
+    useCartStore();
   const total = totalPaise();
+  const itemCount = totalItems();
+
+  const [bestsellers, setBestsellers] = useState<BestsellerProduct[]>(DEFAULT_BESTSELLERS);
+  const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
+  const carouselRef = useRef<HTMLDivElement | null>(null);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -21,8 +106,64 @@ export default function CartDrawer() {
     } else {
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
+
+  // Fetch live products from DB
+  useEffect(() => {
+    if (!isOpen) return;
+
+    fetch('/api/products')
+      .then((res) => res.json())
+      .then((data) => {
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        setBestsellers((prev) =>
+          prev.map((item) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const found = data.find((p: any) => p.slug === item.slug);
+            if (found && found.variants && found.variants.length > 0) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const activeVar = found.variants.find((v: any) => v.is_active) || found.variants[0];
+              const price = activeVar.price_paise;
+              const approxMrp = Math.round(price * 1.25);
+              const discountPaise = approxMrp - price;
+              return {
+                ...item,
+                variantId: activeVar.id,
+                variantLabel: activeVar.label || item.variantLabel,
+                pricePaise: price,
+                mrpPaise: approxMrp,
+                discountOff: `₹${Math.round(discountPaise / 100)} OFF`,
+                maxStock: activeVar.stock_qty || item.maxStock,
+                photo: found.thumbnail_url || found.images?.[0]?.image_url || item.photo,
+              };
+            }
+            return item;
+          })
+        );
+      })
+      .catch(() => {});
+  }, [isOpen]);
+
+  const handleQuickAdd = (product: BestsellerProduct) => {
+    addItem({
+      variantId: product.variantId,
+      productSlug: product.slug,
+      productName: product.name,
+      variantLabel: product.variantLabel,
+      pricePaise: product.pricePaise,
+      maxStock: product.maxStock,
+      thumbnailUrl: product.photo,
+    });
+
+    setAddedIds((prev) => ({ ...prev, [product.id]: true }));
+    setTimeout(() => {
+      setAddedIds((prev) => ({ ...prev, [product.id]: false }));
+    }, 1600);
+  };
 
   if (isAdminPath(pathname)) {
     return null;
@@ -38,7 +179,7 @@ export default function CartDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/40 z-[60]"
+            className="fixed inset-0 bg-[#122A1F]/50 backdrop-blur-[2px] z-[60]"
           />
 
           {/* Drawer */}
@@ -46,95 +187,321 @@ export default function CartDrawer() {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-[70] flex flex-col"
+            transition={{ type: 'spring', damping: 26, stiffness: 220 }}
+            className="fixed top-0 right-0 h-full w-full max-w-[430px] bg-[#FFFDF8] border-l border-[#E4DDC8] shadow-2xl z-[70] flex flex-col justify-between overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-bold text-gray-900">Your Cart</h2>
-              <button onClick={() => setIsOpen(false)} className="p-1 text-gray-400 hover:text-gray-600">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#E4DDC8] bg-[#FFFDF8] sticky top-0 z-20">
+              <div className="flex items-center gap-2">
+                <h2 className="font-serif font-bold text-lg sm:text-xl text-[#151F19]">
+                  Your items
+                </h2>
+                <span className="font-mono text-xs font-bold text-[#1C3F2D] bg-[#EBF5EE] px-2 py-0.5 rounded-full border border-[#C5DEC9]">
+                  {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="w-8 h-8 flex items-center justify-center text-[#5C6B60] hover:text-[#151F19] hover:bg-[#F3EEE0] rounded-full transition-colors"
+                aria-label="Close cart"
+              >
                 <X />
               </button>
             </div>
 
-            {/* Items */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {items.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                  <span className="text-4xl mb-3">🛒</span>
-                  <p className="font-medium">Your cart is empty</p>
-                  <Link
-                    href="/products"
-                    onClick={() => setIsOpen(false)}
-                    className="mt-4 text-green-700 hover:text-green-800 font-medium underline"
-                  >
-                    Start shopping
-                  </Link>
+            {/* Body */}
+            {items.length === 0 ? (
+              /* ================= EMPTY STATE ================= */
+              <div className="flex-1 flex flex-col overflow-y-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {/* Quirky Hero */}
+                <div className="pt-6 pb-5 px-6 text-center bg-[#FFFDF8] flex flex-col items-center">
+                  <h3 className="font-serif font-semibold text-2xl text-[#151F19] tracking-tight">
+                    This cart is empty inside!
+                  </h3>
+
+                  <div className="my-2">
+                    <CartMascot className="w-36 h-36" />
+                  </div>
+
+                  <p className="font-handwriting text-xl sm:text-[22px] text-[#2D7A4D] font-bold leading-snug max-w-[280px] mx-auto">
+                    Fill it, before the cart takes a drastic step it&apos;ll regret the rest of its life.
+                  </p>
                 </div>
-              ) : (
-                <ul className="space-y-4">
-                  {items.map((item) => (
-                    <li key={item.variantId} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-16 h-16 bg-green-100 rounded-md flex items-center justify-center shrink-0">
-                        <span className="text-2xl">🌿</span>
+
+                {/* Bestsellers Section in Signature Warm Cream */}
+                <div className="bg-[#F3EEE0] border-t border-[#E4DDC8] pt-5 pb-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    {/* Eyebrow & Fraunces Heading */}
+                    <div className="text-center mb-4">
+                      <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#5C6B60] font-semibold block mb-1">
+                        start with
+                      </span>
+                      <div className="inline-block relative">
+                        <h4 className="font-serif font-bold text-2xl text-[#151F19] tracking-tight">
+                          Our Bestsellers
+                        </h4>
+                        <div className="w-12 h-0.5 bg-[#1C3F2D] mx-auto mt-1.5 rounded-full" />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-sm truncate">{item.productName}</p>
-                        <p className="text-xs text-gray-500">{item.variantLabel}</p>
-                        <p className="text-sm font-semibold text-green-700 mt-1">
-                          {formatPrice(item.pricePaise * item.quantity)}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <button
-                          onClick={() => removeItem(item.variantId)}
-                          className="text-gray-400 hover:text-red-500 text-xs"
-                        >
-                          Remove
-                        </button>
-                        <div className="flex items-center gap-2 bg-white border rounded-md">
-                          <button
-                            onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
-                            className="p-1 hover:bg-gray-100 rounded-l-md"
+                    </div>
+
+                    {/* Horizontal Carousel (Scrollbar Hidden) */}
+                    <div
+                      ref={carouselRef}
+                      className="flex gap-3 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-4 pt-1 pb-2 scroll-smooth"
+                    >
+                      {bestsellers.map((prod) => {
+                        const isAdded = !!addedIds[prod.id];
+                        return (
+                          <div
+                            key={prod.id}
+                            className="w-[210px] shrink-0 flex flex-col justify-between bg-[#FFFDF8] rounded-2xl p-3 border border-[#E4DDC8] shadow-sm hover:shadow-md hover:border-[#1C3F2D]/40 transition-all group"
                           >
-                            <Minus />
-                          </button>
-                          <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
-                          <button
-                            onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
-                            disabled={item.quantity >= item.maxStock}
-                            className="p-1 hover:bg-gray-100 rounded-r-md disabled:opacity-30"
-                          >
-                            <Plus />
-                          </button>
+                            <div>
+                              {/* Organic tinted packshot image container */}
+                              <div
+                                style={{ backgroundColor: prod.cardBg }}
+                                className="relative aspect-square rounded-xl overflow-hidden mb-2.5 flex items-center justify-center p-2 border border-[#E4DDC8]/60"
+                              >
+                                {/* Badge */}
+                                <div className="absolute top-2 left-2 z-10">
+                                  <span
+                                    style={{
+                                      backgroundColor: prod.badge.bg,
+                                      color: prod.badge.color,
+                                    }}
+                                    className="inline-flex items-center font-mono text-[9.5px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs"
+                                  >
+                                    {prod.badge.text}
+                                  </span>
+                                </div>
+
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={prod.photo}
+                                  alt={prod.name}
+                                  className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                                />
+                              </div>
+
+                              {/* Title */}
+                              <Link
+                                href={`/products/${prod.slug}`}
+                                onClick={() => setIsOpen(false)}
+                                className="font-serif font-bold text-sm text-[#151F19] line-clamp-1 hover:text-[#1C3F2D] transition-colors"
+                              >
+                                {prod.name}
+                              </Link>
+                              <p className="font-mono text-[11px] text-[#5C6B60] mt-0.5">
+                                {prod.variantLabel}
+                              </p>
+
+                              {/* Price Row */}
+                              <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                                <span className="font-bold text-sm text-[#151F19]">
+                                  {formatPrice(prod.pricePaise)}
+                                </span>
+                                <span className="font-mono text-xs text-[#5C6B60] line-through">
+                                  {formatPrice(prod.mrpPaise)}
+                                </span>
+                                <span className="font-mono text-[10px] font-bold text-[#1C3F2D] bg-[#EBF5EE] px-1.5 py-0.5 rounded border border-[#C5DEC9]">
+                                  {prod.discountOff}
+                                </span>
+                              </div>
+
+                              {/* Reassurance Tag */}
+                              <p className="font-mono text-[10.5px] text-[#2D7A4D] font-medium mt-1.5 flex items-center gap-1">
+                                <span>🌱</span>
+                                <span>Harvested live to order</span>
+                              </p>
+                            </div>
+
+                            {/* Full-width ADD Button in Website Forest Green */}
+                            <button
+                              type="button"
+                              onClick={() => handleQuickAdd(prod)}
+                              className={`w-full mt-3 py-2.5 rounded-xl font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-xs active:scale-[0.98] ${
+                                isAdded
+                                  ? 'bg-[#2D7A4D] text-[#FFFDF8]'
+                                  : 'bg-[#1C3F2D] hover:bg-[#122A1F] text-[#FFFDF8]'
+                              }`}
+                            >
+                              {isAdded ? 'ADDED ✓' : 'ADD TO CART'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* ================= FILLED STATE ================= */
+              <div className="flex-1 flex flex-col overflow-y-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {/* Freshness announcement banner */}
+                <div className="bg-[#EBF5EE] text-[#1C3F2D] font-mono text-xs font-medium px-4 py-2.5 border-b border-[#C5DEC9] flex items-center justify-center gap-1.5 shrink-0">
+                  <span>🌱</span>
+                  <span>Cut fresh to order · Delivered within hours in Tricity</span>
+                </div>
+
+                {/* Items List */}
+                <div className="p-4 space-y-3">
+                  {items.map((item) => {
+                    const thumb = getProductThumbnail(item.productSlug, item.thumbnailUrl);
+                    return (
+                      <div
+                        key={item.variantId}
+                        className="flex gap-3.5 p-3.5 bg-[#FFFDF8] border border-[#E4DDC8] rounded-2xl shadow-xs hover:border-[#1C3F2D]/40 transition-colors"
+                      >
+                        {/* Thumbnail */}
+                        <div className="w-18 h-18 sm:w-20 sm:h-20 bg-[#F3EEE0] rounded-xl overflow-hidden shrink-0 border border-[#E4DDC8] relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={thumb}
+                            alt={item.productName}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Info & Controls */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-start justify-between gap-1">
+                              <Link
+                                href={`/products/${item.productSlug}`}
+                                onClick={() => setIsOpen(false)}
+                                className="font-serif font-bold text-[#151F19] text-sm sm:text-base hover:text-[#1C3F2D] transition-colors line-clamp-1"
+                              >
+                                {item.productName}
+                              </Link>
+                              <button
+                                onClick={() => removeItem(item.variantId)}
+                                className="text-[#5C6B60] hover:text-red-600 transition-colors p-0.5 text-xs font-mono shrink-0"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                            <p className="font-mono text-xs text-[#5C6B60] mt-0.5">
+                              {item.variantLabel}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-[#E4DDC8]/60">
+                            <span className="font-mono text-sm font-bold text-[#1C3F2D]">
+                              {formatPrice(item.pricePaise * item.quantity)}
+                            </span>
+
+                            {/* Stepper */}
+                            <div className="flex items-center border border-[#E4DDC8] rounded-lg bg-[#F3EEE0]/50 overflow-hidden shadow-2xs">
+                              <button
+                                onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
+                                className="p-1 hover:bg-[#E4DDC8] text-[#151F19] transition-colors"
+                                aria-label="Decrease quantity"
+                              >
+                                <Minus />
+                              </button>
+                              <span className="font-mono text-xs font-bold w-6 text-center text-[#151F19]">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                                disabled={item.quantity >= item.maxStock}
+                                className="p-1 hover:bg-[#E4DDC8] text-[#151F19] transition-colors disabled:opacity-30"
+                                aria-label="Increase quantity"
+                              >
+                                <Plus />
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+                    );
+                  })}
+                </div>
 
-            {/* Footer */}
-            {items.length > 0 && (
-              <div className="border-t p-4 space-y-3">
-                <div className="flex items-center justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span className="text-green-700">{formatPrice(total)}</span>
+                {/* Upsell strip inside filled cart */}
+                <div className="bg-[#F3EEE0] border-t border-[#E4DDC8] p-4 mt-auto">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <p className="font-mono text-xs font-bold uppercase tracking-wider text-[#1C3F2D]">
+                      Pair with living trays
+                    </p>
+                    <span className="font-mono text-[10.5px] text-[#2D7A4D] font-bold">
+                      Zero pesticides
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2.5 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1">
+                    {bestsellers
+                      .filter((b) => !items.some((i) => i.productSlug === b.slug))
+                      .map((prod) => (
+                        <div
+                          key={prod.id}
+                          className="w-52 shrink-0 bg-[#FFFDF8] rounded-xl p-2.5 border border-[#E4DDC8] shadow-2xs flex items-center gap-2.5"
+                        >
+                          <div className="w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-[#E4DDC8] bg-[#F3EEE0]">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={prod.photo}
+                              alt={prod.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-serif text-xs font-bold text-[#151F19] truncate">
+                              {prod.name}
+                            </p>
+                            <p className="font-mono text-xs font-bold text-[#1C3F2D]">
+                              {formatPrice(prod.pricePaise)}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickAdd(prod)}
+                            className="bg-[#1C3F2D] hover:bg-[#122A1F] text-[#FFFDF8] font-mono text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg shrink-0 transition-colors shadow-2xs"
+                          >
+                            + ADD
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sticky Bottom Actions */}
+            {items.length === 0 ? (
+              /* Sticky ALL PRODUCTS button when empty */
+              <div className="p-4 bg-[#FFFDF8] border-t border-[#E4DDC8] shadow-md sticky bottom-0 z-20">
+                <Link
+                  href="/products"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#122A1F] hover:bg-[#1C3F2D] active:scale-[0.99] text-[#FFFDF8] font-mono text-xs sm:text-[13px] font-bold uppercase tracking-[0.14em] rounded-full shadow-md transition-all text-center"
+                >
+                  <span>Explore All Trays</span>
+                  <span>→</span>
+                </Link>
+              </div>
+            ) : (
+              /* Sticky Checkout button when filled */
+              <div className="border-t border-[#E4DDC8] p-4 bg-[#FFFDF8] space-y-3 sticky bottom-0 z-20 shadow-md">
+                <div className="flex items-center justify-between text-base font-bold text-[#151F19]">
+                  <span className="font-serif">Total</span>
+                  <span className="font-mono text-[#1C3F2D] text-lg font-bold">
+                    {formatPrice(total)}
+                  </span>
                 </div>
                 <Link
                   href="/checkout"
                   onClick={() => setIsOpen(false)}
-                  className="btn-primary w-full text-center block"
+                  className="w-full text-center block py-3.5 bg-[#122A1F] hover:bg-[#1C3F2D] active:scale-[0.99] text-[#FFFDF8] font-mono text-xs sm:text-[13px] font-bold uppercase tracking-[0.14em] rounded-full shadow-md transition-all"
                 >
-                  Checkout
+                  Proceed to Checkout · {formatPrice(total)}
                 </Link>
                 <Link
                   href="/cart"
                   onClick={() => setIsOpen(false)}
-                  className="block text-center text-sm text-gray-500 hover:text-gray-700"
+                  className="block text-center font-mono text-xs font-semibold text-[#5C6B60] hover:text-[#151F19] transition-colors"
                 >
-                  View full cart
+                  View full cart →
                 </Link>
               </div>
             )}
