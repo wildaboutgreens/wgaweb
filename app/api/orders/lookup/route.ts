@@ -34,18 +34,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // ── Require all three lookup fields ──
+    // ── Require order number, phone number, and email address ──
     if (!orderNumber || !phone || !email) {
       return NextResponse.json(
-        { error: 'Order number, phone, and email are all required for order tracking.' },
+        { error: 'Order number, phone number, and email address are all required.' },
         { status: 400 }
       );
     }
 
     // ── Input length limits ──
-    if (orderNumber.length > 20 || phone.length > 20 || email.length > 254) {
+    if (orderNumber.length > 30 || (phone && phone.length > 25) || (email && email.length > 254)) {
       return NextResponse.json(
-        { error: 'Invalid input.' },
+        { error: 'Invalid input length.' },
         { status: 400 }
       );
     }
@@ -80,23 +80,27 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // ── Rate Limiting: 5 requests per IP per 10 minutes (600s) ──
-    const rateLimitError = await checkRateLimit(request, 'orders/lookup', 5, 600);
+    // ── Rate Limiting: 10 requests per IP per 10 minutes (600s) ──
+    const rateLimitError = await checkRateLimit(request, 'orders/lookup', 10, 600);
     if (rateLimitError) {
       return rateLimitError;
     }
 
     const sql = getSQL();
 
-    // Query: all three fields must match the SAME order, AND payment_status = 'paid'.
-    // This makes it structurally impossible for this route to return an unpaid order.
+    // Normalize phone (extract digits, take last 10 digits for Indian numbers)
+    const phoneDigits = phone ? phone.replace(/\D/g, '') : '';
+    const last10Digits = phoneDigits.length >= 10 ? phoneDigits.slice(-10) : phoneDigits;
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+
+    // Query: order_number, phone, AND email must all match, AND payment_status = 'paid'
     const orders = await sql`
-      SELECT id, order_number, customer_name, customer_phone, customer_email, delivery_pincode,
-             total_paise, purchase_type, payment_status, fulfillment_status, created_at
+      SELECT id, order_number, customer_name, customer_phone, customer_email, delivery_address, delivery_pincode,
+             subtotal_paise, total_paise, purchase_type, subscription_frequency, payment_status, fulfillment_status, created_at
       FROM orders
-      WHERE order_number = ${orderNumber}
-        AND TRIM(customer_phone) = ${phone}
-        AND LOWER(TRIM(customer_email)) = ${email.toLowerCase()}
+      WHERE UPPER(TRIM(order_number)) = ${orderNumber.toUpperCase()}
+        AND RIGHT(REGEXP_REPLACE(customer_phone, '[^0-9]', '', 'g'), 10) = ${last10Digits}
+        AND LOWER(TRIM(customer_email)) = ${cleanEmail}
         AND payment_status = 'paid'
       ORDER BY created_at DESC
     `;
@@ -108,6 +112,7 @@ export async function GET(request: NextRequest) {
     const orderIds = orders.map((o) => o.id as string);
     const items = await sql`
       SELECT oi.id, oi.order_id, oi.quantity, oi.unit_price_paise,
+             oi.subscription_trays, oi.subscription_weeks,
              pv.label AS variant_label, pv.net_weight_grams,
              p.name AS product_name, p.slug AS product_slug
       FROM order_items oi

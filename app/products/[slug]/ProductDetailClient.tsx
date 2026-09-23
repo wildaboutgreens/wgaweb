@@ -5,7 +5,30 @@ import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
-import { Product, Variant, RelatedProduct, Review, HighlightBadge, WhyChoosePin, ProductFAQ } from './page';
+import { Product, Variant, RelatedProduct, Review, HighlightBadge, WhyChoosePin, ProductFAQ, DetailAccordion } from './page';
+
+const DEFAULT_DETAIL_ACCORDIONS: DetailAccordion[] = [
+  {
+    title: 'How to Eat & Store',
+    content:
+      'Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of water to the bottom drip tray once a day.\n\nWhen ready to eat, simply snip what you need with kitchen scissors right above the root line. Your tray stays living and fresh for 7 to 10 days!',
+  },
+  {
+    title: 'Nutrient Profile & Science',
+    content:
+      'USDA and university studies have confirmed that day 10 microgreens contain between 10x and 40x the vital micronutrients of their full grown counterparts.\n\nHarvested young at the peak of cellular vitality to deliver bioavailable antioxidants straight to your plate.',
+  },
+  {
+    title: 'Growing Method & Purity',
+    content:
+      'We operate vertical indoor climate racks in the Tricity. No soil, no organic compost pathogens, and absolutely zero pesticide or fertilizer residues.\n\nGrown on sterilized coco peat with 100% reverse osmosis mineral drinking water.',
+  },
+  {
+    title: 'Delivery & Packaging',
+    content:
+      'Delivered in our reusable food-grade living trays. We dispatch orders within hours of the final quality check across Chandigarh, Mohali, and Panchkula.',
+  },
+];
 
 const DEFAULT_PRODUCT_FAQS: ProductFAQ[] = [
   {
@@ -64,6 +87,34 @@ const DEFAULT_WHY_CHOOSE_BLOCKS = [
     image_url: '/right%20choice/no-pest.png',
   },
 ];
+
+function renderHighlightedText(text: string) {
+  if (!text) return null;
+  const parts = text.split(/(<u>.*?<\/u>|__.*?__)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('<u>') && part.endsWith('</u>')) {
+      return (
+        <u
+          key={i}
+          className="decoration-[#B7E23F] decoration-[3px] underline-offset-2 font-medium text-[#122A1F]"
+        >
+          {part.slice(3, -4)}
+        </u>
+      );
+    }
+    if (part.startsWith('__') && part.endsWith('__')) {
+      return (
+        <u
+          key={i}
+          className="decoration-[#B7E23F] decoration-[3px] underline-offset-2 font-medium text-[#122A1F]"
+        >
+          {part.slice(2, -2)}
+        </u>
+      );
+    }
+    return part;
+  });
+}
 
 const DEFAULT_REVIEWS: Review[] = [
   {
@@ -289,7 +340,8 @@ export default function ProductDetailClient({
 
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [plan, setPlan] = useState<'single' | 'subscription'>('single');
-  const [frequency, setFrequency] = useState('weekly');
+  const [subTrays, setSubTrays] = useState<number>(1);
+  const [subWeeks, setSubWeeks] = useState<number>(4);
   const [qty, setQty] = useState(1);
   const [openAcc, setOpenAcc] = useState<number | null>(0);
   const [addedFeedback, setAddedFeedback] = useState(false);
@@ -305,6 +357,11 @@ export default function ProductDetailClient({
     Array.isArray(product.faqs) && product.faqs.length > 0
       ? product.faqs
       : DEFAULT_PRODUCT_FAQS;
+
+  const effectiveAccordions: DetailAccordion[] =
+    Array.isArray(product.detail_accordions) && product.detail_accordions.length > 0
+      ? product.detail_accordions
+      : DEFAULT_DETAIL_ACCORDIONS;
 
   const [whyChoosePins, setWhyChoosePins] = useState<WhyChoosePin[]>(initialWhyChoosePins);
 
@@ -388,8 +445,15 @@ export default function ProductDetailClient({
 
   // Price calculations
   const rawPrice = selectedVariant.price_paise;
-  const effectivePrice =
-    plan === 'subscription' ? Math.round(rawPrice * 0.85) : rawPrice;
+  const basePriceRupees = rawPrice / 100;
+
+  // Subscription calculation (Base Price * Number of trays * number of weeks * 0.85, rounded off without decimals)
+  const subtotalRupees = basePriceRupees * subTrays * subWeeks;
+  const subPriceRupees = Math.round(subtotalRupees * 0.85);
+  const subPricePaise = subPriceRupees * 100;
+  const subRegularPricePaise = Math.round(subtotalRupees) * 100;
+
+  const effectivePrice = plan === 'subscription' ? subPricePaise : rawPrice;
 
   // Sticky bar intersection observer
   useEffect(() => {
@@ -409,17 +473,34 @@ export default function ProductDetailClient({
   const handleAddToCart = () => {
     if (!selectedVariant || selectedVariant.stock_qty === 0) return;
     const thumb = product.thumbnail_url || product.images?.[0]?.image_url || null;
-    for (let i = 0; i < qty; i++) {
+
+    if (plan === 'subscription') {
       addItem({
+        id: `${selectedVariant.id}-sub-${subTrays}t-${subWeeks}w`,
         variantId: selectedVariant.id,
         productSlug: product.slug,
         productName: product.name,
-        variantLabel: `${selectedVariant.label}${
-          plan === 'subscription' ? ` (${frequency} sub)` : ''
-        }`,
-        pricePaise: effectivePrice,
+        variantLabel: `${selectedVariant.label} (${subWeeks}-Wk Plan · ${subTrays} ${subTrays === 1 ? 'tray' : 'trays'}/wk)`,
+        pricePaise: subPricePaise,
+        quantity: qty,
         maxStock: selectedVariant.stock_qty,
         thumbnailUrl: thumb,
+        isSubscription: true,
+        subscriptionTrays: subTrays,
+        subscriptionWeeks: subWeeks,
+      });
+    } else {
+      addItem({
+        id: selectedVariant.id,
+        variantId: selectedVariant.id,
+        productSlug: product.slug,
+        productName: product.name,
+        variantLabel: selectedVariant.label,
+        pricePaise: rawPrice,
+        quantity: qty,
+        maxStock: selectedVariant.stock_qty,
+        thumbnailUrl: thumb,
+        isSubscription: false,
       });
     }
     setAddedFeedback(true);
@@ -504,7 +585,8 @@ export default function ProductDetailClient({
               <div className="relative rounded-2xl overflow-hidden aspect-[1/1.08] bg-gradient-to-br from-[#EDE7D6] to-[#E1DAC3] p-4 sm:p-7 flex items-center justify-center border border-[#E4DDC8] shadow-sm">
                 {/* Badge */}
                 <span className="absolute top-4 left-4 z-10 font-mono text-[10px] font-bold tracking-wider uppercase px-3 py-1.5 rounded-full bg-[#9C4A5C] text-[#FFFDF8] shadow-sm flex items-center gap-1.5">
-                  <span>🌱</span> 100% Pesticide Free
+                  <span>🌱</span>
+                  <span>{product.badge_label || '100% Pesticide Free'}</span>
                 </span>
 
                 {/* Image counter */}
@@ -570,43 +652,28 @@ export default function ProductDetailClient({
 
             {/* ================= DETAIL & BUY BOX (RHS) ================= */}
             <div className="max-w-lg">
-              <div className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#3E8F52] font-semibold mb-2.5 flex items-center gap-2">
-                <span>🌱</span>
-                <span>GROWN LOCALLY · DAY 10 HARVEST</span>
-              </div>
-
-              <h1 className="font-serif font-medium text-4xl sm:text-5xl text-[#151F19] leading-[1.05] tracking-tight mb-2">
+              <h1 className="font-serif font-medium text-4xl sm:text-5xl text-[#151F19] leading-[1.05] tracking-tight mb-5 sm:mb-6">
                 {product.name}
               </h1>
 
-              <div className="font-mono text-xs tracking-wider uppercase text-[#5C6B60] mb-4">
-                LIVING MICROGREENS · {selectedVariant.label || '100G LIVE TRAY'}
-              </div>
-
-              {/* Rating */}
-              <div className="inline-flex items-center gap-2 mb-6">
-                <span className="text-[#1C3F2D] tracking-widest text-sm">★★★★★</span>
-                <span className="font-mono text-[11px] tracking-wide text-[#5C6B60]">
-                  4.9 (128 reviews)
-                </span>
-              </div>
-
               {/* Description in Newsreader Editorial Font */}
               <div className="font-editorial text-[17.5px] leading-[1.62] text-[#33402F] mb-7 space-y-3">
-                <p>
-                  <span className="font-medium italic text-[#122A1F]">
-                    The heavyweight champion of plant nutrition.
-                  </span>{' '}
-                  {product.description ||
-                    'Harvested at the biological apex on day 10, delivering peak cellular antioxidants straight to your door.'}
-                </p>
-                <p>
-                  Carries up to{' '}
-                  <u className="decoration-[#B7E23F] decoration-[3px] underline-offset-2 font-medium text-[#122A1F]">
-                    40 times the concentrated sulforaphane
-                  </u>{' '}
-                  of a mature head of broccoli. Crisp, peppery, and alive until the moment you cut it.
-                </p>
+                {(product.description_lead || product.description) && (
+                  <p>
+                    {product.description_lead && (
+                      <span className="font-medium italic text-[#122A1F]">
+                        {product.description_lead}{' '}
+                      </span>
+                    )}
+                    {product.description ||
+                      'Harvested at the biological apex on day 10, delivering peak cellular antioxidants straight to your door.'}
+                  </p>
+                )}
+                {product.description_highlight && (
+                  <p>
+                    {renderHighlightedText(product.description_highlight)}
+                  </p>
+                )}
               </div>
 
               {/* Benefit Chips */}
@@ -649,17 +716,26 @@ export default function ProductDetailClient({
                 className="bg-[#FFFDF8] border border-[#E4DDC8] rounded-[22px] p-6 sm:p-7 shadow-sm mb-9"
               >
                 {/* Price Row */}
-                <div className="flex items-baseline gap-2.5 mb-5">
-                  <span className="font-display text-4xl text-[#122A1F] leading-none">
-                    {formatPrice(effectivePrice)}
-                  </span>
-                  <span className="font-mono text-xs uppercase tracking-wider text-[#5C6B60]">
-                    / tray
-                  </span>
-                  {plan === 'subscription' && (
-                    <span className="font-mono text-sm line-through text-[#5C6B60]/70 ml-1">
-                      {formatPrice(rawPrice)}
+                <div className="flex flex-col mb-5">
+                  <div className="flex items-baseline gap-2.5">
+                    <span className="font-display text-4xl text-[#122A1F] leading-none">
+                      {formatPrice(effectivePrice)}
                     </span>
+                    <span className="font-mono text-xs uppercase tracking-wider text-[#5C6B60]">
+                      {plan === 'subscription'
+                        ? `/ ${subWeeks} wks`
+                        : `/ ${product.is_bundle || product.slug.toLowerCase().includes('bundle') || product.name.toLowerCase().includes('bundle') ? 'bundle' : 'tray'}`}
+                    </span>
+                    {plan === 'subscription' && (
+                      <span className="font-mono text-sm line-through text-[#5C6B60]/70 ml-1">
+                        {formatPrice(subRegularPricePaise)}
+                      </span>
+                    )}
+                  </div>
+                  {plan === 'subscription' && (
+                    <div className="mt-1 text-xs text-[#2D7A4D] font-medium font-mono">
+                      ₹{Math.round(subPriceRupees / subWeeks)}/wk · {subTrays} {subTrays === 1 ? 'tray' : 'trays'} × {subWeeks} weeks (Save 15%)
+                    </div>
                   )}
                 </div>
 
@@ -674,7 +750,7 @@ export default function ProductDetailClient({
                     }`}
                   >
                     <span className="block text-[13.5px] font-bold text-[#122A1F] mb-0.5">
-                      Single Tray
+                      {product.is_bundle || product.slug.toLowerCase().includes('bundle') || product.name.toLowerCase().includes('bundle') ? 'Single Bundle' : 'Single Tray'}
                     </span>
                     <span className="block font-mono text-[10px] tracking-wide uppercase text-[#5C6B60]">
                       Standard Order
@@ -701,23 +777,6 @@ export default function ProductDetailClient({
                   </button>
                 </div>
 
-                {/* Subscription Frequency Picker */}
-                {plan === 'subscription' && (
-                  <div className="mb-4 bg-[#F3EEE0]/60 p-3 rounded-xl border border-[#E4DDC8]">
-                    <label className="block font-mono text-[10px] tracking-wider uppercase text-[#5C6B60] mb-1 font-semibold">
-                      Delivery Schedule
-                    </label>
-                    <select
-                      value={frequency}
-                      onChange={(e) => setFrequency(e.target.value)}
-                      className="w-full bg-white border border-[#E4DDC8] rounded-lg px-3 py-2 text-xs font-medium text-[#122A1F] outline-none"
-                    >
-                      <option value="weekly">Every Week (Recommended for living trays)</option>
-                      <option value="biweekly">Every 2 Weeks</option>
-                    </select>
-                  </div>
-                )}
-
                 {/* Variant Selector (if more than 1) */}
                 {activeVariants.length > 1 && (
                   <div className="mb-4">
@@ -739,6 +798,60 @@ export default function ProductDetailClient({
                         </button>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Subscription Options: Number of Trays & Weekly Schedule */}
+                {plan === 'subscription' && (
+                  <div className="mb-4 bg-[#F3EEE0]/60 p-3.5 rounded-xl border border-[#E4DDC8] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-mono text-[10px] tracking-wider uppercase text-[#5C6B60] font-semibold">
+                        Delivery Schedule
+                      </label>
+                      <span className="font-mono text-[10px] text-[#2D7A4D] font-bold uppercase tracking-wider bg-[#EBF5EE] px-2 py-0.5 rounded border border-[#C5DEC9]">
+                        15% Off Included
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-mono text-[10px] text-[#5C6B60] mb-1 font-medium">
+                          Number of Trays:
+                        </label>
+                        <select
+                          value={subTrays}
+                          onChange={(e) => setSubTrays(Number(e.target.value))}
+                          className="w-full bg-white border border-[#E4DDC8] rounded-lg px-3 py-2 text-xs font-semibold text-[#122A1F] outline-none focus:ring-1 focus:ring-[#1C3F2D]"
+                        >
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
+                            <option key={num} value={num}>
+                              {num} {num === 1 ? 'Tray' : 'Trays'}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block font-mono text-[10px] text-[#5C6B60] mb-1 font-medium">
+                          Weekly Schedule:
+                        </label>
+                        <select
+                          value={subWeeks}
+                          onChange={(e) => setSubWeeks(Number(e.target.value))}
+                          className="w-full bg-white border border-[#E4DDC8] rounded-lg px-3 py-2 text-xs font-semibold text-[#122A1F] outline-none focus:ring-1 focus:ring-[#1C3F2D]"
+                        >
+                          <option value={4}>4 Weeks</option>
+                          <option value={8}>8 Weeks</option>
+                          <option value={12}>12 Weeks</option>
+                          <option value={16}>16 Weeks</option>
+                          <option value={20}>20 Weeks</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-[#5C6B60] leading-relaxed pt-0.5 border-t border-[#E4DDC8]/60">
+                      Weekly deliveries · Total <strong>{subTrays * subWeeks} {subTrays * subWeeks === 1 ? 'tray' : 'trays'}</strong> over {subWeeks} weeks.
+                    </p>
                   </div>
                 )}
 
@@ -780,161 +893,50 @@ export default function ProductDetailClient({
                             d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                           />
                         </svg>
-                        <span>Add to Cart · {formatPrice(effectivePrice * qty)}</span>
+                        <span>
+                          {plan === 'subscription' ? 'Subscribe · ' : 'Add to Cart · '}
+                          {formatPrice(effectivePrice * qty)}
+                        </span>
                       </>
                     )}
                   </button>
-                </div>
-
-                {/* Buy Note & Guarantee */}
-                <div className="space-y-1.5 mt-4 text-xs text-[#5C6B60]">
-                  <div className="flex items-center gap-2">
-                    <span>🌱</span>
-                    <span>Harvested on the morning of delivery.</span>
-                  </div>
                 </div>
               </div>
 
               {/* Accordions */}
               <div className="border-t border-[#E4DDC8] pt-2">
-                {/* Accordion 1 */}
-                <div className="border-b border-[#E4DDC8]">
-                  <button
-                    onClick={() => setOpenAcc(openAcc === 0 ? null : 0)}
-                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
-                  >
-                    <span>How to Eat &amp; Store</span>
-                    <span className="font-mono text-xl text-[#1C3F2D] select-none">
-                      {openAcc === 0 ? '−' : '+'}
-                    </span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {openAcc === 0 && (
-                      <motion.div
-                        key="acc-0"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
-                        className="overflow-hidden"
+                {effectiveAccordions.map((acc, idx) => {
+                  const isOpen = openAcc === idx;
+                  return (
+                    <div key={idx} className="border-b border-[#E4DDC8]">
+                      <button
+                        onClick={() => setOpenAcc(isOpen ? null : idx)}
+                        className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
                       >
-                        <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
-                          <p>
-                            Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of
-                            water to the bottom drip tray once a day.
-                          </p>
-                          <p>
-                            When ready to eat, simply snip what you need with kitchen scissors right above the root
-                            line. Your tray stays living and fresh for 7 to 10 days!
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Accordion 2 */}
-                <div className="border-b border-[#E4DDC8]">
-                  <button
-                    onClick={() => setOpenAcc(openAcc === 1 ? null : 1)}
-                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
-                  >
-                    <span>Nutrient Profile &amp; Science</span>
-                    <span className="font-mono text-xl text-[#1C3F2D] select-none">
-                      {openAcc === 1 ? '−' : '+'}
-                    </span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {openAcc === 1 && (
-                      <motion.div
-                        key="acc-1"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
-                          <p>
-                            USDA and university studies have confirmed that day 10 microgreens contain between
-                            10x and 40x the vital micronutrients of their full grown counterparts.
-                          </p>
-                          <p>
-                            Broccoli microgreens are world-famous for glucoraphanin, which converts into active
-                            sulforaphane: a potent natural cellular detoxifier.
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Accordion 3 */}
-                <div className="border-b border-[#E4DDC8]">
-                  <button
-                    onClick={() => setOpenAcc(openAcc === 2 ? null : 2)}
-                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
-                  >
-                    <span>Growing Method &amp; Purity</span>
-                    <span className="font-mono text-xl text-[#1C3F2D] select-none">
-                      {openAcc === 2 ? '−' : '+'}
-                    </span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {openAcc === 2 && (
-                      <motion.div
-                        key="acc-2"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
-                          <p>
-                            We operate vertical indoor climate racks in the Tricity. No soil, no organic compost
-                            pathogens, and absolutely zero pesticide or fertilizer residues.
-                          </p>
-                          <p>
-                            Grown on sterilized coco peat with 100% reverse osmosis mineral drinking water.
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Accordion 4 */}
-                <div className="border-b border-[#E4DDC8]">
-                  <button
-                    onClick={() => setOpenAcc(openAcc === 3 ? null : 3)}
-                    className="w-full flex items-center justify-between py-4 text-left font-serif text-[17px] font-semibold text-[#151F19] transition-colors hover:text-[#1C3F2D]"
-                  >
-                    <span>Delivery &amp; Packaging</span>
-                    <span className="font-mono text-xl text-[#1C3F2D] select-none">
-                      {openAcc === 3 ? '−' : '+'}
-                    </span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {openAcc === 3 && (
-                      <motion.div
-                        key="acc-3"
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
-                        className="overflow-hidden"
-                      >
-                        <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2">
-                          <p>
-                            Delivered in our reusable food-grade living trays. We dispatch orders within hours
-                            of the final quality check across Chandigarh, Mohali, and Panchkula.
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
+                        <span>{acc.title}</span>
+                        <span className="font-mono text-xl text-[#1C3F2D] select-none">
+                          {isOpen ? '−' : '+'}
+                        </span>
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            key={`acc-${idx}`}
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pb-4 text-sm text-[#3B4A40] leading-relaxed space-y-2 whitespace-pre-line">
+                              {acc.content}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Pairs Well With / Upsell */}
@@ -1159,27 +1161,30 @@ export default function ProductDetailClient({
 
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <span className="font-serif italic font-semibold text-3xl sm:text-4xl text-[#1C3F2D] w-28 flex-shrink-0">
-                  +1500%
+                <span className="font-serif italic font-semibold text-3xl sm:text-4xl text-[#1C3F2D] min-w-[7.5rem] flex-shrink-0">
+                  {content.stats_item_1_number || '+1500%'}
                 </span>
                 <span className="text-sm text-[#151F19]">
-                  Sulforaphane concentration compared to full-grown broccoli
+                  {content.stats_item_1_text ||
+                    'Sulforaphane concentration compared to full-grown broccoli'}
                 </span>
               </div>
               <div className="flex items-center gap-4">
-                <span className="font-serif italic font-semibold text-3xl sm:text-4xl text-[#1C3F2D] w-28 flex-shrink-0">
-                  +400%
+                <span className="font-serif italic font-semibold text-3xl sm:text-4xl text-[#1C3F2D] min-w-[7.5rem] flex-shrink-0">
+                  {content.stats_item_2_number || '+400%'}
                 </span>
                 <span className="text-sm text-[#151F19]">
-                  Bioavailable Vitamin C and beta-carotene per gram of greens
+                  {content.stats_item_2_text ||
+                    'Bioavailable Vitamin C and beta-carotene per gram of greens'}
                 </span>
               </div>
               <div className="flex items-center gap-4">
-                <span className="font-serif italic font-semibold text-3xl sm:text-4xl text-[#1C3F2D] w-28 flex-shrink-0">
-                  +600%
+                <span className="font-serif italic font-semibold text-3xl sm:text-4xl text-[#1C3F2D] min-w-[7.5rem] flex-shrink-0">
+                  {content.stats_item_3_number || '+600%'}
                 </span>
                 <span className="text-sm text-[#151F19]">
-                  Antioxidant capacity (ORAC value) protecting cells against oxidative stress
+                  {content.stats_item_3_text ||
+                    'Antioxidant capacity (ORAC value) protecting cells against oxidative stress'}
                 </span>
               </div>
             </div>
@@ -1633,7 +1638,11 @@ export default function ProductDetailClient({
               <div className="font-mono text-[10px] sm:text-xs text-[#5C6B60] uppercase">
                 <span className="font-bold text-[#1C3F2D]">{formatPrice(effectivePrice)}</span>
                 <span className="mx-1.5 opacity-50">·</span>
-                <span>{selectedVariant.label}</span>
+                <span>
+                  {plan === 'subscription'
+                    ? `${subWeeks} Wks (${subTrays} ${subTrays === 1 ? 'tray' : 'trays'}/wk)`
+                    : selectedVariant.label}
+                </span>
               </div>
             </div>
           </div>
@@ -1646,9 +1655,9 @@ export default function ProductDetailClient({
               <span className="text-[#CFFA57]">✓ Added!</span>
             ) : (
               <>
-                <span>Add to Cart</span>
+                <span>{plan === 'subscription' ? 'Subscribe' : 'Add to Cart'}</span>
                 <span>·</span>
-                <span>{formatPrice(effectivePrice)}</span>
+                <span>{formatPrice(effectivePrice * qty)}</span>
               </>
             )}
           </button>

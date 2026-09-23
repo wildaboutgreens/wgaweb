@@ -64,6 +64,8 @@ const KNOWN_PUBLIC_PREFIXES = [
   '/order-confirmation',
   '/track-order',
   '/our-story',
+  '/pathshala',
+  '/recipe',
   '/blog',
   '/recipe-khazana',
 ];

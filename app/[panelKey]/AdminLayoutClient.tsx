@@ -20,7 +20,11 @@ export default function AdminLayoutClient({
   const navItems = [
     { href: `/${currentKey}`, label: 'Dashboard', icon: '📊' },
     { href: `/${currentKey}/products`, label: 'Products', icon: '🌱' },
+    { href: `/${currentKey}/health-goals`, label: 'Health Goal Content', icon: '🎯' },
     { href: `/${currentKey}/orders`, label: 'Orders', icon: '📦' },
+    { href: `/${currentKey}/returns`, label: 'Return & Exchange', icon: '🔄' },
+    { href: `/${currentKey}/newsletter`, label: 'Newsletter', icon: '📬' },
+    { href: `/${currentKey}/inquiries`, label: 'Inquiries', icon: '📩' },
     { href: `/${currentKey}/reviews`, label: 'Reviews', icon: '⭐' },
     { href: `/${currentKey}/content`, label: 'Content', icon: '✏️' },
     { href: `/${currentKey}/pins`, label: 'Pins', icon: '📌' },

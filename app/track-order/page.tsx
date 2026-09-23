@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import Script from 'next/script';
+import { useSearchParams } from 'next/navigation';
 import { formatPrice } from '@/lib/format';
+import { Truck } from '@/components/icons';
+import JoinRevolutionSection from '@/components/JoinRevolutionSection';
 
 declare global {
   interface Window {
@@ -32,6 +35,8 @@ interface OrderItem {
   net_weight_grams: number;
   product_name: string;
   product_slug: string;
+  subscription_trays?: number | null;
+  subscription_weeks?: number | null;
 }
 
 interface Order {
@@ -40,23 +45,102 @@ interface Order {
   customer_name: string;
   customer_phone: string;
   customer_email: string | null;
+  delivery_address: string;
   delivery_pincode: string;
+  subtotal_paise: number;
   total_paise: number;
   purchase_type: string;
+  subscription_frequency: string | null;
   payment_status: string;
   fulfillment_status: string;
   created_at: string;
   items: OrderItem[];
 }
 
-const fulfillmentStatusStyles: Record<string, string> = {
-  unfulfilled: 'bg-amber-50 text-amber-700 border-amber-200',
-  shipped: 'bg-blue-50 text-blue-700 border-blue-200',
-  delivered: 'bg-green-50 text-green-700 border-green-200',
-  cancelled: 'bg-red-50 text-red-700 border-red-200',
+const fulfillmentBadgeStyles: Record<string, { label: string; bg: string; text: string; border: string }> = {
+  unfulfilled: {
+    label: '🌱 Morning Harvest In Progress',
+    bg: 'bg-amber-50',
+    text: 'text-amber-800',
+    border: 'border-amber-200',
+  },
+  fulfilled: {
+    label: '📦 Harvested & Packed',
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-800',
+    border: 'border-emerald-200',
+  },
+  shipped: {
+    label: '🚚 Out for Delivery',
+    bg: 'bg-blue-50',
+    text: 'text-blue-800',
+    border: 'border-blue-200',
+  },
+  delivered: {
+    label: '✅ Delivered Fresh',
+    bg: 'bg-green-50',
+    text: 'text-green-800',
+    border: 'border-green-200',
+  },
+  cancelled: {
+    label: '❌ Order Cancelled',
+    bg: 'bg-rose-50',
+    text: 'text-rose-800',
+    border: 'border-rose-200',
+  },
 };
 
-export default function TrackOrderPage() {
+const TIMELINE_STEPS = [
+  {
+    key: 'placed',
+    title: 'Order Confirmed',
+    desc: 'Payment received & verified',
+    icon: '📝',
+  },
+  {
+    key: 'harvest',
+    title: 'Morning Harvest',
+    desc: 'Selected & harvested fresh at our Tricity farm',
+    icon: '🌱',
+  },
+  {
+    key: 'packed',
+    title: 'Packed & Chilled',
+    desc: 'Prepared in breathable eco-trays',
+    icon: '📦',
+  },
+  {
+    key: 'shipped',
+    title: 'Out for Delivery',
+    desc: 'In transit with our Tricity delivery partner',
+    icon: '🚚',
+  },
+  {
+    key: 'delivered',
+    title: 'Delivered Fresh',
+    desc: 'Delivered living to your doorstep',
+    icon: '✨',
+  },
+];
+
+function getActiveStepIndex(status: string): number {
+  switch (status) {
+    case 'unfulfilled':
+      return 1; // Morning harvest in progress
+    case 'fulfilled':
+      return 2; // Packed & Chilled
+    case 'shipped':
+      return 3; // Out for Delivery
+    case 'delivered':
+      return 4; // Delivered
+    default:
+      return 1;
+  }
+}
+
+function TrackOrderContent() {
+  const searchParams = useSearchParams();
+
   const [orderNumber, setOrderNumber] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -64,6 +148,20 @@ export default function TrackOrderPage() {
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Dynamic content blocks from admin
+  const [content, setContent] = useState<Record<string, string>>({
+    track_eyebrow: 'Real-Time Harvest & Delivery Tracking',
+    track_title: 'Track Your Order',
+    track_subtitle:
+      'Enter your order number along with your phone number and email address to view the live harvest and delivery status.',
+    track_support_phone: '+91 98XXXXXXXX',
+    track_support_email: 'support@example.com',
+    track_harvest_note:
+      'Grown with mineral water & clean air · Harvested morning of delivery',
+  });
+
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileReady, setTurnstileReady] = useState(false);
   const turnstileWidgetId = useRef<string | null>(null);
@@ -71,17 +169,40 @@ export default function TrackOrderPage() {
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
-  // Called by <Script onReady>; guaranteed window.turnstile exists
+  // Pre-fill fields from query params if available
+  useEffect(() => {
+    const qOrder = searchParams.get('order_number') || searchParams.get('orderNumber');
+    const qPhone = searchParams.get('phone');
+    const qEmail = searchParams.get('email');
+    if (qOrder) setOrderNumber(qOrder);
+    if (qPhone) setPhone(qPhone);
+    if (qEmail) setEmail(qEmail);
+  }, [searchParams]);
+
+  // Load content blocks for track-order page
+  useEffect(() => {
+    fetch('/api/content/track-order', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && typeof data === 'object') {
+          setContent((prev) => ({ ...prev, ...data }));
+        }
+      })
+      .catch((err) => console.error('Failed to load track-order content:', err));
+  }, []);
+
   const handleTurnstileScriptReady = useCallback(() => {
     setTurnstileReady(true);
   }, []);
 
-  // Render Turnstile widget once script and container are ready
   const renderTurnstile = useCallback(() => {
     if (!turnstileReady || !siteKey || !window.turnstile || !turnstileContainerRef.current) return;
-    // Remove previous widget if any
     if (turnstileWidgetId.current) {
-      try { window.turnstile.remove(turnstileWidgetId.current); } catch { /* ignore */ }
+      try {
+        window.turnstile.remove(turnstileWidgetId.current);
+      } catch {
+        /* ignore */
+      }
     }
     turnstileContainerRef.current.innerHTML = '';
     turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
@@ -105,13 +226,18 @@ export default function TrackOrderPage() {
     const cleanPhone = phone.trim();
     const cleanEmail = email.trim();
 
-    if (!cleanOrderNumber || !cleanPhone || !cleanEmail) {
-      setError('Please enter your order number, phone number, and email address.');
+    if (!cleanOrderNumber) {
+      setError('Please enter your order number.');
       return;
     }
 
-    if (!turnstileToken) {
-      setError('Please complete the CAPTCHA verification.');
+    if (!cleanPhone || !cleanEmail) {
+      setError('Both phone number and email address are required to track your order.');
+      return;
+    }
+
+    if (siteKey && !turnstileToken) {
+      setError('Please complete the verification check.');
       return;
     }
 
@@ -123,13 +249,13 @@ export default function TrackOrderPage() {
         order_number: cleanOrderNumber,
         phone: cleanPhone,
         email: cleanEmail,
-        turnstileToken: turnstileToken,
+        turnstileToken: turnstileToken || 'dev-token',
       });
       const res = await fetch(`/api/orders/lookup?${query.toString()}`);
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Unable to look up order. Please try again.');
+        setError(data.error || 'Unable to look up order. Please verify your details.');
         setOrders([]);
       } else {
         setOrders(data);
@@ -140,15 +266,19 @@ export default function TrackOrderPage() {
       setOrders([]);
     } finally {
       setLoading(false);
-      // Reset Turnstile for next submission
       setTurnstileToken(null);
       renderTurnstile();
     }
   };
 
+  const handleCopyOrderNumber = (num: string) => {
+    navigator.clipboard.writeText(num);
+    setCopiedId(num);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   return (
     <>
-      {/* Turnstile script: Next.js <Script> ensures proper loading */}
       {siteKey && (
         <Script
           src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
@@ -156,200 +286,430 @@ export default function TrackOrderPage() {
           onReady={handleTurnstileScriptReady}
         />
       )}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Header */}
-      <div className="text-center max-w-xl mx-auto mb-10">
-        <span className="text-4xl mb-3 block">📦</span>
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Track Your Order</h1>
-        <p className="text-gray-600 text-sm sm:text-base">
-          Enter your order number, phone number, and email address to view the real time status of your harvest &amp; delivery.
-        </p>
-      </div>
 
-      {/* Lookup Form */}
-      <div className="max-w-lg mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 mb-12">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="orderNumber" className="block text-sm font-medium text-gray-700 mb-1">
-              Order Number *
-            </label>
-            <input
-              id="orderNumber"
-              type="text"
-              value={orderNumber}
-              onChange={(e) => setOrderNumber(e.target.value)}
-              placeholder="e.g. WAG-ABCD1234"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors uppercase tracking-wider"
-              required
-              maxLength={20}
-            />
-            <p className="text-xs text-gray-400 mt-1">
-              Found in your confirmation email
+      {/* Main Container with ample top padding to avoid fixed navbar overlap */}
+      <div className="bg-[#FAF6EF] min-h-screen text-[#151F19] pt-32 sm:pt-40 pb-20">
+        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header Section */}
+          <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#1C3F2D]/5 border border-[#1C3F2D]/15 text-[#1C3F2D] text-xs font-semibold uppercase tracking-wider mb-4 shadow-xs">
+              <Truck className="w-3.5 h-3.5" />
+              <span>{(content.track_eyebrow || 'Real-Time Harvest & Delivery Tracking').replace(/^🚚\s*/, '')}</span>
+            </span>
+
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#122A1F] tracking-tight mb-4">
+              {content.track_title || 'Track Your Order'}
+            </h1>
+
+            <p className="text-[#151F19]/75 text-sm sm:text-base leading-relaxed">
+              {content.track_subtitle ||
+                'Enter your order number along with your phone number and email address to view the live harvest and delivery status across Chandigarh, Mohali & Panchkula.'}
             </p>
           </div>
 
-          <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-              Phone Number *
-            </label>
-            <input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="e.g. 9876543210"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
-              required
-            />
-          </div>
+          {/* Lookup Form Card */}
+          <div className="max-w-xl mx-auto bg-white rounded-3xl border border-[#E4DDC8] shadow-[0_12px_40px_rgba(21,31,25,0.06)] p-6 sm:p-10 mb-12">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="orderNumber"
+                  className="block text-xs font-bold uppercase tracking-wider text-[#1C3F2D] mb-1.5"
+                >
+                  Order Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="orderNumber"
+                  type="text"
+                  value={orderNumber}
+                  onChange={(e) => setOrderNumber(e.target.value)}
+                  placeholder="e.g. WAG-XXXXXXXX"
+                  className="w-full px-4 py-3 bg-[#FAF6EF]/50 border border-[#E4DDC8] rounded-xl text-sm font-mono uppercase tracking-wider text-[#151F19] placeholder:text-[#151F19]/40 focus:bg-white focus:border-[#1C3F2D] focus:ring-2 focus:ring-[#1C3F2D]/15 outline-none transition-all"
+                  required
+                  maxLength={30}
+                />
+                <p className="text-[11.5px] text-[#151F19]/55 mt-1">
+                  Sent via email confirmation receipt (e.g. WAG-XXXXXXXX)
+                </p>
+              </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address *
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="e.g. yourname@example.com"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-colors"
-              required
-            />
-          </div>
-
-          {/* Turnstile CAPTCHA */}
-          <div className="flex justify-center">
-            <div ref={turnstileContainerRef} />
-          </div>
-          {!siteKey && (
-            <p className="text-xs text-amber-600 text-center">
-              CAPTCHA not configured. Set NEXT_PUBLIC_TURNSTILE_SITE_KEY in your environment.
-            </p>
-          )}
-
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || (!!siteKey && !turnstileToken)}
-            className="w-full btn-primary py-3 text-sm font-semibold"
-          >
-            {loading ? 'Looking up order...' : 'Track Order'}
-          </button>
-        </form>
-
-        <p className="text-xs text-gray-400 text-center mt-4">
-          For security, your order number, phone, and email must all match your order.
-        </p>
-      </div>
-
-      {/* Search Results */}
-      {searched && (
-        <div className="space-y-6">
-          {orders.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100 p-8">
-              <span className="text-4xl mb-3 block">🔍</span>
-              <h2 className="text-lg font-bold text-gray-900 mb-1">No Orders Found</h2>
-              <p className="text-sm text-gray-500 max-w-md mx-auto mb-6">
-                We couldn&apos;t find any paid orders matching the provided details. Please double-check your order number, phone number, and email address, or reach out to us if you need help.
-              </p>
-              <Link href="/products" className="btn-secondary text-sm">
-                Explore Microgreens
-              </Link>
-            </div>
-          ) : (
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Your Order
-              </h2>
-              <div className="space-y-6">
-                {orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#1C3F2D] mb-1.5"
                   >
-                    {/* Order Top Bar */}
-                    <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
-                      <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Order Number</p>
-                        <p className="font-mono text-sm font-bold text-green-700 tracking-wider">
-                          {order.order_number}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Placed On</p>
-                        <p className="text-sm font-medium text-gray-800">
-                          {new Date(order.created_at).toLocaleDateString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500 uppercase tracking-wide">Total Amount</p>
-                        <p className="text-sm font-bold text-green-700">
-                          {formatPrice(order.total_paise)}
-                        </p>
-                      </div>
-                      <div>
-                        <span
-                          className={`text-xs font-semibold px-2.5 py-1 rounded-full border capitalize ${
-                            fulfillmentStatusStyles[order.fulfillment_status] || 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {order.fulfillment_status}
-                        </span>
-                      </div>
-                    </div>
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 98XXXXXXXX"
+                    required
+                    className="w-full px-4 py-3 bg-[#FAF6EF]/50 border border-[#E4DDC8] rounded-xl text-sm text-[#151F19] placeholder:text-[#151F19]/40 focus:bg-white focus:border-[#1C3F2D] focus:ring-2 focus:ring-[#1C3F2D]/15 outline-none transition-all"
+                  />
+                  <p className="text-[11px] text-[#151F19]/55 mt-1">Mobile number used at checkout</p>
+                </div>
 
-                    {/* Order Content */}
-                    <div className="p-6">
-                      <div className="mb-4">
-                        <p className="text-xs text-gray-500">
-                          Delivery to Tricity Pincode:{' '}
-                          <span className="font-medium text-gray-800">{order.delivery_pincode}</span>
-                        </p>
-                      </div>
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#1C3F2D] mb-1.5"
+                  >
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="e.g. name@example.com"
+                    required
+                    className="w-full px-4 py-3 bg-[#FAF6EF]/50 border border-[#E4DDC8] rounded-xl text-sm text-[#151F19] placeholder:text-[#151F19]/40 focus:bg-white focus:border-[#1C3F2D] focus:ring-2 focus:ring-[#1C3F2D]/15 outline-none transition-all"
+                  />
+                  <p className="text-[11px] text-[#151F19]/55 mt-1">Email address used at checkout</p>
+                </div>
+              </div>
 
-                      {/* Items */}
-                      <div className="divide-y divide-gray-100">
-                        {order.items.map((item) => (
-                          <div key={item.id} className="py-3 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className="text-xl">🌿</span>
-                              <div>
-                                <Link
-                                  href={`/products/${item.product_slug}`}
-                                  className="font-medium text-sm text-gray-900 hover:text-green-700 transition-colors"
-                                >
-                                  {item.product_name}
-                                </Link>
-                                <p className="text-xs text-gray-500">
-                                  {item.variant_label} ({item.net_weight_grams}g) &times; {item.quantity}
-                                </p>
+              {/* Turnstile Container */}
+              {siteKey && (
+                <div className="flex justify-center pt-2">
+                  <div ref={turnstileContainerRef} />
+                </div>
+              )}
+
+              {error && (
+                <div className="p-3.5 bg-red-50/90 border border-red-200 text-red-700 rounded-xl text-sm flex items-start gap-2">
+                  <span className="text-base leading-none">⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || (!!siteKey && !turnstileToken)}
+                className="w-full bg-[#1C3F2D] hover:bg-[#122A1F] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3.5 px-6 rounded-full shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer mt-2"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <span>Looking up harvest status...</span>
+                  </>
+                ) : (
+                  <>
+                    <Truck className="w-4 h-4" />
+                    <span>Track Harvest &amp; Delivery</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-4 pt-4 border-t border-[#E4DDC8]/60 text-center">
+              <p className="text-xs text-[#151F19]/55">
+                🔒 For privacy, order details require matching your order number and contact info.
+              </p>
+            </div>
+          </div>
+
+          {/* Results Section */}
+          {searched && (
+            <div className="space-y-8 animate-fadeIn">
+              {orders.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-3xl border border-[#E4DDC8] p-8 max-w-xl mx-auto shadow-sm">
+                  <span className="text-4xl mb-3 block">🔍</span>
+                  <h2 className="font-serif text-xl font-bold text-[#122A1F] mb-2">No Matching Orders Found</h2>
+                  <p className="text-sm text-[#151F19]/70 max-w-md mx-auto mb-6 leading-relaxed">
+                    We couldn&apos;t locate a paid order with those credentials. Please check for typos in your order
+                    number, phone number, or email address.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Link
+                      href="/products"
+                      className="px-5 py-2.5 rounded-full bg-[#1C3F2D] text-white text-xs font-semibold hover:bg-[#122A1F] transition-colors"
+                    >
+                      Shop Fresh Microgreens
+                    </Link>
+                    <a
+                      href={`https://wa.me/${(content.track_support_phone || '').replace(/\D/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-5 py-2.5 rounded-full border border-[#1C3F2D] text-[#1C3F2D] text-xs font-semibold hover:bg-[#1C3F2D]/5 transition-colors"
+                    >
+                      Contact Harvest Team
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {orders.map((order) => {
+                    const statusConfig =
+                      fulfillmentBadgeStyles[order.fulfillment_status] || fulfillmentBadgeStyles.unfulfilled;
+                    const activeStepIndex = getActiveStepIndex(order.fulfillment_status);
+                    const isCancelled = order.fulfillment_status === 'cancelled';
+
+                    return (
+                      <div
+                        key={order.id}
+                        className="bg-white rounded-3xl border border-[#E4DDC8] shadow-[0_12px_40px_rgba(21,31,25,0.06)] overflow-hidden"
+                      >
+                        {/* Top Banner / Order Summary Header */}
+                        <div className="bg-[#FAF6EF]/80 px-6 sm:px-8 py-5 border-b border-[#E4DDC8] flex flex-wrap items-center justify-between gap-4">
+                          <div>
+                            <span className="text-[11px] font-bold text-[#1C3F2D] uppercase tracking-wider">
+                              Order Number
+                            </span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="font-mono text-base sm:text-lg font-bold text-[#122A1F] tracking-wide">
+                                {order.order_number}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyOrderNumber(order.order_number)}
+                                className="text-xs bg-white text-[#1C3F2D] border border-[#E4DDC8] hover:border-[#1C3F2D] px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                                title="Copy Order Number"
+                              >
+                                {copiedId === order.order_number ? '✓ Copied' : 'Copy'}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-sm">
+                            <div>
+                              <p className="text-[11px] text-[#151F19]/55 uppercase tracking-wide">Placed On</p>
+                              <p className="font-medium text-[#151F19]">
+                                {new Date(order.created_at).toLocaleDateString('en-IN', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                })}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-[11px] text-[#151F19]/55 uppercase tracking-wide">Total Paid</p>
+                              <p className="font-bold text-[#1C3F2D]">{formatPrice(order.total_paise)}</p>
+                            </div>
+
+                            <div>
+                              <span
+                                className={`text-xs font-semibold px-3 py-1 rounded-full border inline-block ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}
+                              >
+                                {statusConfig.label}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Interactive Visual Tracking Stepper */}
+                        {!isCancelled && (
+                          <div className="p-6 sm:p-8 bg-white border-b border-[#E4DDC8]/60">
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#1C3F2D] mb-6 sm:mb-8">
+                              Live Harvest &amp; Delivery Progress
+                            </h3>
+
+                            {/* Stepper Timeline */}
+                            <div className="relative">
+                              {/* Horizontal connector line for md+ screens */}
+                              <div className="hidden md:block absolute top-5 left-10 right-10 h-1 bg-[#E4DDC8] -z-0">
+                                <div
+                                  className="h-full bg-[#1C3F2D] transition-all duration-700 ease-in-out"
+                                  style={{
+                                    width: `${(activeStepIndex / (TIMELINE_STEPS.length - 1)) * 100}%`,
+                                  }}
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-2 relative z-10">
+                                {TIMELINE_STEPS.map((step, idx) => {
+                                  const isCompleted = idx < activeStepIndex || order.fulfillment_status === 'delivered';
+                                  const isCurrent = idx === activeStepIndex && order.fulfillment_status !== 'delivered';
+
+                                  return (
+                                    <div
+                                      key={step.key}
+                                      className="flex md:flex-col items-start md:items-center text-left md:text-center gap-4 md:gap-2"
+                                    >
+                                      {/* Circle indicator */}
+                                      <div className="relative shrink-0">
+                                        <div
+                                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
+                                            isCompleted
+                                              ? 'bg-[#1C3F2D] text-white shadow-sm'
+                                              : isCurrent
+                                              ? 'bg-[#CFFA57] text-[#122A1F] border-2 border-[#1C3F2D] shadow-md ring-4 ring-[#CFFA57]/30'
+                                              : 'bg-[#FAF6EF] text-[#151F19]/40 border border-[#E4DDC8]'
+                                          }`}
+                                        >
+                                          {isCompleted ? (
+                                            <span className="text-white text-xs">✓</span>
+                                          ) : isCurrent ? (
+                                            <span className="animate-pulse">{step.icon}</span>
+                                          ) : (
+                                            <span className="text-xs opacity-75">{idx + 1}</span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Label & Description */}
+                                      <div>
+                                        <p
+                                          className={`text-xs sm:text-[13px] font-bold ${
+                                            isCompleted || isCurrent ? 'text-[#122A1F]' : 'text-[#151F19]/50'
+                                          }`}
+                                        >
+                                          {step.title}
+                                        </p>
+                                        <p className="text-[11px] text-[#151F19]/60 leading-tight mt-0.5">
+                                          {step.desc}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
-                            <p className="text-sm font-semibold text-gray-800">
-                              {formatPrice(item.unit_price_paise * item.quantity)}
-                            </p>
                           </div>
-                        ))}
+                        )}
+
+                        {isCancelled && (
+                          <div className="p-6 bg-rose-50/60 border-b border-rose-200 text-sm text-rose-800 flex items-center gap-3">
+                            <span className="text-2xl">⚠️</span>
+                            <div>
+                              <p className="font-semibold">This order has been cancelled.</p>
+                              <p className="text-xs text-rose-700/80">
+                                If you have questions or require a refund update, please contact our support team.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Order Content & Itemized Breakdown */}
+                        <div className="p-6 sm:p-8">
+                          {/* Destination & Delivery Info */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-[#FAF6EF]/50 border border-[#E4DDC8]/60 mb-6 text-xs sm:text-sm">
+                            <div>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#1C3F2D] block mb-1">
+                                Delivery Address (Tricity)
+                              </span>
+                              <p className="font-medium text-[#151F19]">
+                                {order.customer_name} · {order.customer_phone}
+                              </p>
+                              <p className="text-[#151F19]/75 mt-0.5">
+                                {order.delivery_address}, PIN {order.delivery_pincode}
+                              </p>
+                            </div>
+
+                            <div>
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-[#1C3F2D] block mb-1">
+                                Harvest Guarantee
+                              </span>
+                              <p className="text-[#151F19]/80 leading-relaxed">
+                                {content.track_harvest_note ||
+                                  'Grown with mineral water & clean air · Harvested morning of delivery in Tricity'}
+                              </p>
+                              {order.subscription_frequency && (
+                                <span className="inline-block mt-1 text-xs font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
+                                  🔁 Active {order.subscription_frequency} Subscription
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Line Items */}
+                          <div className="divide-y divide-[#E4DDC8]/60">
+                            {order.items.map((item) => (
+                              <div key={item.id} className="py-3.5 flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-xl bg-[#FAF6EF] border border-[#E4DDC8] flex items-center justify-center text-lg shrink-0">
+                                    🌿
+                                  </div>
+                                  <div>
+                                    <Link
+                                      href={`/products/${item.product_slug}`}
+                                      className="font-semibold text-sm text-[#122A1F] hover:text-[#1C3F2D] hover:underline transition-colors"
+                                    >
+                                      {item.product_name}
+                                    </Link>
+                                    <p className="text-xs text-[#151F19]/65">
+                                      {item.variant_label} ({item.net_weight_grams}g) &times; {item.quantity}
+                                    </p>
+                                    {item.subscription_trays && item.subscription_weeks && (
+                                      <span className="inline-block mt-0.5 text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                                        🔁 Subscription: {item.subscription_trays} trays/wk · {item.subscription_weeks}{' '}
+                                        wks
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <p className="text-sm font-bold text-[#122A1F] shrink-0">
+                                  {formatPrice(item.unit_price_paise * item.quantity)}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Farm Support Assistance Callout */}
+                          <div className="mt-8 pt-6 border-t border-[#E4DDC8]/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-[#151F19]/70">
+                            <div>
+                              <p className="font-semibold text-[#122A1F]">Questions about your harvest or delivery?</p>
+                              <p>Our team is available every morning to assist you with fresh orders.</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              {content.track_support_phone && (
+                                <a
+                                  href={`https://wa.me/${content.track_support_phone.replace(/\D/g, '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3.5 py-1.5 rounded-full bg-[#1C3F2D] text-white font-medium hover:bg-[#122A1F] transition-colors inline-flex items-center gap-1.5"
+                                >
+                                  <span>WhatsApp</span>
+                                </a>
+                              )}
+                              {content.track_support_email && (
+                                <a
+                                  href={`mailto:${content.track_support_email}`}
+                                  className="px-3.5 py-1.5 rounded-full border border-[#1C3F2D] text-[#1C3F2D] font-medium hover:bg-[#1C3F2D]/5 transition-colors"
+                                >
+                                  <span>Email Support</span>
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
-    </main>
+        </main>
+      </div>
+
+      {/* Join The Revolution Section */}
+      <JoinRevolutionSection />
     </>
+  );
+}
+
+export default function TrackOrderPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FAF6EF] pt-40 text-center text-sm text-[#151F19]/60">
+          Loading tracking...
+        </div>
+      }
+    >
+      <TrackOrderContent />
+    </Suspense>
   );
 }

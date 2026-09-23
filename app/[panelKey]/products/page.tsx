@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
 import { formatPrice } from '@/lib/format';
 import ImageField from '@/components/admin/ImageField';
+import { HEALTH_GOALS } from '@/lib/healthGoals';
 
 interface Variant {
   id: string;
@@ -74,12 +75,43 @@ const defaultProductFaqs: ProductFAQ[] = [
   },
 ];
 
+export interface DetailAccordion {
+  title: string;
+  content: string;
+}
+
+const defaultDetailAccordions: DetailAccordion[] = [
+  {
+    title: 'How to Eat & Store',
+    content:
+      'Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of water to the bottom drip tray once a day.\n\nWhen ready to eat, simply snip what you need with kitchen scissors right above the root line. Your tray stays living and fresh for 7 to 10 days!',
+  },
+  {
+    title: 'Nutrient Profile & Science',
+    content:
+      'USDA and university studies have confirmed that day 10 microgreens contain between 10x and 40x the vital micronutrients of their full grown counterparts.\n\nHarvested young at the peak of cellular vitality to deliver bioavailable antioxidants straight to your plate.',
+  },
+  {
+    title: 'Growing Method & Purity',
+    content:
+      'We operate vertical indoor climate racks in the Tricity. No soil, no organic compost pathogens, and absolutely zero pesticide or fertilizer residues.\n\nGrown on sterilized coco peat with 100% reverse osmosis mineral drinking water.',
+  },
+  {
+    title: 'Delivery & Packaging',
+    content:
+      'Delivered in our reusable food-grade living trays. We dispatch orders within hours of the final quality check across Chandigarh, Mohali, and Panchkula.',
+  },
+];
+
 interface Product {
   id: string;
   slug: string;
   name: string;
   categories: string[];
+  health_goals?: string[];
   description: string;
+  description_lead?: string | null;
+  description_highlight?: string | null;
   nutrition_notes: string | null;
   thumbnail_url: string | null;
   thumbnail_alt_text?: string | null;
@@ -93,13 +125,18 @@ interface Product {
   images?: ProductImage[];
   detail_highlight_badges?: HighlightBadge[] | null;
   faqs?: ProductFAQ[] | null;
+  detail_accordions?: DetailAccordion[] | null;
+  pairs_well_with?: string[] | null;
 }
 
 const emptyProduct = {
   name: '',
   slug: '',
   categories: [] as string[],
+  health_goals: [] as string[],
   description: '',
+  description_lead: '',
+  description_highlight: '',
   nutrition_notes: '',
   thumbnail_url: '',
   thumbnail_alt_text: '',
@@ -135,6 +172,8 @@ export default function AdminProductsPage() {
   const [showCatDropdown, setShowCatDropdown] = useState(false);
   const [badges, setBadges] = useState<HighlightBadge[]>(defaultBadges);
   const [faqs, setFaqs] = useState<ProductFAQ[]>(defaultProductFaqs);
+  const [accordions, setAccordions] = useState<DetailAccordion[]>(defaultDetailAccordions);
+  const [pairsWellWith, setPairsWellWith] = useState<string[]>(['', '', '']);
 
   const handleBadgeChange = (index: number, field: 'icon' | 'label', value: string) => {
     setBadges((prev) => {
@@ -186,6 +225,47 @@ export default function AdminProductsPage() {
     setFaqs(defaultProductFaqs);
   };
 
+  const handleAccordionChange = (index: number, field: 'title' | 'content', value: string) => {
+    setAccordions((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+  };
+
+  const handleAddAccordion = () => {
+    setAccordions((prev) => [...prev, { title: '', content: '' }]);
+  };
+
+  const handleRemoveAccordion = (index: number) => {
+    setAccordions((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleMoveAccordion = (index: number, direction: 'up' | 'down') => {
+    setAccordions((prev) => {
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+      const next = [...prev];
+      const temp = next[index];
+      next[index] = next[targetIndex];
+      next[targetIndex] = temp;
+      return next;
+    });
+  };
+
+  const handleLoadDefaultAccordions = () => {
+    if (accordions.length > 0 && !confirm('Replace current accordions with the 4 standard questions?')) return;
+    setAccordions(defaultDetailAccordions);
+  };
+
+  const handlePairChange = (slotIndex: number, productId: string) => {
+    setPairsWellWith((prev) => {
+      const next = [...prev];
+      next[slotIndex] = productId;
+      return next;
+    });
+  };
+
   const loadProducts = async () => {
     const res = await adminFetch('/api/admin/products');
     if (res.ok) setProducts(await res.json());
@@ -208,7 +288,10 @@ export default function AdminProductsPage() {
         name: data.name || '',
         slug: data.slug || '',
         categories: Array.isArray(data.categories) ? data.categories : (data.category ? [data.category] : []),
+        health_goals: Array.isArray(data.health_goals) ? data.health_goals : [],
         description: data.description || '',
+        description_lead: data.description_lead || '',
+        description_highlight: data.description_highlight || '',
         nutrition_notes: data.nutrition_notes || '',
         thumbnail_url: data.thumbnail_url || '',
         thumbnail_alt_text: data.thumbnail_alt_text || '',
@@ -232,6 +315,20 @@ export default function AdminProductsPage() {
       } else {
         setFaqs(defaultProductFaqs);
       }
+      if (Array.isArray(data.detail_accordions) && data.detail_accordions.length > 0) {
+        setAccordions(data.detail_accordions);
+      } else {
+        setAccordions(defaultDetailAccordions);
+      }
+      if (Array.isArray(data.pairs_well_with)) {
+        setPairsWellWith([
+          data.pairs_well_with[0] || '',
+          data.pairs_well_with[1] || '',
+          data.pairs_well_with[2] || '',
+        ]);
+      } else {
+        setPairsWellWith(['', '', '']);
+      }
     }
   };
 
@@ -248,6 +345,8 @@ export default function AdminProductsPage() {
         tags: parsedTags,
         detail_highlight_badges: badges,
         faqs: faqs.filter((f) => f.question.trim() || f.answer.trim()),
+        detail_accordions: accordions.filter((a) => a.title.trim() || a.content.trim()),
+        pairs_well_with: pairsWellWith.filter(Boolean),
       };
 
       if (isNew) {
@@ -425,6 +524,120 @@ export default function AdminProductsPage() {
                 )}
               </div>
             </div>
+
+            {/* Health Goals Multi-Select Dropdown */}
+            <div className="sm:col-span-2 bg-[#F6FAF7] border border-emerald-200/90 rounded-xl p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+                <div>
+                  <label className="block text-sm font-semibold text-emerald-950 flex items-center gap-1.5">
+                    <span>🎯</span> Health Goals (Shop by Health Goal)
+                  </label>
+                  <p className="text-xs text-emerald-800/80">
+                    Assign one or multiple of the 8 health goals to display this product under those goals on the website.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        health_goals: HEALTH_GOALS.map((g) => g.id),
+                      }))
+                    }
+                    className="text-[11px] font-medium text-emerald-700 hover:text-emerald-900 bg-white px-2.5 py-1 rounded-md border border-emerald-300 hover:bg-emerald-50 transition-colors shadow-xs"
+                  >
+                    Select All 8 Goals
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        health_goals: [],
+                      }))
+                    }
+                    className="text-[11px] font-medium text-gray-600 hover:text-red-700 bg-white px-2.5 py-1 rounded-md border border-gray-300 hover:bg-red-50 transition-colors shadow-xs"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              </div>
+
+              {/* Selected Health Goal Badges */}
+              <div className="flex flex-wrap gap-1.5 mb-3 min-h-[32px] items-center">
+                {form.health_goals && form.health_goals.length > 0 ? (
+                  form.health_goals.map((goalId) => {
+                    const goalDef = HEALTH_GOALS.find(
+                      (g) => g.id === goalId || g.slug === goalId || g.aliases.includes(goalId)
+                    );
+                    return (
+                      <span
+                        key={goalId}
+                        className="inline-flex items-center gap-1.5 bg-white text-[#1C3F2D] text-xs font-semibold px-3 py-1.5 rounded-full border border-emerald-300 shadow-sm"
+                      >
+                        <span>{goalDef?.icon || '🌱'}</span>
+                        <span>{goalDef?.title || goalId}</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((prev) => ({
+                              ...prev,
+                              health_goals: prev.health_goals.filter((g) => g !== goalId),
+                            }))
+                          }
+                          className="text-gray-400 hover:text-red-600 font-bold ml-1 text-sm leading-none"
+                          title="Remove this health goal"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    );
+                  })
+                ) : (
+                  <span className="text-xs text-emerald-700/70 italic">
+                    No health goals selected. Choose from the dropdown below:
+                  </span>
+                )}
+              </div>
+
+              {/* Health Goal Select Dropdown */}
+              <div className="relative">
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val && !form.health_goals.includes(val)) {
+                      setForm((prev) => ({
+                        ...prev,
+                        health_goals: [...prev.health_goals, val],
+                      }));
+                    }
+                  }}
+                  className="w-full bg-white border border-emerald-300 rounded-lg px-3 py-2 text-sm text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 shadow-sm cursor-pointer"
+                >
+                  <option value="" disabled>
+                    + Select a health goal from dropdown...
+                  </option>
+                  {HEALTH_GOALS.map((goal) => {
+                    const isSelected = form.health_goals.includes(goal.id);
+                    return (
+                      <option
+                        key={goal.id}
+                        value={goal.id}
+                        disabled={isSelected}
+                        className={isSelected ? 'text-gray-400 bg-gray-50' : 'text-gray-900'}
+                      >
+                        {isSelected
+                          ? `✓ ${goal.icon} ${goal.title} (Already selected)`
+                          : `${goal.icon} ${goal.title} — ${goal.subtitle}`}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
               <input
@@ -638,14 +851,206 @@ export default function AdminProductsPage() {
               onAltTextChange={(val) => setForm((prev) => ({ ...prev, thumbnail_alt_text: val }))}
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border rounded-lg text-sm"
-            />
+          {/* Editorial Product Description Section */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">Product Editorial Story & Description</h3>
+              <p className="text-xs text-gray-500">
+                These texts appear under the product title on the product detail page in the Newsreader editorial serif font.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description Lead / Hook <span className="text-xs font-normal text-gray-500">(Italic opening sentence)</span>
+              </label>
+              <input
+                type="text"
+                value={form.description_lead}
+                onChange={(e) => setForm({ ...form, description_lead: e.target.value })}
+                placeholder="e.g. The heavyweight champion of plant nutrition."
+                className="w-full px-3 py-2 border rounded-lg text-sm bg-white"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">
+                Renders at the beginning of the first paragraph in bold italic text.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description Body <span className="text-xs font-normal text-gray-500">(Main story paragraph)</span>
+              </label>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                rows={3}
+                placeholder="e.g. Harvested at the biological apex on day 10, delivering peak cellular antioxidants straight to your door."
+                className="w-full px-3 py-2 border rounded-lg text-sm bg-white"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description Highlight / Secondary Note <span className="text-xs font-normal text-gray-500">(Second editorial paragraph)</span>
+              </label>
+              <textarea
+                value={form.description_highlight}
+                onChange={(e) => setForm({ ...form, description_highlight: e.target.value })}
+                rows={2}
+                placeholder="e.g. Carries up to <u>40 times the concentrated sulforaphane</u> of a mature head of broccoli. Crisp, peppery, and alive until the moment you cut it."
+                className="w-full px-3 py-2 border rounded-lg text-sm bg-white"
+              />
+              <p className="text-[11px] text-gray-400 mt-1">
+                Tip: Wrap key phrases with <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-700 font-mono text-[10.5px]">&lt;u&gt;text&lt;/u&gt;</code> or <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-700 font-mono text-[10.5px]">__text__</code> to highlight them with the signature lime-green accent underline.
+              </p>
+            </div>
+          </div>
+
+          {/* Product Detail Description Accordions (4 Questions) */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900">
+                  Product Detail Accordions ({accordions.length})
+                </label>
+                <p className="text-xs text-gray-500">
+                  The 4 expandable question &amp; answer sections shown under the buy box on the product page (How to Eat &amp; Store, Nutrient Science, etc.).
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleLoadDefaultAccordions}
+                  className="px-2.5 py-1 text-xs font-medium bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  title="Reset to 4 standard accordion questions"
+                >
+                  Load Defaults
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddAccordion}
+                  className="px-3 py-1 text-xs font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                >
+                  + Add Question
+                </button>
+              </div>
+            </div>
+
+            {accordions.length === 0 ? (
+              <div className="text-center py-6 bg-white border border-dashed rounded-lg">
+                <p className="text-xs text-gray-400 mb-2">No detail accordions added for this product yet.</p>
+                <button
+                  type="button"
+                  onClick={handleAddAccordion}
+                  className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium"
+                >
+                  + Add First Question
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {accordions.map((acc, idx) => (
+                  <div key={idx} className="bg-white border rounded-lg p-3.5 space-y-2 shadow-sm">
+                    <div className="flex items-center justify-between gap-2 border-b pb-1.5">
+                      <span className="text-xs font-mono font-bold text-gray-500">
+                        Item #{idx + 1}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {idx > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => handleMoveAccordion(idx, 'up')}
+                            className="px-1.5 py-0.5 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
+                            title="Move Up"
+                          >
+                            ↑
+                          </button>
+                        )}
+                        {idx < accordions.length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleMoveAccordion(idx, 'down')}
+                            className="px-1.5 py-0.5 text-xs text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded"
+                            title="Move Down"
+                          >
+                            ↓
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAccordion(idx)}
+                          className="text-red-500 hover:text-red-700 text-xs font-semibold px-1.5 py-0.5 hover:bg-red-50 rounded ml-1"
+                          title="Remove this item"
+                        >
+                          ✕ Remove
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-600 mb-1">Title / Question</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. How to Eat & Store"
+                        value={acc.title}
+                        onChange={(e) => handleAccordionChange(idx, 'title', e.target.value)}
+                        className="w-full px-3 py-1.5 border rounded-lg text-sm bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-gray-600 mb-1">Content / Answer</label>
+                      <textarea
+                        rows={3}
+                        placeholder="e.g. Keep your tray on the kitchen counter away from direct scorching sun..."
+                        value={acc.content}
+                        onChange={(e) => handleAccordionChange(idx, 'content', e.target.value)}
+                        className="w-full px-3 py-1.5 border rounded-lg text-sm bg-white"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Pairs Well With Section (3 Products) */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">
+                🥗 &ldquo;Pairs Well With&rdquo; Recommendations (3 Products)
+              </h3>
+              <p className="text-xs text-gray-500">
+                Choose the 3 companion products displayed directly below the description accordions on this product&apos;s page.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[0, 1, 2].map((slotIdx) => (
+                <div key={slotIdx} className="bg-white p-3 border rounded-lg shadow-sm space-y-1">
+                  <label className="block text-xs font-semibold text-gray-700">
+                    Product #{slotIdx + 1}
+                  </label>
+                  <select
+                    value={pairsWellWith[slotIdx] || ''}
+                    onChange={(e) => handlePairChange(slotIdx, e.target.value)}
+                    className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-2 text-xs font-medium text-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="">-- Choose Product --</option>
+                    {products
+                      .filter((p) => p.id !== editing?.id && p.is_active)
+                      .map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                  </select>
+                  {pairsWellWith[slotIdx] && (
+                    <p className="text-[10.5px] text-emerald-600 font-mono">
+                      ✓ Selected: {products.find((p) => p.id === pairsWellWith[slotIdx])?.name}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nutrition Notes</label>
@@ -824,7 +1229,15 @@ export default function AdminProductsPage() {
                   <input
                     placeholder="Label (e.g. 100g Tray)"
                     value={variantForm.label}
-                    onChange={(e) => setVariantForm({ ...variantForm, label: e.target.value })}
+                    onChange={(e) => {
+                      const newLabel = e.target.value;
+                      const extracted = extractWeightFromLabel(newLabel);
+                      setVariantForm((prev) => ({
+                        ...prev,
+                        label: newLabel,
+                        ...(extracted !== null && !prev.net_weight_grams ? { net_weight_grams: extracted } : {}),
+                      }));
+                    }}
                     className="px-3 py-2 border rounded-lg text-sm"
                   />
                   <input
@@ -911,6 +1324,8 @@ export default function AdminProductsPage() {
             setForm(emptyProduct);
             setBadges(defaultBadges);
             setFaqs(defaultProductFaqs);
+            setAccordions(defaultDetailAccordions);
+            setPairsWellWith(['', '', '']);
           }}
           className="px-4 py-2 bg-gray-900 text-white text-sm rounded-lg hover:bg-gray-800"
         >
@@ -925,6 +1340,7 @@ export default function AdminProductsPage() {
               <th className="px-4 py-3">Thumbnail</th>
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Category</th>
+              <th className="px-4 py-3">Health Goals</th>
               <th className="px-4 py-3">Tags</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Actions</th>
@@ -949,6 +1365,28 @@ export default function AdminProductsPage() {
                 <td className="px-4 py-3 font-medium text-gray-900">{p.name}</td>
                 <td className="px-4 py-3 text-gray-500 capitalize">
                   {(p.categories || []).map(c => c.replace(/-/g, ' ')).join(', ')}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1 max-w-[200px]">
+                    {p.health_goals && p.health_goals.length > 0 ? (
+                      p.health_goals.map((gId) => {
+                        const gDef = HEALTH_GOALS.find(
+                          (g) => g.id === gId || g.slug === gId || g.aliases.includes(gId)
+                        );
+                        return (
+                          <span
+                            key={gId}
+                            className="text-[9.5px] font-semibold bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1"
+                          >
+                            <span>{gDef?.icon || '🌱'}</span>
+                            <span>{gDef?.title || gId}</span>
+                          </span>
+                        );
+                      })
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">None</span>
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
@@ -993,6 +1431,22 @@ export default function AdminProductsPage() {
   );
 }
 
+// ── Helper to extract weight in grams from variant label ──
+function extractWeightFromLabel(label: string): number | null {
+  if (!label) return null;
+  const kgMatch = label.match(/(\d+(?:\.\d+)?)\s*kg\b/i);
+  if (kgMatch) {
+    const kg = parseFloat(kgMatch[1]);
+    if (!isNaN(kg)) return Math.round(kg * 1000);
+  }
+  const gMatch = label.match(/(\d+(?:\.\d+)?)\s*(?:g|gm|gram|grams)\b/i);
+  if (gMatch) {
+    const g = parseFloat(gMatch[1]);
+    if (!isNaN(g)) return Math.round(g);
+  }
+  return null;
+}
+
 // ── Inline variant editor row ──
 function VariantRow({
   variant,
@@ -1004,22 +1458,47 @@ function VariantRow({
   onDelete: (id: string) => void;
 }) {
   const [v, setV] = useState(variant);
+
+  useEffect(() => {
+    setV(variant);
+  }, [variant]);
+
   const changed =
     v.label !== variant.label ||
+    v.net_weight_grams !== variant.net_weight_grams ||
     v.price_paise !== variant.price_paise ||
     v.stock_qty !== variant.stock_qty ||
     v.is_active !== variant.is_active;
+
+  const handleLabelChange = (newLabel: string) => {
+    const extracted = extractWeightFromLabel(newLabel);
+    setV((prev) => ({
+      ...prev,
+      label: newLabel,
+      ...(extracted !== null ? { net_weight_grams: extracted } : {}),
+    }));
+  };
 
   return (
     <tr className="border-b last:border-0">
       <td className="py-2">
         <input
           value={v.label}
-          onChange={(e) => setV({ ...v, label: e.target.value })}
+          onChange={(e) => handleLabelChange(e.target.value)}
           className="px-2 py-1 border rounded text-sm w-full"
         />
       </td>
-      <td className="py-2 text-gray-500">{v.net_weight_grams}g</td>
+      <td className="py-2">
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            value={v.net_weight_grams ?? ''}
+            onChange={(e) => setV({ ...v, net_weight_grams: Number(e.target.value) })}
+            className="px-2 py-1 border rounded text-sm w-16"
+          />
+          <span className="text-gray-500 text-xs">g</span>
+        </div>
+      </td>
       <td className="py-2">
         <input
           type="number"
@@ -1046,7 +1525,7 @@ function VariantRow({
       </td>
       <td className="py-2 space-x-2">
         {changed && (
-          <button onClick={() => onSave(v)} className="text-blue-600 hover:text-blue-800 text-xs">
+          <button onClick={() => onSave(v)} className="text-blue-600 hover:text-blue-800 text-xs font-semibold">
             Save
           </button>
         )}

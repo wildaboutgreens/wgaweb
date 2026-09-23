@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
 import { formatPrice } from '@/lib/format';
+import { downloadCSV } from '@/lib/csvExport';
 
 interface Order {
   id: string;
+  order_number: string | null;
   customer_name: string;
   customer_phone: string;
   customer_email: string | null;
@@ -20,6 +22,8 @@ interface OrderItem {
   variant_label: string;
   quantity: number;
   price_paise: number;
+  subscription_trays?: number | null;
+  subscription_weeks?: number | null;
 }
 
 interface OrderDetail extends Order {
@@ -38,26 +42,29 @@ const statusColors: Record<string, string> = {
   fulfilled: 'bg-blue-50 text-blue-700',
   shipped: 'bg-purple-50 text-purple-700',
   delivered: 'bg-green-50 text-green-700',
+  cancelled: 'bg-red-50 text-red-700',
 };
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
   const [fulfillmentFilter, setFulfillmentFilter] = useState('');
   const [detail, setDetail] = useState<OrderDetail | null>(null);
   const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const loadOrders = async () => {
+  const loadOrders = useCallback(async () => {
     const params = new URLSearchParams();
     if (paymentFilter) params.set('payment_status', paymentFilter);
     if (fulfillmentFilter) params.set('fulfillment_status', fulfillmentFilter);
     const res = await adminFetch(`/api/admin/orders?${params}`);
     if (res.ok) setOrders(await res.json());
-  };
+  }, [paymentFilter, fulfillmentFilter]);
 
   useEffect(() => {
     loadOrders();
-  }, [paymentFilter, fulfillmentFilter]);
+  }, [loadOrders]);
 
   const openDetail = async (id: string) => {
     const res = await adminFetch(`/api/admin/orders/${id}`);
@@ -90,6 +97,41 @@ export default function AdminOrdersPage() {
           &larr; Back to orders
         </button>
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Order Detail</h1>
+
+        {/* Order Number & Live Tracking Header */}
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div>
+            <span className="text-xs uppercase tracking-wider font-semibold text-emerald-800">Order Number</span>
+            <div className="font-mono text-lg font-bold text-emerald-950 flex items-center gap-2 mt-0.5">
+              {detail.order_number || <span className="font-sans text-sm text-gray-400 font-normal">Legacy (No Order #)</span>}
+              {detail.order_number && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(detail.order_number!);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="text-xs bg-white text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded hover:bg-emerald-100 transition-colors cursor-pointer"
+                  title="Copy Order Number"
+                >
+                  {copied ? '✓ Copied' : 'Copy'}
+                </button>
+              )}
+            </div>
+          </div>
+          {detail.order_number && (
+            <a
+              href={`/track-order?order_number=${encodeURIComponent(detail.order_number)}&phone=${encodeURIComponent(detail.customer_phone)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold text-white bg-[#1C3F2D] hover:bg-[#122A1F] px-4 py-2 rounded-lg transition-all shadow-xs flex items-center gap-1.5"
+            >
+              <span>View Live Tracking</span>
+              <span>↗</span>
+            </a>
+          )}
+        </div>
 
         <div className="bg-white rounded-xl border p-6 mb-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-6">
@@ -139,20 +181,21 @@ export default function AdminOrdersPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-3 pt-4 border-t">
-            <span className="text-sm text-gray-500">Fulfillment:</span>
+          <div className="flex flex-wrap items-center gap-3 pt-4 border-t">
+            <span className="text-sm font-medium text-gray-700">Fulfillment Status:</span>
             <select
               value={detail.fulfillment_status}
               onChange={(e) => updateFulfillment(e.target.value)}
               disabled={saving}
-              className="px-3 py-2 border rounded-lg text-sm"
+              className="px-3 py-2 border rounded-lg text-sm bg-white font-medium focus:ring-2 focus:ring-[#1C3F2D] outline-none"
             >
-              <option value="unfulfilled">Unfulfilled</option>
-              <option value="fulfilled">Fulfilled</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
+              <option value="unfulfilled">🌱 Unfulfilled (Harvesting / Processing)</option>
+              <option value="fulfilled">📦 Fulfilled (Harvested & Packed)</option>
+              <option value="shipped">🚚 Shipped (Out for Delivery)</option>
+              <option value="delivered">✅ Delivered (Doorstep)</option>
+              <option value="cancelled">❌ Cancelled</option>
             </select>
-            {saving && <span className="text-xs text-gray-400">Saving...</span>}
+            {saving && <span className="text-xs text-gray-400">Saving update...</span>}
           </div>
         </div>
 
@@ -172,7 +215,14 @@ export default function AdminOrdersPage() {
               {detail.items.map((item, i) => (
                 <tr key={i} className="border-b last:border-0">
                   <td className="py-2">{item.product_name}</td>
-                  <td className="py-2">{item.variant_label}</td>
+                  <td className="py-2">
+                    <div>{item.variant_label}</div>
+                    {item.subscription_trays && item.subscription_weeks && (
+                      <span className="inline-block mt-0.5 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-medium">
+                        🔁 Subscription: {item.subscription_trays} {item.subscription_trays === 1 ? 'tray' : 'trays'}/wk · {item.subscription_weeks} wks
+                      </span>
+                    )}
+                  </td>
                   <td className="py-2 text-right">{item.quantity}</td>
                   <td className="py-2 text-right">{formatPrice(item.price_paise)}</td>
                   <td className="py-2 text-right font-medium">
@@ -187,55 +237,145 @@ export default function AdminOrdersPage() {
     );
   }
 
+  const filteredOrders = orders.filter((o) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      (o.order_number && o.order_number.toLowerCase().includes(q)) ||
+      o.customer_name.toLowerCase().includes(q) ||
+      o.customer_phone.includes(q) ||
+      (o.customer_email && o.customer_email.toLowerCase().includes(q))
+    );
+  });
+
+  const handleExportCSV = () => {
+    const headers = [
+      'Order Number',
+      'Customer Name',
+      'Customer Phone',
+      'Customer Email',
+      'Total (INR)',
+      'Payment Status',
+      'Fulfillment Status',
+      'Created At',
+    ];
+
+    const rows = filteredOrders.map((o) => [
+      o.order_number || '',
+      o.customer_name,
+      o.customer_phone,
+      o.customer_email || '',
+      (o.total_paise / 100).toFixed(2),
+      o.payment_status,
+      o.fulfillment_status,
+      new Date(o.created_at).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'medium',
+      }),
+    ]);
+
+    downloadCSV('wga-orders.csv', [headers, ...rows]);
+  };
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Orders</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+              {filteredOrders.length} {filteredOrders.length === 1 ? 'order' : 'orders'}
+            </span>
+          </div>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage harvest orders, payment statuses, and fulfillment dispatches.
+          </p>
+        </div>
 
-      <div className="flex flex-wrap gap-3 mb-6">
-        <select
-          value={paymentFilter}
-          onChange={(e) => setPaymentFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm"
+        <button
+          type="button"
+          onClick={handleExportCSV}
+          disabled={filteredOrders.length === 0}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-800 hover:bg-emerald-900 disabled:opacity-50 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
         >
-          <option value="">All payment statuses</option>
-          <option value="paid">Paid</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
-        </select>
-        <select
-          value={fulfillmentFilter}
-          onChange={(e) => setFulfillmentFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm"
-        >
-          <option value="">All fulfillment statuses</option>
-          <option value="unfulfilled">Unfulfilled</option>
-          <option value="fulfilled">Fulfilled</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-        </select>
+          <span>📥</span>
+          <span>Export to CSV</span>
+        </button>
       </div>
 
-      <div className="bg-white rounded-xl border overflow-hidden">
+      {/* Search & Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            placeholder="Search by Order #, Customer, Phone, or Email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#1C3F2D] focus:border-[#1C3F2D] bg-white"
+          />
+          <span className="absolute left-3 top-2.5 text-gray-400">🔍</span>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <select
+            value={paymentFilter}
+            onChange={(e) => setPaymentFilter(e.target.value)}
+            className="px-3 py-2 border rounded-lg text-sm bg-white"
+          >
+            <option value="">All payment statuses</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="failed">Failed</option>
+          </select>
+          <select
+            value={fulfillmentFilter}
+            onChange={(e) => setFulfillmentFilter(e.target.value)}
+            className="px-3 py-2 border rounded-lg text-sm bg-white"
+          >
+            <option value="">All fulfillment statuses</option>
+            <option value="unfulfilled">Unfulfilled</option>
+            <option value="fulfilled">Fulfilled</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border overflow-hidden shadow-xs">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-gray-500 border-b bg-gray-50">
+            <tr className="text-left text-gray-500 border-b bg-gray-50/80">
+              <th className="px-4 py-3">Order #</th>
               <th className="px-4 py-3">Customer</th>
+              <th className="px-4 py-3">Phone</th>
               <th className="px-4 py-3">Total</th>
               <th className="px-4 py-3">Payment</th>
               <th className="px-4 py-3">Fulfillment</th>
-              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Date &amp; Time</th>
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody>
-            {orders.map((o) => (
+            {filteredOrders.map((o) => (
               <tr
                 key={o.id}
-                className="border-b last:border-0 hover:bg-gray-50 cursor-pointer"
+                className="border-b last:border-0 hover:bg-gray-50 cursor-pointer transition-colors"
                 onClick={() => openDetail(o.id)}
               >
-                <td className="px-4 py-3 font-medium">{o.customer_name}</td>
-                <td className="px-4 py-3">{formatPrice(o.total_paise)}</td>
+                <td className="px-4 py-3 font-mono font-bold text-xs text-emerald-800">
+                  {o.order_number || <span className="text-gray-400 font-sans font-normal">—</span>}
+                </td>
+                <td className="px-4 py-3 font-medium text-gray-900">{o.customer_name}</td>
+                <td className="px-4 py-3 text-gray-600 text-xs font-mono">{o.customer_phone}</td>
+                <td className="px-4 py-3 font-semibold text-gray-800">{formatPrice(o.total_paise)}</td>
                 <td className="px-4 py-3">
                   <span
                     className={`text-xs font-medium px-2 py-1 rounded-full ${
@@ -254,15 +394,34 @@ export default function AdminOrdersPage() {
                     {o.fulfillment_status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-500">
-                  {new Date(o.created_at).toLocaleDateString()}
+                <td className="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">
+                  <div>
+                    {new Date(o.created_at).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                    })}
+                  </div>
+                  <div className="text-[11px] text-gray-400 font-mono">
+                    {new Date(o.created_at).toLocaleTimeString('en-IN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true,
+                    })}
+                  </div>
                 </td>
-                <td className="px-4 py-3 text-blue-600 text-sm">View</td>
+                <td className="px-4 py-3 text-emerald-700 font-semibold text-xs hover:underline">
+                  View →
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-        {orders.length === 0 && <p className="p-6 text-center text-gray-400">No orders found</p>}
+        {filteredOrders.length === 0 && (
+          <p className="p-8 text-center text-gray-400 text-sm">
+            {searchQuery ? `No orders matching "${searchQuery}"` : 'No orders found'}
+          </p>
+        )}
       </div>
     </div>
   );

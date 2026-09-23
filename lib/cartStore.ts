@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 export interface CartItem {
+  id?: string;
   variantId: string;
   productSlug: string;
   productName: string;
@@ -12,6 +13,9 @@ export interface CartItem {
   quantity: number;
   maxStock: number;
   thumbnailUrl?: string | null;
+  isSubscription?: boolean;
+  subscriptionTrays?: number;
+  subscriptionWeeks?: number;
 }
 
 export const PRODUCT_FALLBACK_IMAGES: Record<string, string> = {
@@ -33,8 +37,8 @@ interface CartState {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
-  removeItem: (variantId: string) => void;
-  updateQuantity: (variantId: string, quantity: number) => void;
+  removeItem: (idOrVariantId: string) => void;
+  updateQuantity: (idOrVariantId: string, quantity: number) => void;
   clearCart: () => void;
   totalPaise: () => number;
   totalItems: () => number;
@@ -51,14 +55,25 @@ export const useCartStore = create<CartState>()(
       addItem: (newItem) =>
         set((state) => {
           const resolvedThumb = getProductThumbnail(newItem.productSlug, newItem.thumbnailUrl);
-          const itemWithThumb = { ...newItem, thumbnailUrl: resolvedThumb };
+          const itemKey =
+            newItem.id ||
+            (newItem.isSubscription
+              ? `${newItem.variantId}-sub-${newItem.subscriptionTrays || 1}t-${newItem.subscriptionWeeks || 4}w`
+              : newItem.variantId);
+          const initialQty = Math.min(newItem.quantity || 1, newItem.maxStock);
+          const itemWithThumb: CartItem = {
+            ...newItem,
+            id: itemKey,
+            thumbnailUrl: resolvedThumb,
+            quantity: initialQty,
+          };
 
-          const existing = state.items.find((i) => i.variantId === newItem.variantId);
+          const existing = state.items.find((i) => (i.id || i.variantId) === itemKey);
           if (existing) {
             const newQty = Math.min(existing.quantity + (newItem.quantity || 1), newItem.maxStock);
             return {
               items: state.items.map((i) =>
-                i.variantId === newItem.variantId
+                (i.id || i.variantId) === itemKey
                   ? { ...i, quantity: newQty, thumbnailUrl: i.thumbnailUrl || resolvedThumb }
                   : i
               ),
@@ -67,24 +82,30 @@ export const useCartStore = create<CartState>()(
           return {
             items: [
               ...state.items,
-              { ...itemWithThumb, quantity: Math.min(newItem.quantity || 1, newItem.maxStock) },
+              itemWithThumb,
             ],
           };
         }),
 
-      removeItem: (variantId) =>
+      removeItem: (idOrVariantId) =>
         set((state) => ({
-          items: state.items.filter((i) => i.variantId !== variantId),
+          items: state.items.filter(
+            (i) => i.id !== idOrVariantId && i.variantId !== idOrVariantId
+          ),
         })),
 
-      updateQuantity: (variantId, quantity) =>
+      updateQuantity: (idOrVariantId, quantity) =>
         set((state) => {
           if (quantity <= 0) {
-            return { items: state.items.filter((i) => i.variantId !== variantId) };
+            return {
+              items: state.items.filter(
+                (i) => i.id !== idOrVariantId && i.variantId !== idOrVariantId
+              ),
+            };
           }
           return {
             items: state.items.map((i) =>
-              i.variantId === variantId
+              (i.id === idOrVariantId || i.variantId === idOrVariantId)
                 ? { ...i, quantity: Math.min(quantity, i.maxStock) }
                 : i
             ),

@@ -12,7 +12,50 @@ export async function POST(request: NextRequest) {
 
     const sql = getSQL();
     const body = await request.json();
-    const { email, source } = body;
+    const { email, source, turnstileToken } = body;
+
+    // ── Require Turnstile token ──
+    if (!turnstileToken) {
+      return NextResponse.json(
+        { error: 'Turnstile verification is required.' },
+        { status: 400 }
+      );
+    }
+
+    // ── Verify Turnstile token server-side ──
+    const turnstileSecret = process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY;
+    if (!turnstileSecret) {
+      console.error('CLOUDFLARE_TURNSTILE_SECRET_KEY is not configured');
+      return NextResponse.json(
+        { error: 'CAPTCHA verification is not configured. Please contact support.' },
+        { status: 500 }
+      );
+    }
+
+    const secretToUse =
+      process.env.NODE_ENV !== 'production' && turnstileToken === 'XXXX.DUMMY.TOKEN.XXXX'
+        ? '1x0000000000000000000000000000000AA'
+        : turnstileSecret;
+
+    const turnstileRes = await fetch(
+      'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          secret: secretToUse,
+          response: turnstileToken,
+        }),
+      }
+    );
+
+    const turnstileData = await turnstileRes.json();
+    if (!turnstileData.success) {
+      return NextResponse.json(
+        { error: 'CAPTCHA verification failed. Please try again.' },
+        { status: 403 }
+      );
+    }
 
     if (!email || !EMAIL_REGEX.test(email)) {
       return NextResponse.json(

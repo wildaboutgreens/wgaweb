@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
 import { Product, WhyChoosePin, Review, SamplerVariantData } from './page';
@@ -224,18 +226,73 @@ export default function ProductListClient({
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [newsletterMessage, setNewsletterMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const turnstileWidgetId = useRef<string | null>(null);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  const handleTurnstileScriptReady = useCallback(() => {
+    setTurnstileReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.turnstile) {
+      setTurnstileReady(true);
+      return;
+    }
+    const interval = setInterval(() => {
+      if (window.turnstile) {
+        setTurnstileReady(true);
+        clearInterval(interval);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  const renderTurnstile = useCallback(() => {
+    if (!turnstileReady || !siteKey || !window.turnstile || !turnstileContainerRef.current) return;
+    if (turnstileWidgetId.current) {
+      try { window.turnstile.remove(turnstileWidgetId.current); } catch { /* ignore */ }
+    }
+    turnstileContainerRef.current.innerHTML = '';
+    turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: siteKey,
+      callback: (token: string) => setTurnstileToken(token),
+      'expired-callback': () => setTurnstileToken(null),
+      'error-callback': () => setTurnstileToken(null),
+      theme: 'dark',
+    });
+  }, [turnstileReady, siteKey]);
+
+  useEffect(() => {
+    renderTurnstile();
+  }, [renderTurnstile]);
 
   const handleNewsletterSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newsletterEmail.trim()) return;
+
+    if (!turnstileToken) {
+      setNewsletterStatus('error');
+      setNewsletterMessage('Security check in progress. Please try again in a moment.');
+      return;
+    }
+
     setNewsletterStatus('loading');
     setNewsletterMessage('');
     try {
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: newsletterEmail.trim(), source: 'product_listing' }),
+        body: JSON.stringify({
+          email: newsletterEmail.trim(),
+          source: 'product_listing',
+          turnstileToken,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -249,6 +306,10 @@ export default function ProductListClient({
     } catch {
       setNewsletterStatus('error');
       setNewsletterMessage('Failed to connect. Please check your internet connection.');
+    } finally {
+      // Reset Turnstile for next submission
+      setTurnstileToken(null);
+      renderTurnstile();
     }
   };
 
@@ -353,7 +414,15 @@ export default function ProductListClient({
   };
 
   return (
-    <div className="bg-[#F3EEE0] text-[#151F19] min-h-screen">
+    <>
+      {siteKey && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+          onReady={handleTurnstileScriptReady}
+        />
+      )}
+      <div className="bg-[#F3EEE0] text-[#151F19] min-h-screen">
       {/* ================= SECTION 1: PLP HERO ================= */}
       <section className="grid grid-cols-1 md:grid-cols-2 min-h-[82vh]">
         {/* Left Column: Forest Copy */}
@@ -475,6 +544,12 @@ export default function ProductListClient({
                 >
                   {prods.map((product) => {
                     const meta = getProductMeta(product);
+                    const isBundle = Boolean(
+                      product.is_bundle ||
+                      product.categories?.some((c) => c.toLowerCase().includes('bundle')) ||
+                      product.slug.toLowerCase().includes('bundle') ||
+                      product.name.toLowerCase().includes('bundle')
+                    );
                     const activeVar =
                       product.variants.find((v) => v.is_active) || product.variants[0];
                     const pricePaise = activeVar ? activeVar.price_paise : 9900;
@@ -561,7 +636,7 @@ export default function ProductListClient({
                                 </div>
 
                                 <div className="font-mono text-[5.5px] uppercase tracking-wider text-[#5C6B60] pt-1.5 border-t border-black/10">
-                                  100G LIVE TRAY · DAY 10
+                                  {isBundle ? 'LIVE BUNDLE · DAY 10' : '100G LIVE TRAY · DAY 10'}
                                 </div>
                               </div>
                             </div>
@@ -582,7 +657,7 @@ export default function ProductListClient({
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-[#3E8F52] text-xs">🌿</span>
-                              <span>{product.highlight_2 || 'Living tray · 7 to 10 days fresh'}</span>
+                              <span>{product.highlight_2 || (isBundle ? 'Living bundle · 7 to 10 days fresh' : 'Living tray · 7 to 10 days fresh')}</span>
                             </div>
                           </div>
                         </div>
@@ -592,7 +667,7 @@ export default function ProductListClient({
                           <div className="font-mono font-bold text-[15px] text-[#122A1F] mb-3">
                             {formatPrice(pricePaise)}{' '}
                             <span className="font-normal text-[11px] text-[#5C6B60] uppercase">
-                              / tray
+                              / {isBundle ? 'bundle' : 'tray'}
                             </span>
                           </div>
 
@@ -731,111 +806,7 @@ export default function ProductListClient({
         </div>
       </section>
 
-      {/* ================= SECTION 5: FULL TRANSPARENCY COMPARISON ================= */}
-      <section className="bg-[#1C3F2D] text-[#FFFDF8] py-20 border-y border-[#E4DDC8]/20">
-        <div className="max-w-[1180px] mx-auto px-4 sm:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left Copy & 3-Photo Collage */}
-            <div>
-              <h2 className="font-display uppercase text-3xl sm:text-4xl lg:text-5xl text-[#CFFA57] leading-none mb-3">
-                {content.comparison_title || 'Full Transparency'}
-              </h2>
-              <p className="font-serif italic text-base sm:text-lg text-white/90 mb-8 max-w-md">
-                {content.comparison_subtitle ||
-                  'We publish everything about how your greens are cultivated. No hidden secrets, no industrial shortcuts.'}
-              </p>
-
-              {/* Overlapping Photo Collage */}
-              <div className="relative h-64 sm:h-72 max-w-sm">
-                {/* Image 1 */}
-                <div className="absolute w-[44%] aspect-[3/4] top-0 left-2 z-10 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/90 -rotate-6">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=80&w=600&auto=format&fit=crop"
-                    alt="Indoor rack"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* Image 2 */}
-                <div className="absolute w-[42%] aspect-square top-[12%] left-[34%] z-20 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/90 rotate-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=600&auto=format&fit=crop"
-                    alt="Living broccoli"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* Image 3 */}
-                <div className="absolute w-[44%] aspect-[4/3] bottom-2 right-4 z-10 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/90 -rotate-3">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=600&auto=format&fit=crop"
-                    alt="Fresh tray"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Right Comparison Table */}
-            <div className="bg-white/5 border border-white/15 rounded-3xl p-5 sm:p-7 backdrop-blur-sm">
-              <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center pb-3 border-b border-white/20 font-mono text-[10px] uppercase tracking-wider text-white/55">
-                <span>Parameter</span>
-                <span className="w-24 sm:w-28 text-center text-[#CFFA57] font-bold">
-                  Wild About Greens
-                </span>
-                <span className="w-24 sm:w-28 text-center">Store Bought</span>
-              </div>
-
-              <div className="divide-y divide-white/10 text-xs sm:text-sm">
-                <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-4">
-                  <span className="font-semibold text-white/90">Growing Medium</span>
-                  <span className="w-24 sm:w-28 text-center text-[#CFFA57] font-bold flex items-center justify-center gap-1">
-                    <span>✓</span> Sterile Coco Peat
-                  </span>
-                  <span className="w-24 sm:w-28 text-center text-white/40">Field Soil / Slurry</span>
-                </div>
-
-                <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-4">
-                  <span className="font-semibold text-white/90">Water Source</span>
-                  <span className="w-24 sm:w-28 text-center text-[#CFFA57] font-bold flex items-center justify-center gap-1">
-                    <span>✓</span> 100% Mineral RO
-                  </span>
-                  <span className="w-24 sm:w-28 text-center text-white/40">Agri Runoff</span>
-                </div>
-
-                <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-4">
-                  <span className="font-semibold text-white/90">Chemical Sprays</span>
-                  <span className="w-24 sm:w-28 text-center text-[#CFFA57] font-bold flex items-center justify-center gap-1">
-                    <span>✓</span> 0.00% Pesticides
-                  </span>
-                  <span className="w-24 sm:w-28 text-center text-white/40">Frequent Sprays</span>
-                </div>
-
-                <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-4">
-                  <span className="font-semibold text-white/90">Harvest to Door</span>
-                  <span className="w-24 sm:w-28 text-center text-[#CFFA57] font-bold flex items-center justify-center gap-1">
-                    <span>✓</span> &lt; 6 Hours Living
-                  </span>
-                  <span className="w-24 sm:w-28 text-center text-white/40">5 to 12 Days Freight</span>
-                </div>
-
-                <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center py-4">
-                  <span className="font-semibold text-white/90">Vitality</span>
-                  <span className="w-24 sm:w-28 text-center text-[#CFFA57] font-bold flex items-center justify-center gap-1">
-                    <span>✓</span> Living Roots
-                  </span>
-                  <span className="w-24 sm:w-28 text-center text-white/40">Dead &amp; Wilting</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= SECTION 6: WHY CHOOSE US (4 COLOR BLOCKS) ================= */}
+      {/* ================= SECTION 5: WHY CHOOSE US (4 COLOR BLOCKS) ================= */}
       <section className="bg-[#FFFDF8] py-16">
         <div className="max-w-[1180px] mx-auto px-4 sm:px-8">
           <div className="mb-8">
@@ -1073,9 +1044,15 @@ export default function ProductListClient({
       {/* ================= SECTION 8: FAQ ACCORDION ================= */}
       <section className="bg-[#F3EEE0] py-20 sm:py-24">
         <div className="max-w-[940px] mx-auto px-4 sm:px-8">
-          <h2 className="font-serif font-bold text-[clamp(32px,4vw,40px)] text-center text-[#151F19] mb-12">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+            className="font-serif font-bold text-[clamp(32px,4vw,40px)] text-center text-[#151F19] mb-12"
+          >
             {content.faq_title || 'Frequently Asked Questions'}
-          </h2>
+          </motion.h2>
 
           <div className="divide-y divide-[#151F19]/15 border-y border-[#151F19]/15">
             {DEFAULT_FAQS.map((faq, idx) => {
@@ -1084,30 +1061,56 @@ export default function ProductListClient({
               const answer = content[faq.aKey] || faq.defaultA;
 
               return (
-                <div key={idx} className="transition-colors">
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-30px' }}
+                  transition={{ duration: 0.4, delay: Math.min(idx * 0.06, 0.3), ease: 'easeOut' }}
+                  className="transition-colors"
+                >
                   <button
                     type="button"
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    className="w-full py-5 flex items-center justify-between text-left gap-4 focus:outline-none cursor-pointer group"
+                    className="w-full py-5 sm:py-6 flex items-center justify-between text-left gap-4 focus:outline-none cursor-pointer group"
                     aria-expanded={isOpen}
                   >
-                    <span className="font-serif font-bold text-[17px] text-[#151F19] group-hover:text-[#1C3F2D] transition-colors">
+                    <span className="font-serif font-bold text-[17px] sm:text-[18px] text-[#151F19] group-hover:text-[#1C3F2D] transition-colors leading-snug">
                       {question}
                     </span>
                     <span
-                      className={`w-7 h-7 rounded-full border border-[#151F19]/25 flex items-center justify-center font-mono text-sm text-[#151F19] flex-shrink-0 transition-all duration-200 ${
-                        isOpen ? 'bg-[#151F19] text-[#CFFA57] border-[#151F19]' : 'bg-transparent'
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                        isOpen
+                          ? 'bg-[#151F19] text-[#CFFA57] border-[#151F19] rotate-45 shadow-sm'
+                          : 'border-[#151F19]/25 bg-transparent text-[#151F19] group-hover:border-[#151F19]'
                       }`}
                     >
-                      {isOpen ? '−' : '+'}
+                      <svg
+                        className="w-3.5 h-3.5 transition-transform duration-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 4v16m8-8H4" />
+                      </svg>
                     </span>
                   </button>
-                  {isOpen && (
-                    <div className="pb-6 text-[14px] text-[#5C6B60] leading-relaxed font-sans pr-8">
-                      {answer}
-                    </div>
-                  )}
-                </div>
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-6 text-[14.5px] sm:text-[15px] text-[#5C6B60] leading-relaxed font-sans pr-8 whitespace-pre-line">
+                          {answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               );
             })}
           </div>
@@ -1161,6 +1164,12 @@ export default function ProductListClient({
                 {newsletterStatus === 'loading' ? 'Signing Up...' : 'Sign Up'}
               </button>
             </form>
+            {/* Invisible Turnstile container positioned off-screen to preserve exact layout */}
+            <div
+              ref={turnstileContainerRef}
+              style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+              aria-hidden="true"
+            />
             {newsletterMessage && (
               <p
                 className={`text-xs mt-2.5 ${
@@ -1177,5 +1186,6 @@ export default function ProductListClient({
         </div>
       </section>
     </div>
+    </>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Script from 'next/script';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
 import type { SamplerVariantData } from './page';
@@ -19,17 +20,63 @@ export default function OurStoryClient({
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const turnstileWidgetId = useRef<string | null>(null);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  const handleTurnstileScriptReady = useCallback(() => {
+    setTurnstileReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.turnstile) {
+      setTurnstileReady(true);
+    }
+  }, []);
+
+  const renderTurnstile = useCallback(() => {
+    if (!turnstileReady || !siteKey || !window.turnstile || !turnstileContainerRef.current) return;
+    if (turnstileWidgetId.current) {
+      try { window.turnstile.remove(turnstileWidgetId.current); } catch { /* ignore */ }
+    }
+    turnstileContainerRef.current.innerHTML = '';
+    turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: siteKey,
+      callback: (token: string) => setTurnstileToken(token),
+      'expired-callback': () => setTurnstileToken(null),
+      'error-callback': () => setTurnstileToken(null),
+      theme: 'dark',
+    });
+  }, [turnstileReady, siteKey]);
+
+  useEffect(() => {
+    renderTurnstile();
+  }, [renderTurnstile]);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
+
+    if (!turnstileToken) {
+      setStatus('error');
+      setMessage('Security check in progress. Please try again in a moment.');
+      return;
+    }
+
     setStatus('loading');
     setMessage('');
     try {
       const res = await fetch('/api/newsletter/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim(), source: 'our_story' }),
+        body: JSON.stringify({
+          email: email.trim(),
+          source: 'our_story',
+          turnstileToken,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -43,6 +90,10 @@ export default function OurStoryClient({
     } catch {
       setStatus('error');
       setMessage('Failed to connect. Please check your internet connection.');
+    } finally {
+      // Reset Turnstile for next submission
+      setTurnstileToken(null);
+      renderTurnstile();
     }
   };
 
@@ -67,7 +118,15 @@ export default function OurStoryClient({
   };
 
   return (
-    <div className="bg-[#F3EEE0] text-[#151F19] min-h-screen pt-[64px] sm:pt-[72px]">
+    <>
+      {siteKey && (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+          onReady={handleTurnstileScriptReady}
+        />
+      )}
+      <div className="bg-[#F3EEE0] text-[#151F19] min-h-screen pt-[64px] sm:pt-[72px]">
       {/* ============ ANCHOR NAV ============ */}
       <nav
         className="sticky top-[58px] sm:top-[64px] z-40 bg-[#F3EEE0]/95 backdrop-blur-md border-b border-[#151F19]/10 transition-all duration-300"
@@ -119,7 +178,7 @@ export default function OurStoryClient({
             </h1>
             <div className="mt-8 sm:mt-10">
               <Link
-                href="/blog"
+                href="/pathshala"
                 className="inline-flex items-center gap-2 font-sans text-sm font-semibold tracking-wide bg-[#122A1F] text-[#FFFDF8] px-7 py-3.5 rounded-full hover:bg-[#1C3F2D] transition-all hover:-translate-y-0.5 hover:shadow-xl duration-200"
               >
                 {content.hero_cta_text || 'Know More →'}
@@ -555,6 +614,12 @@ export default function OurStoryClient({
                   {status === 'loading' ? 'Signing Up...' : 'Sign Up'}
                 </button>
               </form>
+              {/* Invisible Turnstile container positioned off-screen to preserve exact layout */}
+              <div
+                ref={turnstileContainerRef}
+                style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+                aria-hidden="true"
+              />
               {message && (
                 <p
                   className={`text-xs mt-2.5 ${
@@ -572,5 +637,6 @@ export default function OurStoryClient({
         </section>
       </main>
     </div>
+    </>
   );
 }

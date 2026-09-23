@@ -55,12 +55,19 @@ export interface ProductFAQ {
   answer: string;
 }
 
+export interface DetailAccordion {
+  title: string;
+  content: string;
+}
+
 export interface Product {
   id: string;
   slug: string;
   name: string;
   categories: string[];
   description: string;
+  description_lead?: string | null;
+  description_highlight?: string | null;
   nutrition_notes: string | null;
   thumbnail_url: string | null;
   thumbnail_alt_text?: string | null;
@@ -73,6 +80,8 @@ export interface Product {
   images: ProductImage[];
   detail_highlight_badges?: HighlightBadge[] | null;
   faqs?: ProductFAQ[] | null;
+  detail_accordions?: DetailAccordion[] | null;
+  pairs_well_with?: string[] | null;
 }
 
 export interface RelatedProduct {
@@ -95,9 +104,9 @@ async function getProduct(slug: string): Promise<Product | null> {
   try {
     const sql = getSQL();
     const products = await sql`
-      SELECT id, slug, name, categories, description, nutrition_notes,
+      SELECT id, slug, name, categories, description, description_lead, description_highlight, nutrition_notes,
              thumbnail_url, thumbnail_alt_text, tags, badge_label, highlight_1, highlight_2,
-             is_bundle, is_active, detail_highlight_badges, faqs
+             is_bundle, is_active, detail_highlight_badges, faqs, detail_accordions, pairs_well_with
       FROM products
       WHERE slug = ${slug} AND is_active = true
     `;
@@ -129,7 +138,7 @@ async function getProduct(slug: string): Promise<Product | null> {
   }
 }
 
-async function getRelatedProducts(currentSlug: string): Promise<RelatedProduct[]> {
+async function getRelatedProducts(currentSlug: string, pairedIds?: string[] | null): Promise<RelatedProduct[]> {
   try {
     const sql = getSQL();
     const products = await sql`
@@ -149,7 +158,27 @@ async function getRelatedProducts(currentSlug: string): Promise<RelatedProduct[]
       ORDER BY p.created_at ASC
       LIMIT 20
     `;
-    return products as unknown as RelatedProduct[];
+    const allRelated = products as unknown as RelatedProduct[];
+
+    if (Array.isArray(pairedIds) && pairedIds.length > 0) {
+      const selected: RelatedProduct[] = [];
+      for (const pid of pairedIds) {
+        if (!pid) continue;
+        const found = allRelated.find((p) => p.id === pid || p.slug === pid);
+        if (found && !selected.some((s) => s.id === found.id)) {
+          selected.push(found);
+        }
+      }
+      for (const p of allRelated) {
+        if (selected.length >= 3) break;
+        if (!selected.some((s) => s.id === p.id)) {
+          selected.push(p);
+        }
+      }
+      return selected;
+    }
+
+    return allRelated;
   } catch (err) {
     console.error('Error fetching related products:', err);
     return [];
@@ -238,7 +267,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   if (!product) notFound();
 
   const [relatedProducts, content, reviews, whyChoosePins] = await Promise.all([
-    getRelatedProducts(params.slug),
+    getRelatedProducts(params.slug, product.pairs_well_with),
     getContentMap(),
     getProductReviews(product.id),
     getWhyChoosePins(),

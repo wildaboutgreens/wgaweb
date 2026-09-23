@@ -52,30 +52,6 @@ body {
   }
 }
 
-/* Sprig drift decor */
-.sprig {
-  position: absolute;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.5;
-  color: var(--leaf);
-  animation: drift 9s ease-in-out infinite;
-}
-.sprig svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-@keyframes drift {
-  0%, 100% {
-    transform: translateY(0) rotate(var(--r, 0deg));
-  }
-  50% {
-    transform: translateY(-13px) rotate(calc(var(--r, 0deg) + 5deg));
-  }
-}
-
 @keyframes wiggle {
   0%, 100% {
     transform: rotate(-8deg);
@@ -236,5 +212,19 @@ body {
 body:has(.admin-panel-root) header,
 body:has(.admin-panel-root) footer {
   display: none !important;
+}
+
+/* Scrollbar hiding utilities for clean modal and horizontal scroll design */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 

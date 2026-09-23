@@ -10,8 +10,8 @@ export async function GET(
     const { slug } = params;
 
     const products = await sql`
-      SELECT id, slug, name, categories, badge_label, highlight_1, highlight_2, description, nutrition_notes,
-             thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at, detail_highlight_badges
+      SELECT id, slug, name, categories, badge_label, highlight_1, highlight_2, description, description_lead, description_highlight, nutrition_notes,
+             thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at, detail_highlight_badges, faqs, detail_accordions, pairs_well_with
       FROM products
       WHERE slug = ${slug} AND is_active = true
       LIMIT 1

@@ -21,6 +21,9 @@ interface RawCartItem {
   variantId?: string;
   product_variant_id?: string;
   quantity: number;
+  isSubscription?: boolean;
+  subscriptionTrays?: number;
+  subscriptionWeeks?: number;
 }
 
 interface RawCreateOrderBody {
@@ -64,8 +67,8 @@ export async function POST(request: NextRequest) {
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
     }
-    if (!customerName || !customerPhone || !deliveryAddress || !deliveryPincode) {
-      return NextResponse.json({ error: 'Missing required customer/delivery fields' }, { status: 400 });
+    if (!customerName || !customerPhone || !customerEmail || !deliveryAddress || !deliveryPincode) {
+      return NextResponse.json({ error: 'Missing required customer/delivery fields (name, phone, email, address, pincode)' }, { status: 400 });
     }
     if (!purchaseType || !['one_time', 'subscription'].includes(purchaseType)) {
       return NextResponse.json({ error: 'Invalid purchase type' }, { status: 400 });
@@ -81,8 +84,8 @@ export async function POST(request: NextRequest) {
     if (typeof customerPhone !== 'string' || customerPhone.length > 20) {
       return NextResponse.json({ error: 'Phone number is too long (max 20 characters)' }, { status: 400 });
     }
-    if (customerEmail && (typeof customerEmail !== 'string' || customerEmail.length > 254)) {
-      return NextResponse.json({ error: 'Email is too long (max 254 characters)' }, { status: 400 });
+    if (typeof customerEmail !== 'string' || customerEmail.length > 254 || !customerEmail.includes('@')) {
+      return NextResponse.json({ error: 'A valid email address is required' }, { status: 400 });
     }
     if (typeof deliveryAddress !== 'string' || deliveryAddress.length > 1000) {
       return NextResponse.json({ error: 'Delivery address is too long (max 1000 characters)' }, { status: 400 });
@@ -106,6 +109,9 @@ export async function POST(request: NextRequest) {
     const normalizedItems = items.map((item) => ({
       variantId: (item.variantId || item.product_variant_id) as string,
       quantity: Number(item.quantity) || 1,
+      isSubscription: Boolean(item.isSubscription),
+      subscriptionTrays: item.subscriptionTrays ? Number(item.subscriptionTrays) : undefined,
+      subscriptionWeeks: item.subscriptionWeeks ? Number(item.subscriptionWeeks) : undefined,
     }));
 
     const variantIds = normalizedItems.map((item) => item.variantId).filter(Boolean);
@@ -147,16 +153,35 @@ export async function POST(request: NextRequest) {
 
     // ── Calculate total server-side ──
     let subtotalPaise = 0;
-    const lineItems: { variantId: string; quantity: number; unitPricePaise: number }[] = [];
+    const lineItems: {
+      variantId: string;
+      quantity: number;
+      unitPricePaise: number;
+      subscriptionTrays?: number | null;
+      subscriptionWeeks?: number | null;
+    }[] = [];
 
     for (const item of normalizedItems) {
       const variant = variantMap.get(item.variantId)!;
-      const unitPrice = Number(variant.price_paise);
+      let unitPrice: number;
+
+      if (item.isSubscription && item.subscriptionTrays && item.subscriptionWeeks) {
+        // Formula: Base Price * Number of trays * number of weeks * 0.85 (rounded off to whole rupees without decimals)
+        const basePriceRupees = Number(variant.price_paise) / 100;
+        const subtotalRupees = basePriceRupees * item.subscriptionTrays * item.subscriptionWeeks;
+        const finalPriceRupees = Math.round(subtotalRupees * 0.85);
+        unitPrice = finalPriceRupees * 100; // in paise
+      } else {
+        unitPrice = Number(variant.price_paise);
+      }
+
       subtotalPaise += unitPrice * item.quantity;
       lineItems.push({
         variantId: item.variantId,
         quantity: item.quantity,
         unitPricePaise: unitPrice,
+        subscriptionTrays: item.subscriptionTrays || null,
+        subscriptionWeeks: item.subscriptionWeeks || null,
       });
     }
 
@@ -239,8 +264,14 @@ export async function POST(request: NextRequest) {
     // ── Insert order items ──
     for (const item of lineItems) {
       await sql`
-        INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price_paise)
-        VALUES (${orderId!}, ${item.variantId}, ${item.quantity}, ${item.unitPricePaise})
+        INSERT INTO order_items (
+          order_id, product_variant_id, quantity, unit_price_paise,
+          subscription_trays, subscription_weeks
+        )
+        VALUES (
+          ${orderId!}, ${item.variantId}, ${item.quantity}, ${item.unitPricePaise},
+          ${item.subscriptionTrays ?? null}, ${item.subscriptionWeeks ?? null}
+        )
       `;
     }
 

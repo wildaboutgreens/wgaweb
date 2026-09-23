@@ -3,40 +3,40 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-export interface RecipeItem {
+export interface ArticleItem {
   id: string;
   slug: string;
   title: string;
   excerpt: string | null;
   cover_image_url: string | null;
   cover_image_alt_text?: string | null;
-  recipe_categories: string[] | null;
+  recipe_categories?: string[] | null;
   published_at: string | null;
 }
 
-interface RecipeKhazanaClientProps {
-  recipes: RecipeItem[];
+interface PathshalaClientProps {
+  posts: ArticleItem[];
   categories: string[];
   content: Record<string, string>;
 }
 
-const DEFAULT_HERO_IMAGE = 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=2000&q=85';
+const DEFAULT_BLOG_HERO = 'https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=2000&q=85';
 
-export default function RecipeKhazanaClient({
-  recipes,
+export default function PathshalaClient({
+  posts,
   categories,
   content,
-}: RecipeKhazanaClientProps) {
+}: PathshalaClientProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all');
 
-  const heroImage = content.hero_image_url?.trim() || DEFAULT_HERO_IMAGE;
-  const heroTitle = content.hero_title?.trim() || 'All Recipes';
+  const heroImage = content.hero_image_url?.trim() || DEFAULT_BLOG_HERO;
+  const heroTitle = content.hero_title?.trim() || 'Pathshala';
   const heroSubtitle = content.hero_subtitle?.trim() || '';
 
-  const filteredRecipes = recipes.filter((recipe) => {
+  const filteredPosts = posts.filter((post) => {
     if (activeCategory === 'all') return true;
-    if (!recipe.recipe_categories || !Array.isArray(recipe.recipe_categories)) return false;
-    return recipe.recipe_categories.some(
+    if (!post.recipe_categories || !Array.isArray(post.recipe_categories)) return false;
+    return post.recipe_categories.some(
       (cat) => cat.toLowerCase().trim() === activeCategory.toLowerCase().trim()
     );
   });
@@ -96,36 +96,44 @@ export default function RecipeKhazanaClient({
           })}
         </div>
 
-        {/* 4-Column Recipe Grid */}
-        {filteredRecipes.length === 0 ? (
+        {/* 4-Column Article Grid */}
+        {filteredPosts.length === 0 ? (
           <div className="text-center py-16 bg-[#FAF9F6] border border-[#E4DDC8] p-8 max-w-xl mx-auto shadow-xs">
-            <span className="text-5xl mb-4 block">🍳</span>
+            <span className="text-5xl mb-4 block">📰</span>
             <h2 className="font-serif text-xl font-bold text-[#151F19] mb-2">
-              No recipes found in this category
+              No articles found
             </h2>
             <p className="text-xs sm:text-sm text-[#5C6B60] mb-6 leading-relaxed">
-              Try selecting another category or view all recipes.
+              We are crafting new articles on living nutrition and vertical farming. Check back soon!
             </p>
             <button
               onClick={() => setActiveCategory('all')}
               className="inline-block px-6 py-2.5 border border-[#74A832] bg-[#74A832] text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#5E8C24] transition-all"
             >
-              View All Recipes
+              View All Articles
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 sm:gap-x-7 gap-y-10 sm:gap-y-12">
-            {filteredRecipes.map((post) => {
+            {filteredPosts.map((post) => {
               const postCategories = (post.recipe_categories || []).filter(
                 (c) => c && c.trim().length > 0
               );
-              const categoriesText = postCategories.length > 0 ? postCategories.join(', ') : null;
+              const categoriesText =
+                postCategories.length > 0
+                  ? `Found in ${postCategories.join(', ')} Articles`
+                  : post.published_at
+                  ? `Published ${new Date(post.published_at).toLocaleDateString('en-IN', {
+                      month: 'short',
+                      year: 'numeric',
+                    })}`
+                  : 'Article';
 
               return (
                 <article key={post.id} className="group flex flex-col">
                   {/* Photo (Clean rectangular presentation, smooth hover zoom) */}
                   <Link
-                    href={`/blog/${post.slug}`}
+                    href={`/pathshala/${post.slug}`}
                     className="block aspect-[16/10] w-full overflow-hidden bg-[#EDEAE1] relative"
                   >
                     {post.cover_image_url ? (
@@ -137,22 +145,20 @@ export default function RecipeKhazanaClient({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#EDE7D6] to-[#E1DAC3] text-4xl opacity-50">
-                        🍳
+                        🌿
                       </div>
                     )}
                   </Link>
 
-                  {/* Centered Title & Found in line below photo */}
+                  {/* Centered Title & Metadata below photo */}
                   <div className="mt-3.5 sm:mt-4 text-center flex flex-col items-center px-1">
                     <h2 className="font-sans font-semibold text-xs sm:text-[14px] uppercase tracking-[0.06em] text-[#6CA030] hover:text-[#527d22] transition-colors line-clamp-2 leading-snug">
-                      <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                      <Link href={`/pathshala/${post.slug}`}>{post.title}</Link>
                     </h2>
 
-                    {categoriesText && (
-                      <p className="text-[11px] sm:text-xs text-[#555555] font-normal tracking-wide mt-1.5">
-                        Found in {categoriesText} Recipes
-                      </p>
-                    )}
+                    <p className="text-[11px] sm:text-xs text-[#555555] font-normal tracking-wide mt-1.5">
+                      {categoriesText}
+                    </p>
                   </div>
                 </article>
               );

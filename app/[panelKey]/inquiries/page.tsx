@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
 
 interface Inquiry {
@@ -24,15 +24,15 @@ export default function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [filter, setFilter] = useState('');
 
-  const loadInquiries = async () => {
+  const loadInquiries = useCallback(async () => {
     const url = filter ? `/api/admin/inquiries?status=${filter}` : '/api/admin/inquiries';
     const res = await adminFetch(url);
     if (res.ok) setInquiries(await res.json());
-  };
+  }, [filter]);
 
   useEffect(() => {
     loadInquiries();
-  }, [filter]);
+  }, [loadInquiries]);
 
   const updateStatus = async (id: string, status: string) => {
     await adminFetch(`/api/admin/inquiries/${id}`, {

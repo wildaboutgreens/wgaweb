@@ -49,7 +49,7 @@ export async function PUT(
       );
     }
 
-    const results = [];
+    const results: unknown[] = [];
     for (const block of blocks) {
       const { key, value, value_type } = block;
       if (!key) continue;
@@ -65,6 +65,19 @@ export async function PUT(
         RETURNING *
       `;
       results.push(result[0]);
+    }
+
+    if (page === 'homepage') {
+      const p1 = blocks.find((b: { key?: string; value?: string }) => b.key === 'recipes_pinned_1')?.value?.trim();
+      const p2 = blocks.find((b: { key?: string; value?: string }) => b.key === 'recipes_pinned_2')?.value?.trim();
+      const activeSlugs = [p1, p2].filter(Boolean) as string[];
+      if (activeSlugs.length > 0) {
+        await sql`
+          UPDATE blog_posts
+          SET show_on_homepage = (slug = ANY(${activeSlugs}))
+          WHERE post_type = 'recipe'
+        `;
+      }
     }
 
     return NextResponse.json(results);

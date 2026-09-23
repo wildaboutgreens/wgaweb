@@ -50,16 +50,16 @@ const config: Config = {
       },
       animation: {
         kenburns: 'kenburns 20s ease-in-out infinite alternate',
-        drift: 'drift 9s ease-in-out infinite',
+        shimmer: 'shimmer 3s ease-in-out infinite',
       },
       keyframes: {
         kenburns: {
           '0%': { transform: 'scale(1.06)' },
           '100%': { transform: 'scale(1.14)' },
         },
-        drift: {
-          '0%, 100%': { transform: 'translateY(0) rotate(var(--r, 0deg))' },
-          '50%': { transform: 'translateY(-13px) rotate(calc(var(--r, 0deg) + 5deg))' },
+        shimmer: {
+          '0%': { transform: 'translateX(-150%) skewX(-20deg)' },
+          '40%, 100%': { transform: 'translateX(250%) skewX(-20deg)' },
         },
       },
     },

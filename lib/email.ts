@@ -3,10 +3,17 @@ import { getSQL } from '@/lib/db';
 
 let _resend: Resend | null = null;
 
-function getResend(): Resend {
-  if (!_resend) {
-    _resend = new Resend(process.env.RESEND_API_KEY);
+/**
+ * Returns a Resend client, or null if RESEND_API_KEY is not configured.
+ * Callers must guard against null and skip email sending gracefully.
+ */
+function getResend(): Resend | null {
+  if (_resend) return _resend;
+  const key = process.env.RESEND_API_KEY;
+  if (!key || key.trim() === '') {
+    return null;
   }
+  _resend = new Resend(key);
   return _resend;
 }
 
@@ -87,8 +94,18 @@ export async function sendOrderConfirmation(
       ? `\nThis is a ${order.subscription_frequency} subscription order.`
       : '';
 
+  const resend = getResend();
+  if (!resend) {
+    console.warn(`Order ${orderId}: RESEND_API_KEY not configured, skipping confirmation email`);
+    // Reset the flag so a retry can be attempted once the key is set
+    await sql`
+      UPDATE orders SET confirmation_email_sent = false WHERE id = ${orderId}
+    `;
+    return false;
+  }
+
   try {
-    await getResend().emails.send({
+    await resend.emails.send({
       from: fromEmail,
       to: order.customer_email,
       subject: `Wild About Greens: Order Confirmed! 🌱`,
@@ -149,8 +166,14 @@ export async function sendInquiryNotification(
   // Send to the business owner's email (FROM_EMAIL doubles as the admin inbox for MVP)
   const toEmail = process.env.FROM_EMAIL || 'orders@wildaboutgreens.com';
 
+  const resend = getResend();
+  if (!resend) {
+    console.warn(`Inquiry ${inquiry.id}: RESEND_API_KEY not configured, skipping notification email`);
+    return false;
+  }
+
   try {
-    await getResend().emails.send({
+    await resend.emails.send({
       from: fromEmail,
       to: toEmail,
       subject: `🏢 New Bulk Inquiry: ${inquiry.business_name}`,
@@ -186,6 +209,12 @@ export async function sendInquiryNotification(
 export async function sendNewsletterWelcome(
   email: string
 ): Promise<boolean> {
+  const resend = getResend();
+  if (!resend) {
+    console.warn(`RESEND_API_KEY not configured, skipping welcome email for ${email}`);
+    return false;
+  }
+
   const fromEmail = process.env.FROM_EMAIL || 'orders@wildaboutgreens.com';
 
   try {
@@ -210,7 +239,7 @@ export async function sendNewsletterWelcome(
       .map((line: string) => line.trim() === '' ? '<br />' : `<p>${line}</p>`)
       .join('\n');
 
-    await getResend().emails.send({
+    await resend.emails.send({
       from: fromEmail,
       to: email,
       subject,

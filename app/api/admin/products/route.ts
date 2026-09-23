@@ -3,6 +3,21 @@ import { getSQL } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
+interface AdminProductRow {
+  id: string;
+  [key: string]: unknown;
+}
+
+interface AdminVariantRow {
+  id: string;
+  product_id: string;
+  label: string;
+  net_weight_grams: number | null;
+  price_paise: number;
+  stock_qty: number;
+  is_active: boolean;
+}
+
 export async function GET() {
   try {
     const sql = getSQL();
@@ -11,7 +26,26 @@ export async function GET() {
       FROM products
       ORDER BY created_at DESC
     `;
-    return NextResponse.json(products);
+    const productList = products as unknown as AdminProductRow[];
+    if (productList.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    const productIds = productList.map((p) => p.id);
+    const variants = await sql`
+      SELECT id, product_id, label, net_weight_grams, price_paise, stock_qty, is_active
+      FROM product_variants
+      WHERE product_id = ANY(${productIds})
+      ORDER BY price_paise ASC
+    `;
+    const variantList = variants as unknown as AdminVariantRow[];
+
+    const withVariants = productList.map((p) => ({
+      ...p,
+      variants: variantList.filter((v) => v.product_id === p.id),
+    }));
+
+    return NextResponse.json(withVariants);
   } catch (error: unknown) {
     console.error('admin get products error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -24,7 +58,7 @@ export async function POST(request: NextRequest) {
     const sql = getSQL();
     const body = await request.json();
 
-    const { slug, name, categories, badge_label, highlight_1, highlight_2, description, nutrition_notes, is_bundle, thumbnail_url, thumbnail_alt_text, tags, detail_highlight_badges, faqs } = body;
+    const { slug, name, categories, health_goals, badge_label, highlight_1, highlight_2, description, description_lead, description_highlight, nutrition_notes, is_bundle, thumbnail_url, thumbnail_alt_text, tags, detail_highlight_badges, faqs, detail_accordions, pairs_well_with } = body;
 
     if (!slug || !name || !categories || !Array.isArray(categories) || categories.length === 0) {
       return NextResponse.json(
@@ -33,6 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const formattedHealthGoals = Array.isArray(health_goals) ? health_goals : [];
     const formattedTags = Array.isArray(tags) ? tags : [];
     const formattedBadges = Array.isArray(detail_highlight_badges)
       ? JSON.stringify(detail_highlight_badges)
@@ -43,10 +78,12 @@ export async function POST(request: NextRequest) {
           { icon: '✂️', label: 'Cut to Order' },
         ]);
     const formattedFaqs = Array.isArray(faqs) ? JSON.stringify(faqs) : JSON.stringify([]);
+    const formattedAccordions = Array.isArray(detail_accordions) ? JSON.stringify(detail_accordions) : JSON.stringify([]);
+    const formattedPairs = Array.isArray(pairs_well_with) ? JSON.stringify(pairs_well_with) : JSON.stringify([]);
 
     const result = await sql`
-      INSERT INTO products (slug, name, categories, description, nutrition_notes, is_bundle, thumbnail_url, thumbnail_alt_text, tags, badge_label, highlight_1, highlight_2, detail_highlight_badges, faqs)
-      VALUES (${slug}, ${name}, ${categories}, ${description || null}, ${nutrition_notes || null}, ${is_bundle || false}, ${thumbnail_url || null}, ${thumbnail_alt_text || null}, ${formattedTags}, ${badge_label || null}, ${highlight_1 || null}, ${highlight_2 || null}, ${formattedBadges}::jsonb, ${formattedFaqs}::jsonb)
+      INSERT INTO products (slug, name, categories, health_goals, description, description_lead, description_highlight, nutrition_notes, is_bundle, thumbnail_url, thumbnail_alt_text, tags, badge_label, highlight_1, highlight_2, detail_highlight_badges, faqs, detail_accordions, pairs_well_with)
+      VALUES (${slug}, ${name}, ${categories}, ${formattedHealthGoals}, ${description || null}, ${description_lead || null}, ${description_highlight || null}, ${nutrition_notes || null}, ${is_bundle || false}, ${thumbnail_url || null}, ${thumbnail_alt_text || null}, ${formattedTags}, ${badge_label || null}, ${highlight_1 || null}, ${highlight_2 || null}, ${formattedBadges}::jsonb, ${formattedFaqs}::jsonb, ${formattedAccordions}::jsonb, ${formattedPairs}::jsonb)
       RETURNING *
     `;
 

@@ -53,11 +53,14 @@ export async function PUT(
     const { id } = params;
     const body = await request.json();
 
-    const { slug, name, categories, badge_label, highlight_1, highlight_2, description, nutrition_notes, is_bundle, is_active, thumbnail_url, thumbnail_alt_text, tags, detail_highlight_badges, faqs } = body;
+    const { slug, name, categories, health_goals, badge_label, highlight_1, highlight_2, description, description_lead, description_highlight, nutrition_notes, is_bundle, is_active, thumbnail_url, thumbnail_alt_text, tags, detail_highlight_badges, faqs, detail_accordions, pairs_well_with } = body;
 
     const formattedTags = tags !== undefined ? (Array.isArray(tags) ? tags : []) : null;
+    const formattedHealthGoals = health_goals !== undefined ? (Array.isArray(health_goals) ? health_goals : []) : null;
     const badgesJson = detail_highlight_badges !== undefined && detail_highlight_badges !== null ? JSON.stringify(detail_highlight_badges) : null;
     const faqsJson = faqs !== undefined && faqs !== null ? JSON.stringify(faqs) : null;
+    const accordionsJson = detail_accordions !== undefined && detail_accordions !== null ? JSON.stringify(detail_accordions) : null;
+    const pairsJson = pairs_well_with !== undefined && pairs_well_with !== null ? JSON.stringify(pairs_well_with) : null;
 
     const result = await sql`
       UPDATE products
@@ -65,10 +68,13 @@ export async function PUT(
         slug            = COALESCE(${slug ?? null}, slug),
         name            = COALESCE(${name ?? null}, name),
         categories      = CASE WHEN ${categories !== undefined} THEN ${categories} ELSE categories END,
+        health_goals    = CASE WHEN ${health_goals !== undefined} THEN ${formattedHealthGoals} ELSE health_goals END,
         badge_label     = CASE WHEN ${badge_label !== undefined} THEN ${badge_label ?? null} ELSE badge_label END,
         highlight_1     = CASE WHEN ${highlight_1 !== undefined} THEN ${highlight_1 ?? null} ELSE highlight_1 END,
         highlight_2     = CASE WHEN ${highlight_2 !== undefined} THEN ${highlight_2 ?? null} ELSE highlight_2 END,
         description     = COALESCE(${description ?? null}, description),
+        description_lead = CASE WHEN ${description_lead !== undefined} THEN ${description_lead ?? null} ELSE description_lead END,
+        description_highlight = CASE WHEN ${description_highlight !== undefined} THEN ${description_highlight ?? null} ELSE description_highlight END,
         nutrition_notes = COALESCE(${nutrition_notes ?? null}, nutrition_notes),
         is_bundle       = COALESCE(${is_bundle ?? null}, is_bundle),
         is_active       = COALESCE(${is_active ?? null}, is_active),
@@ -76,7 +82,9 @@ export async function PUT(
         thumbnail_alt_text = CASE WHEN ${thumbnail_alt_text !== undefined} THEN ${thumbnail_alt_text ?? null} ELSE thumbnail_alt_text END,
         tags            = CASE WHEN ${tags !== undefined} THEN ${formattedTags} ELSE tags END,
         detail_highlight_badges = CASE WHEN ${detail_highlight_badges !== undefined} THEN ${badgesJson}::jsonb ELSE detail_highlight_badges END,
-        faqs            = CASE WHEN ${faqs !== undefined} THEN ${faqsJson}::jsonb ELSE faqs END
+        faqs            = CASE WHEN ${faqs !== undefined} THEN ${faqsJson}::jsonb ELSE faqs END,
+        detail_accordions = CASE WHEN ${detail_accordions !== undefined} THEN ${accordionsJson}::jsonb ELSE detail_accordions END,
+        pairs_well_with = CASE WHEN ${pairs_well_with !== undefined} THEN ${pairsJson}::jsonb ELSE pairs_well_with END
       WHERE id = ${id}
       RETURNING *
     `;

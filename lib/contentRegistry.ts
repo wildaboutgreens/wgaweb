@@ -1,7 +1,7 @@
 export interface ContentFieldDef {
   key: string;
   label: string;
-  type: 'text' | 'textarea' | 'image_url';
+  type: 'text' | 'textarea' | 'image_url' | 'recipe_select' | 'product_select' | 'mascot_select';
   defaultValue: string;
   description?: string;
 }
@@ -131,6 +131,20 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       defaultValue: 'Sneak greens into your meals.',
     },
     {
+      key: 'recipes_pinned_1',
+      label: 'Featured Recipe 01 (Recipe 01 / 02)',
+      type: 'recipe_select',
+      defaultValue: 'pea-shoot-citrus-summer-salad',
+      description: 'Select the 1st recipe displayed as Recipe 01 / 02 in homepage Recipe Khazana.',
+    },
+    {
+      key: 'recipes_pinned_2',
+      label: 'Featured Recipe 02 (Recipe 02 / 02)',
+      type: 'recipe_select',
+      defaultValue: 'crispy-broccoli-microgreen-toast',
+      description: 'Select the 2nd recipe displayed as Recipe 02 / 02 in homepage Recipe Khazana.',
+    },
+    {
       key: 'recipes_bg_image',
       label: 'Recipe Khazana Background Image',
       type: 'image_url',
@@ -234,19 +248,6 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       type: 'textarea',
       defaultValue:
         'Experience the full spectrum of cellular nutrition. Three signature living varieties delivered together at special bundle pricing.',
-    },
-    {
-      key: 'comparison_title',
-      label: 'Comparison Section Title',
-      type: 'text',
-      defaultValue: 'Living Trays vs Cut Supermarket Packs',
-    },
-    {
-      key: 'comparison_subtitle',
-      label: 'Comparison Section Subtitle',
-      type: 'textarea',
-      defaultValue:
-        'Real nutrient density measured at harvest hour, not after a week in cold transport.',
     },
     {
       key: 'trust_title',
@@ -455,6 +456,48 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       description: 'Media image for the Nutrient Stats section.',
     },
     {
+      key: 'stats_item_1_number',
+      label: 'Nutrient Stat 1 — Value / Metric',
+      type: 'text',
+      defaultValue: '+1500%',
+      description: 'First stat metric or percentage, e.g. +1500%',
+    },
+    {
+      key: 'stats_item_1_text',
+      label: 'Nutrient Stat 1 — Description',
+      type: 'text',
+      defaultValue: 'Sulforaphane concentration compared to full-grown broccoli',
+      description: 'Description text next to Stat 1.',
+    },
+    {
+      key: 'stats_item_2_number',
+      label: 'Nutrient Stat 2 — Value / Metric',
+      type: 'text',
+      defaultValue: '+400%',
+      description: 'Second stat metric or percentage, e.g. +400%',
+    },
+    {
+      key: 'stats_item_2_text',
+      label: 'Nutrient Stat 2 — Description',
+      type: 'text',
+      defaultValue: 'Bioavailable Vitamin C and beta-carotene per gram of greens',
+      description: 'Description text next to Stat 2.',
+    },
+    {
+      key: 'stats_item_3_number',
+      label: 'Nutrient Stat 3 — Value / Metric',
+      type: 'text',
+      defaultValue: '+600%',
+      description: 'Third stat metric or percentage, e.g. +600%',
+    },
+    {
+      key: 'stats_item_3_text',
+      label: 'Nutrient Stat 3 — Description',
+      type: 'text',
+      defaultValue: 'Antioxidant capacity (ORAC value) protecting cells against oxidative stress',
+      description: 'Description text next to Stat 3.',
+    },
+    {
       key: 'reasons_title',
       label: 'Six Reasons Section Title',
       type: 'text',
@@ -634,6 +677,29 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       description: 'Body content for the welcome email. Use plain text with line breaks.',
     },
   ],
+  'recipe': [
+    {
+      key: 'hero_image_url',
+      label: 'Hero Banner Image (Full-Width Panoramic)',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Upload a wide edge-to-edge panoramic food banner photo (~1920x600px recommended) for the Recipe page. Displayed full-bleed with no overlay text.',
+    },
+    {
+      key: 'hero_title',
+      label: 'Page Heading',
+      type: 'text',
+      defaultValue: 'All Recipes',
+      description: 'Page title displayed centered in crisp uppercase tracked editorial styling below the banner.',
+    },
+    {
+      key: 'hero_subtitle',
+      label: 'Page Subtitle (Optional)',
+      type: 'textarea',
+      defaultValue: 'Explore delicious and nutritious recipes crafted with fresh, living microgreens.',
+      description: 'Optional short introductory subtitle displayed centered below the heading.',
+    },
+  ],
   'recipe-khazana': [
     {
       key: 'hero_image_url',
@@ -654,6 +720,29 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Page Subtitle (Optional)',
       type: 'textarea',
       defaultValue: 'Explore delicious and nutritious recipes crafted with fresh, living microgreens.',
+      description: 'Optional short introductory subtitle displayed centered below the heading.',
+    },
+  ],
+  'pathshala': [
+    {
+      key: 'hero_image_url',
+      label: 'Hero Banner Image (Full-Width Panoramic)',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Upload a wide edge-to-edge panoramic banner photo (~1920x600px recommended) for the Pathshala page. Displayed full-bleed with no overlay text.',
+    },
+    {
+      key: 'hero_title',
+      label: 'Page Heading',
+      type: 'text',
+      defaultValue: 'Pathshala',
+      description: 'Page title displayed centered in crisp uppercase tracked editorial styling below the banner.',
+    },
+    {
+      key: 'hero_subtitle',
+      label: 'Page Subtitle (Optional)',
+      type: 'textarea',
+      defaultValue: 'Nutritional deep dives, cellular antioxidant science, and insights from our vertical indoor farm.',
       description: 'Optional short introductory subtitle displayed centered below the heading.',
     },
   ],
@@ -678,6 +767,144 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       type: 'textarea',
       defaultValue: 'Nutritional deep dives, cellular antioxidant science, and insights from our vertical indoor farm.',
       description: 'Optional short introductory subtitle displayed centered below the heading.',
+    },
+  ],
+  'cart-drawer': [
+    {
+      key: 'cart_empty_title',
+      label: 'Empty Cart Headline',
+      type: 'text',
+      defaultValue: 'This cart is empty inside!',
+      description: 'Main heading displayed when the customer opens an empty cart drawer.',
+    },
+    {
+      key: 'cart_empty_subtitle',
+      label: 'Empty Cart Punchline / Humor Text',
+      type: 'textarea',
+      defaultValue: 'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.',
+      description: 'Quirky cursive humor line displayed below the empty cart cartoon mascot.',
+    },
+    {
+      key: 'cart_mascot_variant',
+      label: 'Cartoon Mascot Variation',
+      type: 'mascot_select',
+      defaultValue: 'pleading',
+      description: 'Choose the cartoon character personality displayed in the empty cart drawer.',
+    },
+    {
+      key: 'cart_rec_eyebrow',
+      label: 'Recommendations Eyebrow',
+      type: 'text',
+      defaultValue: 'START WITH',
+      description: 'Small uppercase tracking eyebrow above the recommendations title.',
+    },
+    {
+      key: 'cart_rec_title',
+      label: 'Recommendations Section Title',
+      type: 'text',
+      defaultValue: 'Our Bestsellers',
+      description: 'Heading for the recommended products carousel inside the cart drawer.',
+    },
+    {
+      key: 'cart_rec_product_1',
+      label: 'Recommended Product #1',
+      type: 'product_select',
+      defaultValue: 'broccoli-microgreens',
+      description: 'Select the 1st product to feature in the cart recommendations carousel.',
+    },
+    {
+      key: 'cart_rec_badge_1',
+      label: 'Product #1 Custom Badge (Optional Override)',
+      type: 'text',
+      defaultValue: '',
+      description: 'Optional custom badge. If left blank, automatically syncs the badge label from the Products page.',
+    },
+    {
+      key: 'cart_rec_product_2',
+      label: 'Recommended Product #2',
+      type: 'product_select',
+      defaultValue: 'sunflower-microgreens',
+      description: 'Select the 2nd product to feature in the cart recommendations carousel.',
+    },
+    {
+      key: 'cart_rec_badge_2',
+      label: 'Product #2 Custom Badge (Optional Override)',
+      type: 'text',
+      defaultValue: '',
+      description: 'Optional custom badge. If left blank, automatically syncs the badge label from the Products page.',
+    },
+    {
+      key: 'cart_rec_product_3',
+      label: 'Recommended Product #3',
+      type: 'product_select',
+      defaultValue: 'radish-microgreens',
+      description: 'Select the 3rd product to feature in the cart recommendations carousel.',
+    },
+    {
+      key: 'cart_rec_badge_3',
+      label: 'Product #3 Custom Badge (Optional Override)',
+      type: 'text',
+      defaultValue: '',
+      description: 'Optional custom badge. If left blank, automatically syncs the badge label from the Products page.',
+    },
+    {
+      key: 'cart_rec_product_4',
+      label: 'Recommended Product #4',
+      type: 'product_select',
+      defaultValue: 'classic-trio-bundle',
+      description: 'Select the 4th product to feature in the cart recommendations carousel.',
+    },
+    {
+      key: 'cart_rec_badge_4',
+      label: 'Product #4 Custom Badge (Optional Override)',
+      type: 'text',
+      defaultValue: '',
+      description: 'Optional custom badge. If left blank, automatically syncs the badge label from the Products page.',
+    },
+  ],
+  'track-order': [
+    {
+      key: 'track_eyebrow',
+      label: 'Page Pill / Eyebrow',
+      type: 'text',
+      defaultValue: 'Real-Time Harvest & Delivery Tracking',
+      description: 'The small pill badge above the headline on the track order page.',
+    },
+    {
+      key: 'track_title',
+      label: 'Page Headline',
+      type: 'text',
+      defaultValue: 'Track Your Order',
+      description: 'Main editorial heading on the track order page.',
+    },
+    {
+      key: 'track_subtitle',
+      label: 'Page Subtitle',
+      type: 'textarea',
+      defaultValue:
+        'Enter your order number along with your phone number and email address to view the live harvest and delivery status across Chandigarh, Mohali & Panchkula.',
+      description: 'The descriptive sentence under the headline.',
+    },
+    {
+      key: 'track_support_phone',
+      label: 'Support Phone / WhatsApp Number',
+      type: 'text',
+      defaultValue: '+91 98XXXXXXXX',
+      description: 'Phone or WhatsApp number displayed in the help and delivery inquiries section.',
+    },
+    {
+      key: 'track_support_email',
+      label: 'Support Email Address',
+      type: 'text',
+      defaultValue: 'hello@wildaboutgreens.com',
+      description: 'Contact email displayed in the customer help section.',
+    },
+    {
+      key: 'track_harvest_note',
+      label: 'Harvest Promise Note',
+      type: 'text',
+      defaultValue: 'Grown with mineral water & clean air · Harvested morning of delivery in Tricity',
+      description: 'Short trust badge displayed on the tracking result card.',
     },
   ],
 };

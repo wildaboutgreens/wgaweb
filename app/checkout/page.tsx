@@ -66,12 +66,16 @@ export default function CheckoutPage() {
     setError(null);
 
     // Client-side validation
-    if (!form.name || !form.phone || !form.address || !form.pincode) {
+    if (!form.name || !form.phone || !form.email || !form.address || !form.pincode) {
       setError('Please fill in all required fields.');
       return;
     }
     if (!/^\d{10}$/.test(form.phone)) {
       setError('Please enter a valid 10-digit phone number.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError('Please enter a valid email address.');
       return;
     }
     if (!isServiceablePincode(form.pincode)) {
@@ -80,6 +84,8 @@ export default function CheckoutPage() {
     }
 
     setLoading(true);
+
+    const hasSubscription = items.some((i) => i.isSubscription);
 
     try {
       // Create order
@@ -90,13 +96,17 @@ export default function CheckoutPage() {
           items: items.map((item) => ({
             variantId: item.variantId,
             quantity: item.quantity,
+            isSubscription: Boolean(item.isSubscription),
+            subscriptionTrays: item.subscriptionTrays,
+            subscriptionWeeks: item.subscriptionWeeks,
           })),
-          purchaseType: 'one_time',
-          customerName: form.name,
-          customerPhone: form.phone,
-          customerEmail: form.email || undefined,
-          deliveryAddress: form.address,
-          deliveryPincode: form.pincode,
+          purchaseType: hasSubscription ? 'subscription' : 'one_time',
+          subscriptionFrequency: hasSubscription ? 'weekly' : undefined,
+          customerName: form.name.trim(),
+          customerPhone: form.phone.trim(),
+          customerEmail: form.email.trim(),
+          deliveryAddress: form.address.trim(),
+          deliveryPincode: form.pincode.trim(),
         }),
       });
 
@@ -205,11 +215,18 @@ export default function CheckoutPage() {
 
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email Address *
+          </label>
           <input
-            type="email" id="email" name="email" value={form.email} onChange={handleChange}
+            type="email"
+            id="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            required
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-            placeholder="For order confirmation"
+            placeholder="For order confirmation & tracking"
           />
         </div>
 
@@ -239,15 +256,33 @@ export default function CheckoutPage() {
         <div className="p-4 bg-gray-50 rounded-xl">
           <h3 className="font-semibold text-gray-900 mb-3">Order Summary</h3>
           <ul className="space-y-2 text-sm">
-            {items.map((item) => (
-              <li key={item.variantId} className="flex justify-between">
-                <span className="text-gray-600">
-                  {item.productName} ({item.variantLabel}) × {item.quantity}
-                </span>
-                <span className="font-medium">{formatPrice(item.pricePaise * item.quantity)}</span>
-              </li>
-            ))}
+            {items.map((item) => {
+              const itemKey = item.id || item.variantId;
+              return (
+                <li key={itemKey} className="flex justify-between items-start gap-2">
+                  <div className="min-w-0">
+                    <span className="text-gray-700 font-medium block">
+                      {item.productName} × {item.quantity}
+                    </span>
+                    <span className="text-xs text-gray-500 block">
+                      {item.variantLabel}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-gray-900 shrink-0">
+                    {formatPrice(item.pricePaise * item.quantity)}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
+          {items.some((i) => i.isSubscription) && (
+            <div className="mt-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center gap-1.5">
+              <span>🌱</span>
+              <span>
+                <strong>Subscription Plan:</strong> Trays will be harvested live and delivered weekly according to your schedule.
+              </span>
+            </div>
+          )}
           <div className="border-t mt-3 pt-3 flex justify-between text-lg font-bold">
             <span>Total</span>
             <span className="text-green-700">{formatPrice(total)}</span>

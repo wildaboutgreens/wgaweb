@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
-const VALID_FULFILLMENT_STATUSES = ['unfulfilled', 'shipped', 'delivered', 'cancelled'];
+const VALID_FULFILLMENT_STATUSES = ['unfulfilled', 'fulfilled', 'shipped', 'delivered', 'cancelled'];
 
 // GET /api/admin/orders/[id]: full order detail with line items + product names
 export async function GET(
@@ -24,6 +24,7 @@ export async function GET(
 
     const items = await sql`
       SELECT oi.id, oi.quantity, oi.unit_price_paise,
+             oi.subscription_trays, oi.subscription_weeks,
              pv.label, pv.net_weight_grams,
              p.name AS product_name, p.slug AS product_slug
       FROM order_items oi

@@ -54,15 +54,37 @@ export default function AdminBlogPage() {
   const [saving, setSaving] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'article' | 'recipe'>('all');
 
+  // Pinned recipes on Homepage
+  const [allRecipes, setAllRecipes] = useState<{ id: string; slug: string; title: string; is_published: boolean }[]>([]);
+  const [pinned1, setPinned1] = useState('');
+  const [pinned2, setPinned2] = useState('');
+  const [savingPinned, setSavingPinned] = useState(false);
+  const [pinnedSavedMessage, setPinnedSavedMessage] = useState(false);
+
   const loadPosts = useCallback(async () => {
     const url = filterType === 'all' ? '/api/admin/blog' : `/api/admin/blog?type=${filterType}`;
     const res = await adminFetch(url);
     if (res.ok) setPosts(await res.json());
   }, [filterType]);
 
+  const loadPinnedRecipes = useCallback(async () => {
+    try {
+      const res = await adminFetch('/api/admin/blog/pinned-recipes');
+      if (res.ok) {
+        const data = await res.json();
+        setAllRecipes(data.recipes || []);
+        setPinned1(data.pinned1 || '');
+        setPinned2(data.pinned2 || '');
+      }
+    } catch (err) {
+      console.error('Error loading pinned recipes:', err);
+    }
+  }, []);
+
   useEffect(() => {
     loadPosts();
-  }, [loadPosts]);
+    loadPinnedRecipes();
+  }, [loadPosts, loadPinnedRecipes]);
 
   const openEdit = async (id: string) => {
     const res = await adminFetch(`/api/admin/blog/${id}`);
@@ -109,6 +131,7 @@ export default function AdminBlogPage() {
           setIsNew(false);
           setEditing(null);
           loadPosts();
+          loadPinnedRecipes();
         }
       } else if (editing) {
         const res = await adminFetch(`/api/admin/blog/${editing.id}`, {
@@ -119,6 +142,7 @@ export default function AdminBlogPage() {
         if (res.ok) {
           setEditing(null);
           loadPosts();
+          loadPinnedRecipes();
         }
       }
     } finally {
@@ -131,6 +155,25 @@ export default function AdminBlogPage() {
     await adminFetch(`/api/admin/blog/${id}`, { method: 'DELETE' });
     setEditing(null);
     loadPosts();
+    loadPinnedRecipes();
+  };
+
+  const handleSavePinned = async () => {
+    setSavingPinned(true);
+    try {
+      const res = await adminFetch('/api/admin/blog/pinned-recipes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned1, pinned2 }),
+      });
+      if (res.ok) {
+        setPinnedSavedMessage(true);
+        setTimeout(() => setPinnedSavedMessage(false), 3500);
+        loadPosts();
+      }
+    } finally {
+      setSavingPinned(false);
+    }
   };
 
   if (editing || isNew) {
@@ -576,6 +619,110 @@ export default function AdminBlogPage() {
         </button>
       </div>
 
+      {/* Homepage Featured Recipes (Recipe Khazana) */}
+      <div className="mb-6 bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/30 border border-emerald-200 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">📌</span>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900">
+                Homepage Featured Recipes (Recipe Khazana)
+              </h2>
+              <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                Live on Homepage
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Select the 2 recipes showcased on the homepage Recipe Khazana section as <span className="font-mono font-semibold text-emerald-900">Recipe 01 / 02</span> and <span className="font-mono font-semibold text-emerald-900">Recipe 02 / 02</span>.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {pinnedSavedMessage && (
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-md border border-emerald-300">
+                ✓ Pinned recipes updated!
+              </span>
+            )}
+            <button
+              onClick={handleSavePinned}
+              disabled={savingPinned}
+              className="px-4 py-2 bg-[#1C3F2D] hover:bg-[#122A1F] text-white text-xs sm:text-sm font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {savingPinned ? 'Saving...' : 'Save Pinned Recipes'}
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          {/* Slot 1 */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-mono font-bold tracking-wider uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                Recipe 01 / 02
+              </span>
+              {pinned1 && (
+                <a
+                  href={`/recipe/${pinned1}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-blue-600 hover:underline"
+                >
+                  View recipe ↗
+                </a>
+              )}
+            </div>
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+              Select First Featured Recipe:
+            </label>
+            <select
+              value={pinned1}
+              onChange={(e) => setPinned1(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+            >
+              <option value="">-- Select Recipe 01 --</option>
+              {allRecipes.map((r) => (
+                <option key={r.id} value={r.slug}>
+                  {r.title} {!r.is_published ? '(Draft)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Slot 2 */}
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-mono font-bold tracking-wider uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                Recipe 02 / 02
+              </span>
+              {pinned2 && (
+                <a
+                  href={`/recipe/${pinned2}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-blue-600 hover:underline"
+                >
+                  View recipe ↗
+                </a>
+              )}
+            </div>
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+              Select Second Featured Recipe:
+            </label>
+            <select
+              value={pinned2}
+              onChange={(e) => setPinned2(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+            >
+              <option value="">-- Select Recipe 02 --</option>
+              {allRecipes.map((r) => (
+                <option key={r.id} value={r.slug}>
+                  {r.title} {!r.is_published ? '(Draft)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-4">
         <button
@@ -627,7 +774,19 @@ export default function AdminBlogPage() {
               return (
               <tr key={p.id} className="border-b last:border-0 hover:bg-gray-50">
                 <td className="px-4 py-3">
-                  <div className="font-medium text-gray-900">{p.title}</div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-gray-900">{p.title}</span>
+                    {p.slug === pinned1 && (
+                      <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-300 shrink-0">
+                        📌 Recipe 01 / 02
+                      </span>
+                    )}
+                    {p.slug === pinned2 && (
+                      <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-300 shrink-0">
+                        📌 Recipe 02 / 02
+                      </span>
+                    )}
+                  </div>
                   {cats.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {cats.map((c, i) => (

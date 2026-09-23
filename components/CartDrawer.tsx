@@ -95,6 +95,14 @@ export default function CartDrawer() {
   const total = totalPaise();
   const itemCount = totalItems();
 
+  const [cartContent, setCartContent] = useState<Record<string, string>>({
+    cart_empty_title: 'This cart is empty inside!',
+    cart_empty_subtitle:
+      'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.',
+    cart_mascot_variant: 'pleading',
+    cart_rec_eyebrow: 'START WITH',
+    cart_rec_title: 'Our Bestsellers',
+  });
   const [bestsellers, setBestsellers] = useState<BestsellerProduct[]>(DEFAULT_BESTSELLERS);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
   const carouselRef = useRef<HTMLDivElement | null>(null);
@@ -111,41 +119,85 @@ export default function CartDrawer() {
     };
   }, [isOpen]);
 
-  // Fetch live products from DB
+  // Fetch live cart-drawer content and products from DB
   useEffect(() => {
     if (!isOpen) return;
 
-    fetch('/api/products')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!Array.isArray(data) || data.length === 0) return;
+    Promise.all([
+      fetch('/api/content/cart-drawer')
+        .then((res) => (res.ok ? res.json() : {}))
+        .catch(() => ({})),
+      fetch('/api/products')
+        .then((res) => (res.ok ? res.json() : []))
+        .catch(() => []),
+    ]).then(([rawContent, rawProducts]) => {
+      const contentData = (rawContent || {}) as Record<string, string>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const productsData = (rawProducts || []) as any[];
 
-        setBestsellers((prev) =>
-          prev.map((item) => {
+      if (contentData && typeof contentData === 'object' && Object.keys(contentData).length > 0) {
+        setCartContent((prev) => ({ ...prev, ...contentData }));
+      }
+
+      if (Array.isArray(productsData) && productsData.length > 0) {
+        const slotKeys = [
+          { prodKey: 'cart_rec_product_1', badgeKey: 'cart_rec_badge_1', defaultSlug: 'broccoli-microgreens', defaultBadge: '★ BESTSELLER', bg: '#EEF5EF', badgeBg: '#1C3F2D', badgeColor: '#FFFDF8' },
+          { prodKey: 'cart_rec_product_2', badgeKey: 'cart_rec_badge_2', defaultSlug: 'sunflower-microgreens', defaultBadge: '☀ FAVORITE', bg: '#FAF4EB', badgeBg: '#8C5815', badgeColor: '#FFFDF8' },
+          { prodKey: 'cart_rec_product_3', badgeKey: 'cart_rec_badge_3', defaultSlug: 'radish-microgreens', defaultBadge: '🌱 PEAK FLAVOUR', bg: '#F0F6F1', badgeBg: '#2D7A4D', badgeColor: '#FFFDF8' },
+          { prodKey: 'cart_rec_product_4', badgeKey: 'cart_rec_badge_4', defaultSlug: 'classic-trio-bundle', defaultBadge: '✦ VALUE PACK', bg: '#EEF2EE', badgeBg: '#122A1F', badgeColor: '#CFFA57' },
+        ];
+
+        const mapped: BestsellerProduct[] = [];
+        slotKeys.forEach((slot, idx) => {
+          // If admin has set the key or fallback to defaultSlug
+          const chosenSlug = contentData?.[slot.prodKey] !== undefined ? contentData[slot.prodKey] : slot.defaultSlug;
+          if (!chosenSlug) return; // Client explicitly chose None / hide slot
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const found = productsData.find((p: any) => p.slug === chosenSlug);
+          if (found && found.variants && found.variants.length > 0) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const found = data.find((p: any) => p.slug === item.slug);
-            if (found && found.variants && found.variants.length > 0) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const activeVar = found.variants.find((v: any) => v.is_active) || found.variants[0];
-              const price = activeVar.price_paise;
-              const approxMrp = Math.round(price * 1.25);
-              const discountPaise = approxMrp - price;
-              return {
-                ...item,
-                variantId: activeVar.id,
-                variantLabel: activeVar.label || item.variantLabel,
-                pricePaise: price,
-                mrpPaise: approxMrp,
-                discountOff: `₹${Math.round(discountPaise / 100)} OFF`,
-                maxStock: activeVar.stock_qty || item.maxStock,
-                photo: found.thumbnail_url || found.images?.[0]?.image_url || item.photo,
-              };
-            }
-            return item;
-          })
-        );
-      })
-      .catch(() => {});
+            const activeVar = found.variants.find((v: any) => v.is_active) || found.variants[0];
+            const price = activeVar.price_paise;
+            const approxMrp = Math.round(price * 1.25);
+            const discountPaise = approxMrp - price;
+            const customBadge = contentData?.[slot.badgeKey]?.trim();
+            const rawBadge = customBadge || found.badge_label || slot.defaultBadge;
+            const badgeLabel =
+              rawBadge.startsWith('★') ||
+              rawBadge.startsWith('☀') ||
+              rawBadge.startsWith('🌱') ||
+              rawBadge.startsWith('✦') ||
+              rawBadge.startsWith('🏷️')
+                ? rawBadge
+                : `★ ${rawBadge.toUpperCase()}`;
+
+            mapped.push({
+              id: found.id,
+              slug: found.slug,
+              name: found.name,
+              variantId: activeVar.id,
+              variantLabel: activeVar.label || '100g living tray',
+              pricePaise: price,
+              mrpPaise: approxMrp,
+              discountOff: `₹${Math.round(discountPaise / 100)} OFF`,
+              badge: {
+                text: badgeLabel,
+                bg: slot.badgeBg,
+                color: slot.badgeColor,
+              },
+              cardBg: slot.bg,
+              photo: found.thumbnail_url || found.images?.[0]?.image_url || DEFAULT_BESTSELLERS[idx % DEFAULT_BESTSELLERS.length].photo,
+              maxStock: activeVar.stock_qty || 25,
+            });
+          }
+        });
+
+        if (mapped.length > 0) {
+          setBestsellers(mapped);
+        }
+      }
+    });
   }, [isOpen]);
 
   const handleQuickAdd = (product: BestsellerProduct) => {
@@ -216,15 +268,19 @@ export default function CartDrawer() {
                 {/* Quirky Hero */}
                 <div className="pt-6 pb-5 px-6 text-center bg-[#FFFDF8] flex flex-col items-center">
                   <h3 className="font-serif font-semibold text-2xl text-[#151F19] tracking-tight">
-                    This cart is empty inside!
+                    {cartContent.cart_empty_title || 'This cart is empty inside!'}
                   </h3>
 
                   <div className="my-2">
-                    <CartMascot className="w-36 h-36" />
+                    <CartMascot
+                      variant={cartContent.cart_mascot_variant || 'pleading'}
+                      className="w-36 h-36"
+                    />
                   </div>
 
                   <p className="font-handwriting text-xl sm:text-[22px] text-[#2D7A4D] font-bold leading-snug max-w-[280px] mx-auto">
-                    Fill it, before the cart takes a drastic step it&apos;ll regret the rest of its life.
+                    {cartContent.cart_empty_subtitle ||
+                      'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.'}
                   </p>
                 </div>
 
@@ -234,11 +290,11 @@ export default function CartDrawer() {
                     {/* Eyebrow & Fraunces Heading */}
                     <div className="text-center mb-4">
                       <span className="font-mono text-[11px] tracking-[0.14em] uppercase text-[#5C6B60] font-semibold block mb-1">
-                        start with
+                        {cartContent.cart_rec_eyebrow || 'start with'}
                       </span>
                       <div className="inline-block relative">
                         <h4 className="font-serif font-bold text-2xl text-[#151F19] tracking-tight">
-                          Our Bestsellers
+                          {cartContent.cart_rec_title || 'Our Bestsellers'}
                         </h4>
                         <div className="w-12 h-0.5 bg-[#1C3F2D] mx-auto mt-1.5 rounded-full" />
                       </div>
@@ -347,9 +403,10 @@ export default function CartDrawer() {
                 <div className="p-4 space-y-3">
                   {items.map((item) => {
                     const thumb = getProductThumbnail(item.productSlug, item.thumbnailUrl);
+                    const itemKey = item.id || item.variantId;
                     return (
                       <div
-                        key={item.variantId}
+                        key={itemKey}
                         className="flex gap-3.5 p-3.5 bg-[#FFFDF8] border border-[#E4DDC8] rounded-2xl shadow-xs hover:border-[#1C3F2D]/40 transition-colors"
                       >
                         {/* Thumbnail */}
@@ -374,7 +431,7 @@ export default function CartDrawer() {
                                 {item.productName}
                               </Link>
                               <button
-                                onClick={() => removeItem(item.variantId)}
+                                onClick={() => removeItem(itemKey)}
                                 className="text-[#5C6B60] hover:text-red-600 transition-colors p-0.5 text-xs font-mono shrink-0"
                               >
                                 Remove
@@ -383,6 +440,14 @@ export default function CartDrawer() {
                             <p className="font-mono text-xs text-[#5C6B60] mt-0.5">
                               {item.variantLabel}
                             </p>
+                            {item.isSubscription && (
+                              <div className="mt-1">
+                                <span className="inline-flex items-center gap-1 font-mono text-[10px] text-[#2D7A4D] bg-[#EBF5EE] px-2 py-0.5 rounded border border-[#C5DEC9] font-medium">
+                                  <span>🔁</span>
+                                  <span>Weekly: {item.subscriptionTrays} {item.subscriptionTrays === 1 ? 'tray' : 'trays'}/wk · {item.subscriptionWeeks} wks</span>
+                                </span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-[#E4DDC8]/60">
@@ -393,7 +458,7 @@ export default function CartDrawer() {
                             {/* Stepper */}
                             <div className="flex items-center border border-[#E4DDC8] rounded-lg bg-[#F3EEE0]/50 overflow-hidden shadow-2xs">
                               <button
-                                onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
+                                onClick={() => updateQuantity(itemKey, item.quantity - 1)}
                                 className="p-1 hover:bg-[#E4DDC8] text-[#151F19] transition-colors"
                                 aria-label="Decrease quantity"
                               >
@@ -403,7 +468,7 @@ export default function CartDrawer() {
                                 {item.quantity}
                               </span>
                               <button
-                                onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                                onClick={() => updateQuantity(itemKey, item.quantity + 1)}
                                 disabled={item.quantity >= item.maxStock}
                                 className="p-1 hover:bg-[#E4DDC8] text-[#151F19] transition-colors disabled:opacity-30"
                                 aria-label="Increase quantity"

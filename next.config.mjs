@@ -24,6 +24,25 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/recipe-khazana',
+        destination: '/recipe',
+        permanent: true,
+      },
+      {
+        source: '/recipe-khazana/:slug',
+        destination: '/recipe/:slug',
+        permanent: true,
+      },
+      {
+        source: '/blog',
+        destination: '/pathshala',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
