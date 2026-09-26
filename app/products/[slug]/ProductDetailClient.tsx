@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
+import { LeafFavicon } from '@/components/icons';
 import { Product, Variant, RelatedProduct, Review, HighlightBadge, WhyChoosePin, ProductFAQ, DetailAccordion } from './page';
 
 const DEFAULT_DETAIL_ACCORDIONS: DetailAccordion[] = [
@@ -585,7 +586,7 @@ export default function ProductDetailClient({
               <div className="relative rounded-2xl overflow-hidden aspect-[1/1.08] bg-gradient-to-br from-[#EDE7D6] to-[#E1DAC3] p-4 sm:p-7 flex items-center justify-center border border-[#E4DDC8] shadow-sm">
                 {/* Badge */}
                 <span className="absolute top-4 left-4 z-10 font-mono text-[10px] font-bold tracking-wider uppercase px-3 py-1.5 rounded-full bg-[#9C4A5C] text-[#FFFDF8] shadow-sm flex items-center gap-1.5">
-                  <span>🌱</span>
+                  <LeafFavicon className="w-3.5 h-3.5" />
                   <span>{product.badge_label || '100% Pesticide Free'}</span>
                 </span>
 
@@ -1411,7 +1412,7 @@ export default function ProductDetailClient({
                           onClick={() => handleQuickAdd(item)}
                           className="w-full py-2.5 px-4 rounded-full bg-[#1C372A] hover:bg-[#12241C] text-[#FFFDF8] font-mono text-[11.5px] font-bold uppercase tracking-wider transition-all text-center cursor-pointer shadow-sm active:scale-[0.98]"
                         >
-                          SHOP SET · {formatCleanPrice(item.price_paise)}
+                          ADD TO CART · {formatCleanPrice(item.price_paise)}
                         </button>
                       ) : (
                         <button
@@ -1419,7 +1420,7 @@ export default function ProductDetailClient({
                           onClick={() => handleQuickAdd(item)}
                           className="w-full py-2.5 px-4 rounded-full border border-[#151F19] bg-transparent text-[#151F19] font-mono text-[11.5px] font-bold uppercase tracking-wider hover:bg-[#151F19] hover:text-white transition-all text-center cursor-pointer active:scale-[0.98]"
                         >
-                          ADD TO BOX · {formatCleanPrice(item.price_paise)}
+                          ADD TO CART · {formatCleanPrice(item.price_paise)}
                         </button>
                       )}
                     </div>

@@ -164,7 +164,7 @@ export default function Footer() {
               <Link href="/products?category=bundle" className="block text-[14.5px] text-[#FFFDF8]/75 hover:text-[#CFFA57] transition-colors">
                 Subscriptions &amp; Bundles
               </Link>
-              <Link href="/recipe" className="block text-[14.5px] text-[#FFFDF8]/75 hover:text-[#CFFA57] transition-colors">
+              <Link href="/recipes" className="block text-[14.5px] text-[#FFFDF8]/75 hover:text-[#CFFA57] transition-colors">
                 Recipe Khazana
               </Link>
               <Link href="/cart" className="block text-[14.5px] text-[#FFFDF8]/75 hover:text-[#CFFA57] transition-colors">
@@ -244,8 +244,8 @@ export default function Footer() {
               <Link href="/terms-and-conditions" className="text-[#FFFDF8]/60 hover:text-[#CFFA57] transition-colors">
                 Terms &amp; Conditions
               </Link>
-              <Link href="/returns-and-exchange" className="text-[#FFFDF8]/60 hover:text-[#CFFA57] transition-colors">
-                Returns &amp; Exchange
+              <Link href="/shipping-and-returns" className="text-[#FFFDF8]/60 hover:text-[#CFFA57] transition-colors">
+                Shipping &amp; Returns
               </Link>
               <Link href="/contact-us" className="text-[#FFFDF8]/60 hover:text-[#CFFA57] transition-colors">
                 Contact Us

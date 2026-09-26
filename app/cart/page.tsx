@@ -217,9 +217,8 @@ export default function CartPage() {
             <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#151F19] tracking-tight">
               Shopping Cart
             </h1>
-            <p className="font-mono text-xs text-[#5C6B60] uppercase tracking-wider mt-1 flex items-center gap-1.5">
-              <span>🌱</span>
-              <span>Harvested live on delivery day · Chandigarh · Mohali · Panchkula</span>
+            <p className="font-mono text-xs text-[#5C6B60] uppercase tracking-wider mt-1">
+              Chandigarh · Mohali · Panchkula
             </p>
           </div>
 
@@ -358,9 +357,6 @@ export default function CartPage() {
                   Add living bestsellers to your box
                 </h3>
               </div>
-              <span className="font-mono text-xs text-[#2D7A4D] font-bold hidden sm:inline-block">
-                🌱 Harvested fresh together
-              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -433,7 +429,7 @@ export default function CartPage() {
                 </span>
               </span>
               <span className="font-mono text-xs text-[#3E8F52] font-bold uppercase">
-                Free on harvest morning
+                FREE
               </span>
             </div>
           </div>
@@ -442,7 +438,7 @@ export default function CartPage() {
             <div>
               <span className="font-serif font-bold text-xl text-[#151F19] block">Total</span>
               <span className="font-mono text-[11px] text-[#5C6B60]">
-                Taxes &amp; Tricity harvest shipping included
+                Taxes &amp; Tricity delivery included
               </span>
             </div>
             <span className="font-mono font-bold text-2xl sm:text-3xl text-[#122A1F]">

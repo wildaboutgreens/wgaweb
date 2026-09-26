@@ -27,18 +27,63 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        source: '/recipe',
+        destination: '/recipes',
+        permanent: true,
+      },
+      {
+        source: '/recipe/:slug',
+        destination: '/recipes/:slug',
+        permanent: true,
+      },
+      {
         source: '/recipe-khazana',
-        destination: '/recipe',
+        destination: '/recipes',
         permanent: true,
       },
       {
         source: '/recipe-khazana/:slug',
-        destination: '/recipe/:slug',
+        destination: '/recipes/:slug',
         permanent: true,
       },
       {
         source: '/blog',
         destination: '/pathshala',
+        permanent: true,
+      },
+      {
+        source: '/terms-of-service',
+        destination: '/terms-and-conditions',
+        permanent: true,
+      },
+      {
+        source: '/terms',
+        destination: '/terms-and-conditions',
+        permanent: true,
+      },
+      {
+        source: '/privacy',
+        destination: '/privacy-policy',
+        permanent: true,
+      },
+      {
+        source: '/returns-and-exchange',
+        destination: '/shipping-and-returns',
+        permanent: false,
+      },
+      {
+        source: '/returns',
+        destination: '/shipping-and-returns',
+        permanent: true,
+      },
+      {
+        source: '/shipping',
+        destination: '/shipping-and-returns',
+        permanent: true,
+      },
+      {
+        source: '/shipping-policy',
+        destination: '/shipping-and-returns',
         permanent: true,
       },
     ];

@@ -661,7 +661,7 @@ export default function AdminBlogPage() {
               </span>
               {pinned1 && (
                 <a
-                  href={`/recipe/${pinned1}`}
+                  href={`/recipes/${pinned1}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] text-blue-600 hover:underline"
@@ -695,7 +695,7 @@ export default function AdminBlogPage() {
               </span>
               {pinned2 && (
                 <a
-                  href={`/recipe/${pinned2}`}
+                  href={`/recipes/${pinned2}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[11px] text-blue-600 hover:underline"

@@ -19,7 +19,7 @@ export default async function BlogPostRedirect({ params }: { params: { slug: str
 
     const postType = (posts[0] as { post_type: string }).post_type;
     if (postType === 'recipe') {
-      permanentRedirect(`/recipe/${params.slug}`);
+      permanentRedirect(`/recipes/${params.slug}`);
     } else {
       permanentRedirect(`/pathshala/${params.slug}`);
     }

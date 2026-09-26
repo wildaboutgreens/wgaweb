@@ -65,9 +65,19 @@ const KNOWN_PUBLIC_PREFIXES = [
   '/track-order',
   '/our-story',
   '/pathshala',
+  '/recipes',
   '/recipe',
   '/blog',
   '/recipe-khazana',
+  '/contact-us',
+  '/policies',
+  '/privacy-policy',
+  '/terms-and-conditions',
+  '/terms-of-service',
+  '/shipping-and-returns',
+  '/returns-and-exchange',
+  '/shipping',
+  '/health-goals',
 ];
 
 const ADMIN_SUBPAGES = [

@@ -6,6 +6,7 @@ import Script from 'next/script';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
+import { LeafFavicon } from '@/components/icons';
 import { Product, WhyChoosePin, Review, SamplerVariantData } from './page';
 
 interface ProductMeta {
@@ -577,9 +578,9 @@ export default function ProductListClient({
                                 backgroundColor: meta.badge.bg,
                                 color: meta.badge.color,
                               }}
-                              className="absolute top-3 left-3 z-20 font-mono text-[9.5px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1"
+                              className="absolute top-3 left-3 z-20 font-mono text-[9.5px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1.5"
                             >
-                              <span>🌱</span>
+                              <LeafFavicon className="w-3.5 h-3.5" />
                               <span>{product.badge_label || meta.badge.text}</span>
                             </span>
 
@@ -625,7 +626,7 @@ export default function ProductListClient({
                               <div className="flex-1 p-2.5 flex flex-col justify-between">
                                 <div>
                                   <div className="font-serif font-bold text-[8.5px] tracking-wide text-[#1C3F2D] flex items-center gap-1 mb-1">
-                                    <span>🌱</span> WAG
+                                    <LeafFavicon className="w-2.5 h-2.5" /> WAG
                                   </div>
                                   <h5 className="font-serif font-bold text-[11.5px] leading-tight text-[#151F19] mb-1 line-clamp-2">
                                     {product.name}

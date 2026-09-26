@@ -67,7 +67,7 @@ const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
     pricePaise: 7900,
     mrpPaise: 9900,
     discountOff: '₹20 OFF',
-    badge: { text: '🌱 PEAK FLAVOUR', bg: '#2D7A4D', color: '#FFFDF8' },
+    badge: { text: 'PEAK FLAVOUR', bg: '#2D7A4D', color: '#FFFDF8' },
     cardBg: '#F0F6F1',
     photo: 'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=800&auto=format&fit=crop',
     maxStock: 35,
@@ -143,7 +143,7 @@ export default function CartDrawer() {
         const slotKeys = [
           { prodKey: 'cart_rec_product_1', badgeKey: 'cart_rec_badge_1', defaultSlug: 'broccoli-microgreens', defaultBadge: '★ BESTSELLER', bg: '#EEF5EF', badgeBg: '#1C3F2D', badgeColor: '#FFFDF8' },
           { prodKey: 'cart_rec_product_2', badgeKey: 'cart_rec_badge_2', defaultSlug: 'sunflower-microgreens', defaultBadge: '☀ FAVORITE', bg: '#FAF4EB', badgeBg: '#8C5815', badgeColor: '#FFFDF8' },
-          { prodKey: 'cart_rec_product_3', badgeKey: 'cart_rec_badge_3', defaultSlug: 'radish-microgreens', defaultBadge: '🌱 PEAK FLAVOUR', bg: '#F0F6F1', badgeBg: '#2D7A4D', badgeColor: '#FFFDF8' },
+          { prodKey: 'cart_rec_product_3', badgeKey: 'cart_rec_badge_3', defaultSlug: 'radish-microgreens', defaultBadge: 'PEAK FLAVOUR', bg: '#F0F6F1', badgeBg: '#2D7A4D', badgeColor: '#FFFDF8' },
           { prodKey: 'cart_rec_product_4', badgeKey: 'cart_rec_badge_4', defaultSlug: 'classic-trio-bundle', defaultBadge: '✦ VALUE PACK', bg: '#EEF2EE', badgeBg: '#122A1F', badgeColor: '#CFFA57' },
         ];
 
@@ -363,12 +363,6 @@ export default function CartDrawer() {
                                   {prod.discountOff}
                                 </span>
                               </div>
-
-                              {/* Reassurance Tag */}
-                              <p className="font-mono text-[10.5px] text-[#2D7A4D] font-medium mt-1.5 flex items-center gap-1">
-                                <span>🌱</span>
-                                <span>Harvested live to order</span>
-                              </p>
                             </div>
 
                             {/* Full-width ADD Button in Website Forest Green */}
@@ -393,10 +387,9 @@ export default function CartDrawer() {
             ) : (
               /* ================= FILLED STATE ================= */
               <div className="flex-1 flex flex-col overflow-y-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {/* Freshness announcement banner */}
+                {/* Delivery announcement banner */}
                 <div className="bg-[#EBF5EE] text-[#1C3F2D] font-mono text-xs font-medium px-4 py-2.5 border-b border-[#C5DEC9] flex items-center justify-center gap-1.5 shrink-0">
-                  <span>🌱</span>
-                  <span>Cut fresh to order · Delivered within hours in Tricity</span>
+                  <span>Delivered within hours in Chandigarh, Mohali &amp; Panchkula</span>
                 </div>
 
                 {/* Items List */}
@@ -410,7 +403,7 @@ export default function CartDrawer() {
                         className="flex gap-3.5 p-3.5 bg-[#FFFDF8] border border-[#E4DDC8] rounded-2xl shadow-xs hover:border-[#1C3F2D]/40 transition-colors"
                       >
                         {/* Thumbnail */}
-                        <div className="w-18 h-18 sm:w-20 sm:h-20 bg-[#F3EEE0] rounded-xl overflow-hidden shrink-0 border border-[#E4DDC8] relative">
+                        <div className="w-[72px] h-[72px] sm:w-20 sm:h-20 bg-[#F3EEE0] rounded-xl overflow-hidden shrink-0 border border-[#E4DDC8] relative">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={thumb}

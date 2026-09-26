@@ -125,7 +125,7 @@ export default function RecipeClient({
                 <article key={post.id} className="group flex flex-col">
                   {/* Photo (Clean rectangular presentation, smooth hover zoom) */}
                   <Link
-                    href={`/recipe/${post.slug}`}
+                    href={`/recipes/${post.slug}`}
                     className="block aspect-[16/10] w-full overflow-hidden bg-[#EDEAE1] relative"
                   >
                     {post.cover_image_url ? (
@@ -145,7 +145,7 @@ export default function RecipeClient({
                   {/* Centered Title & Found in line below photo */}
                   <div className="mt-3.5 sm:mt-4 text-center flex flex-col items-center px-1">
                     <h2 className="font-sans font-semibold text-xs sm:text-[14px] uppercase tracking-[0.06em] text-[#6CA030] hover:text-[#527d22] transition-colors line-clamp-2 leading-snug">
-                      <Link href={`/recipe/${post.slug}`}>{post.title}</Link>
+                      <Link href={`/recipes/${post.slug}`}>{post.title}</Link>
                     </h2>
 
                     {categoriesText && (

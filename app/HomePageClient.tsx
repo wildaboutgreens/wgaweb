@@ -645,7 +645,7 @@ export default function HomePageClient({
                   variants={scrollItemVariants}
                 >
                   <Link
-                    href={`/recipe/${recipe.slug}`}
+                    href={`/recipes/${recipe.slug}`}
                     className="group block pl-4 border-l-2 border-[#CFFA57]/60 hover:border-[#CFFA57] hover:translate-x-1 transition-all duration-300 cursor-pointer"
                   >
                     <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[#B7E23F] block mb-2 font-semibold">
@@ -666,7 +666,7 @@ export default function HomePageClient({
               <>
                 <motion.div variants={scrollItemVariants}>
                   <Link
-                    href="/recipe"
+                    href="/recipes"
                     className="group block pl-4 border-l-2 border-[#CFFA57]/60 hover:border-[#CFFA57] hover:translate-x-1 transition-all duration-300 cursor-pointer"
                   >
                     <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[#B7E23F] block mb-2 font-semibold">
@@ -687,7 +687,7 @@ export default function HomePageClient({
 
                 <motion.div variants={scrollItemVariants}>
                   <Link
-                    href="/recipe"
+                    href="/recipes"
                     className="group block pl-4 border-l-2 border-[#CFFA57]/60 hover:border-[#CFFA57] hover:translate-x-1 transition-all duration-300 cursor-pointer"
                   >
                     <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-[#B7E23F] block mb-2 font-semibold">
@@ -717,7 +717,7 @@ export default function HomePageClient({
             viewport={{ once: true }}
           >
             <Link
-              href="/recipe"
+              href="/recipes"
               className="btn-primary-mockup font-bold text-sm shadow-lg hover:scale-105 transition-transform inline-block"
             >
               {content.recipes_cta_text || 'The Recipe Khazana →'}

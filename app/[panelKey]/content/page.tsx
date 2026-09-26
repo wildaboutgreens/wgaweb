@@ -361,7 +361,7 @@ export default function AdminContentPage() {
                     </select>
                     {form[field.key] && (
                       <a
-                        href={`/recipe/${form[field.key]}`}
+                        href={`/recipes/${form[field.key]}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="shrink-0 px-3 py-2 border border-gray-300 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-1 transition-colors"

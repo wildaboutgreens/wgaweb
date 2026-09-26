@@ -677,6 +677,29 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       description: 'Body content for the welcome email. Use plain text with line breaks.',
     },
   ],
+  'recipes': [
+    {
+      key: 'hero_image_url',
+      label: 'Hero Banner Image (Full-Width Panoramic)',
+      type: 'image_url',
+      defaultValue: '',
+      description: 'Upload a wide edge-to-edge panoramic food banner photo (~1920x600px recommended) for the Recipes page. Displayed full-bleed with no overlay text.',
+    },
+    {
+      key: 'hero_title',
+      label: 'Page Heading',
+      type: 'text',
+      defaultValue: 'All Recipes',
+      description: 'Page title displayed centered in crisp uppercase tracked editorial styling below the banner.',
+    },
+    {
+      key: 'hero_subtitle',
+      label: 'Page Subtitle (Optional)',
+      type: 'textarea',
+      defaultValue: 'Explore delicious and nutritious recipes crafted with fresh, living microgreens.',
+      description: 'Optional short introductory subtitle displayed centered below the heading.',
+    },
+  ],
   'recipe': [
     {
       key: 'hero_image_url',

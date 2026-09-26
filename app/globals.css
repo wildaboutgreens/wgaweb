@@ -40,6 +40,34 @@ body {
   color: var(--ink);
 }
 
+/* Suppress text editing caret cursor on non-editable elements, buttons, and links */
+*:not(input):not(textarea):not([contenteditable="true"]):not([contenteditable="true"] *) {
+  caret-color: transparent !important;
+}
+
+input,
+textarea,
+[contenteditable="true"],
+[contenteditable="true"] * {
+  caret-color: auto !important;
+}
+
+/* Prevent unwanted text selection / insertion carets on buttons and interactive navigation */
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+summary {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+
 .wrap {
   max-width: var(--maxw);
   margin: 0 auto;

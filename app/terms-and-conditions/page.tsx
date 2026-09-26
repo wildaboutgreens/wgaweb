@@ -97,7 +97,7 @@ export default function TermsAndConditionsPage() {
               </ul>
               <div className="pt-2">
                 <Link
-                  href="/returns-and-exchange"
+                  href="/shipping-and-returns"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#1C3F2D] text-white text-xs font-semibold hover:bg-[#122A1F] transition-all shadow-sm"
                 >
                   <span>Go to Returns &amp; Exchange Portal</span>
