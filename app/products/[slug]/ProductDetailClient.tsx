@@ -288,13 +288,17 @@ export interface OtherGreenItem {
 
 export default function ProductDetailClient({
   product,
-  relatedProducts,
+  relatedProducts = [],
+  pairedProducts,
+  otherProducts,
   content = {},
   reviews = [],
   initialWhyChoosePins = [],
 }: {
   product: Product;
-  relatedProducts: RelatedProduct[];
+  relatedProducts?: RelatedProduct[];
+  pairedProducts?: RelatedProduct[];
+  otherProducts?: RelatedProduct[];
   content?: Record<string, string>;
   reviews?: Review[];
   initialWhyChoosePins?: WhyChoosePin[];
@@ -377,14 +381,19 @@ export default function ProductDetailClient({
       .catch(() => {});
   }, []);
 
+  const companionProducts = (
+    pairedProducts && pairedProducts.length > 0 ? pairedProducts : relatedProducts || []
+  ).slice(0, 3);
+
   // Build the list of actual products fetched from backend (administered via admin panel)
   const displayOtherGreens: OtherGreenItem[] = (() => {
     const currentSlug = product.slug;
     const CARD_PALETTE = ['#EBE5D8', '#F5E1E6', '#D9E4D5', '#EBE0D2', '#DDE7D4', '#EDE7DC'];
 
-    if (!relatedProducts || relatedProducts.length === 0) return [];
+    const items = (otherProducts && otherProducts.length > 0 ? otherProducts : relatedProducts) || [];
+    if (items.length === 0) return [];
 
-    return relatedProducts
+    return items
       .filter((rel) => rel.slug !== currentSlug)
       .map((rel, index) => {
         const fallbackPhoto = RELATED_FALLBACKS[rel.slug]?.photo || '';
@@ -558,8 +567,20 @@ export default function ProductDetailClient({
 
   const scrollOtherGreens = (dir: 'left' | 'right') => {
     if (!ogTrackRef.current) return;
-    const offset = dir === 'left' ? -280 : 280;
-    ogTrackRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    const { scrollLeft, scrollWidth, clientWidth } = ogTrackRef.current;
+    if (dir === 'right') {
+      if (scrollLeft + clientWidth >= scrollWidth - 10) {
+        ogTrackRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+      } else {
+        ogTrackRef.current.scrollBy({ left: 280, behavior: 'smooth' });
+      }
+    } else {
+      if (scrollLeft <= 10) {
+        ogTrackRef.current.scrollTo({ left: scrollWidth, behavior: 'smooth' });
+      } else {
+        ogTrackRef.current.scrollBy({ left: -280, behavior: 'smooth' });
+      }
+    }
   };
 
   return (
@@ -941,7 +962,7 @@ export default function ProductDetailClient({
               </div>
 
               {/* Pairs Well With / Upsell */}
-              {relatedProducts.length > 0 && (
+              {companionProducts.length > 0 && (
                 <div className="mt-8 pt-6 border-t border-[#E4DDC8]">
                   <div className="flex items-center gap-2 mb-3.5">
                     <span className="text-base sm:text-lg">🥗</span>
@@ -951,7 +972,7 @@ export default function ProductDetailClient({
                   </div>
 
                   <div className="space-y-3 sm:space-y-3.5">
-                    {relatedProducts.slice(0, 3).map((rel) => {
+                    {companionProducts.map((rel) => {
                       const fallback = RELATED_FALLBACKS[rel.slug];
                       const photoUrl = rel.thumbnail_url || fallback?.photo || null;
                       const subtitle =

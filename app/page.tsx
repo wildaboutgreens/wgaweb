@@ -201,15 +201,41 @@ async function getFeaturedRecipes(contentMap?: Record<string, string>): Promise<
   }
 }
 
+export interface PartnerLogo {
+  id: string;
+  name: string;
+  logo_url: string;
+  website_url?: string | null;
+  display_order: number;
+  is_active: boolean;
+}
+
+async function getPartnerLogos(): Promise<PartnerLogo[]> {
+  try {
+    const sql = getSQL();
+    const logos = await sql`
+      SELECT id, name, logo_url, website_url, display_order, is_active
+      FROM partner_logos
+      WHERE is_active = true
+      ORDER BY display_order ASC, created_at ASC
+    `;
+    return logos as unknown as PartnerLogo[];
+  } catch (err) {
+    console.error('Error fetching partner logos:', err);
+    return [];
+  }
+}
+
 export default async function HomePage() {
   const content = await getContentMap();
-  const [dbPins, recipeCount, featuredRecipes, healthGoalsContent, allProducts] =
+  const [dbPins, recipeCount, featuredRecipes, healthGoalsContent, allProducts, partnerLogos] =
     await Promise.all([
       getPins(),
       getRecipeCount(),
       getFeaturedRecipes(content),
       getHealthGoalsContent(),
       getActiveProducts(),
+      getPartnerLogos(),
     ]);
 
   return (
@@ -220,6 +246,7 @@ export default async function HomePage() {
       featuredRecipes={featuredRecipes}
       initialHealthGoals={healthGoalsContent}
       allProducts={allProducts}
+      partnerLogos={partnerLogos}
     />
   );
 }

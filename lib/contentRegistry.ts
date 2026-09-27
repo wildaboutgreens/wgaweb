@@ -194,6 +194,27 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       type: 'text',
       defaultValue: 'One tray at a time, grown ten minutes from your kitchen.',
     },
+    {
+      key: 'homepage_partner_logos_enabled',
+      label: 'Partner Logos Section Enabled (true/false)',
+      type: 'text',
+      defaultValue: 'true',
+      description: 'Set to "true" to show the Partner Logos section on the homepage, or "false" to hide it.',
+    },
+    {
+      key: 'homepage_partner_logos_eyebrow',
+      label: 'Partner Logos Eyebrow',
+      type: 'text',
+      defaultValue: 'TRUSTED BY',
+      description: 'Small text displayed above the partner logos headline.',
+    },
+    {
+      key: 'homepage_partner_logos_title',
+      label: 'Partner Logos Headline',
+      type: 'text',
+      defaultValue: 'Leading organizations choose Wild About Greens.',
+      description: 'Main heading for the partner logos section.',
+    },
   ],
 
   'product-listing': [

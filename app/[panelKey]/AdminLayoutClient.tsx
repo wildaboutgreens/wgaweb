@@ -27,6 +27,7 @@ export default function AdminLayoutClient({
     { href: `/${currentKey}/inquiries`, label: 'Inquiries', icon: '📩' },
     { href: `/${currentKey}/reviews`, label: 'Reviews', icon: '⭐' },
     { href: `/${currentKey}/content`, label: 'Content', icon: '✏️' },
+    { href: `/${currentKey}/partner-logos`, label: 'Partner Logos', icon: '🏢' },
     { href: `/${currentKey}/pins`, label: 'Pins', icon: '📌' },
     { href: `/${currentKey}/blog`, label: 'Pathshala & Recipes', icon: '📝' },
   ];

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -88,6 +88,61 @@ const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
   },
 ];
 
+function formatProductForCart(
+  found: any,
+  badgeText?: string,
+  bg: string = '#EEF5EF',
+  badgeBg: string = '#1C3F2D',
+  badgeColor: string = '#FFFDF8'
+): BestsellerProduct {
+  const activeVar =
+    (Array.isArray(found.variants) && found.variants.find((v: any) => v.is_active)) ||
+    (Array.isArray(found.variants) && found.variants[0]) ||
+    {
+      id: found.id,
+      label: '100g living tray',
+      price_paise: 9900,
+      stock_qty: 25,
+    };
+  const price = activeVar.price_paise || 9900;
+  const approxMrp = Math.round(price * 1.25);
+  const discountPaise = approxMrp - price;
+  const customBadge = badgeText?.trim();
+  const rawBadge = customBadge || found.badge_label || '★ POPULAR';
+  const badgeLabel =
+    rawBadge.startsWith('★') ||
+    rawBadge.startsWith('☀') ||
+    rawBadge.startsWith('🌱') ||
+    rawBadge.startsWith('✦') ||
+    rawBadge.startsWith('🏷️')
+      ? rawBadge
+      : `★ ${rawBadge.toUpperCase()}`;
+
+  const photo =
+    found.thumbnail_url ||
+    found.images?.[0]?.image_url ||
+    getProductThumbnail(found.slug, null);
+
+  return {
+    id: found.id,
+    slug: found.slug,
+    name: found.name,
+    variantId: activeVar.id,
+    variantLabel: activeVar.label || '100g living tray',
+    pricePaise: price,
+    mrpPaise: approxMrp,
+    discountOff: `₹${Math.round(discountPaise / 100)} OFF`,
+    badge: {
+      text: badgeLabel,
+      bg: badgeBg,
+      color: badgeColor,
+    },
+    cardBg: bg,
+    photo,
+    maxStock: activeVar.stock_qty || 25,
+  };
+}
+
 export default function CartDrawer() {
   const pathname = usePathname();
   const { items, isOpen, setIsOpen, removeItem, updateQuantity, totalPaise, addItem, totalItems } =
@@ -104,8 +159,22 @@ export default function CartDrawer() {
     cart_rec_title: 'Our Bestsellers',
   });
   const [bestsellers, setBestsellers] = useState<BestsellerProduct[]>(DEFAULT_BESTSELLERS);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [allProducts, setAllProducts] = useState<any[]>([]);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
   const carouselRef = useRef<HTMLDivElement | null>(null);
+
+  // Pre-fetch on mount so products and paired products are immediately ready
+  useEffect(() => {
+    fetch('/api/products')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((productsData) => {
+        if (Array.isArray(productsData) && productsData.length > 0) {
+          setAllProducts(productsData);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -140,6 +209,8 @@ export default function CartDrawer() {
       }
 
       if (Array.isArray(productsData) && productsData.length > 0) {
+        setAllProducts(productsData);
+
         const slotKeys = [
           { prodKey: 'cart_rec_product_1', badgeKey: 'cart_rec_badge_1', defaultSlug: 'broccoli-microgreens', defaultBadge: '★ BESTSELLER', bg: '#EEF5EF', badgeBg: '#1C3F2D', badgeColor: '#FFFDF8' },
           { prodKey: 'cart_rec_product_2', badgeKey: 'cart_rec_badge_2', defaultSlug: 'sunflower-microgreens', defaultBadge: '☀ FAVORITE', bg: '#FAF4EB', badgeBg: '#8C5815', badgeColor: '#FFFDF8' },
@@ -148,7 +219,7 @@ export default function CartDrawer() {
         ];
 
         const mapped: BestsellerProduct[] = [];
-        slotKeys.forEach((slot, idx) => {
+        slotKeys.forEach((slot) => {
           // If admin has set the key or fallback to defaultSlug
           const chosenSlug = contentData?.[slot.prodKey] !== undefined ? contentData[slot.prodKey] : slot.defaultSlug;
           if (!chosenSlug) return; // Client explicitly chose None / hide slot
@@ -156,40 +227,15 @@ export default function CartDrawer() {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const found = productsData.find((p: any) => p.slug === chosenSlug);
           if (found && found.variants && found.variants.length > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const activeVar = found.variants.find((v: any) => v.is_active) || found.variants[0];
-            const price = activeVar.price_paise;
-            const approxMrp = Math.round(price * 1.25);
-            const discountPaise = approxMrp - price;
-            const customBadge = contentData?.[slot.badgeKey]?.trim();
-            const rawBadge = customBadge || found.badge_label || slot.defaultBadge;
-            const badgeLabel =
-              rawBadge.startsWith('★') ||
-              rawBadge.startsWith('☀') ||
-              rawBadge.startsWith('🌱') ||
-              rawBadge.startsWith('✦') ||
-              rawBadge.startsWith('🏷️')
-                ? rawBadge
-                : `★ ${rawBadge.toUpperCase()}`;
-
-            mapped.push({
-              id: found.id,
-              slug: found.slug,
-              name: found.name,
-              variantId: activeVar.id,
-              variantLabel: activeVar.label || '100g living tray',
-              pricePaise: price,
-              mrpPaise: approxMrp,
-              discountOff: `₹${Math.round(discountPaise / 100)} OFF`,
-              badge: {
-                text: badgeLabel,
-                bg: slot.badgeBg,
-                color: slot.badgeColor,
-              },
-              cardBg: slot.bg,
-              photo: found.thumbnail_url || found.images?.[0]?.image_url || DEFAULT_BESTSELLERS[idx % DEFAULT_BESTSELLERS.length].photo,
-              maxStock: activeVar.stock_qty || 25,
-            });
+            mapped.push(
+              formatProductForCart(
+                found,
+                contentData?.[slot.badgeKey],
+                slot.bg,
+                slot.badgeBg,
+                slot.badgeColor
+              )
+            );
           }
         });
 
@@ -199,6 +245,66 @@ export default function CartDrawer() {
       }
     });
   }, [isOpen]);
+
+  // Dynamic companion products based on admin panel's "Pairs Well With" setting for items in cart
+  const pairedUpsellProducts: BestsellerProduct[] = useMemo(() => {
+    if (items.length === 0) return [];
+
+    const cartSlugSet = new Set(items.map((i) => i.productSlug));
+    const matchedProducts: BestsellerProduct[] = [];
+    const addedProductIds = new Set<string>();
+
+    if (allProducts.length > 0) {
+      // Prioritize the companion products of the cart items (most recently added item first)
+      for (let i = items.length - 1; i >= 0; i--) {
+        const cartItem = items[i];
+        const prodInDb = allProducts.find(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (p: any) => p.slug === cartItem.productSlug || p.id === cartItem.id
+        );
+
+        if (prodInDb && prodInDb.pairs_well_with) {
+          let pairedIds: string[] = [];
+          if (Array.isArray(prodInDb.pairs_well_with)) {
+            pairedIds = prodInDb.pairs_well_with;
+          } else if (typeof prodInDb.pairs_well_with === 'string') {
+            try {
+              pairedIds = JSON.parse(prodInDb.pairs_well_with);
+            } catch {}
+          }
+
+          for (const pid of pairedIds) {
+            if (!pid) continue;
+            const companion = allProducts.find(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (p: any) => (p.id === pid || p.slug === pid) && p.is_active !== false
+            );
+            if (
+              companion &&
+              !cartSlugSet.has(companion.slug) &&
+              !addedProductIds.has(companion.id)
+            ) {
+              addedProductIds.add(companion.id);
+              matchedProducts.push(formatProductForCart(companion));
+            }
+          }
+        }
+      }
+    }
+
+    // If fewer than 3 paired products found, supplement with bestsellers that aren't already in cart
+    if (matchedProducts.length < 3) {
+      for (const b of bestsellers) {
+        if (!cartSlugSet.has(b.slug) && !addedProductIds.has(b.id)) {
+          addedProductIds.add(b.id);
+          matchedProducts.push(b);
+          if (matchedProducts.length >= 3) break;
+        }
+      }
+    }
+
+    return matchedProducts;
+  }, [items, allProducts, bestsellers]);
 
   const handleQuickAdd = (product: BestsellerProduct) => {
     addItem({
@@ -477,20 +583,19 @@ export default function CartDrawer() {
                 </div>
 
                 {/* Upsell strip inside filled cart */}
-                <div className="bg-[#F3EEE0] border-t border-[#E4DDC8] p-4 mt-auto">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <p className="font-mono text-xs font-bold uppercase tracking-wider text-[#1C3F2D]">
-                      Pair with living trays
-                    </p>
-                    <span className="font-mono text-[10.5px] text-[#2D7A4D] font-bold">
-                      Zero pesticides
-                    </span>
-                  </div>
+                {pairedUpsellProducts.length > 0 && (
+                  <div className="bg-[#F3EEE0] border-t border-[#E4DDC8] p-4 mt-auto">
+                    <div className="flex items-center justify-between mb-2.5">
+                      <p className="font-mono text-xs font-bold uppercase tracking-wider text-[#1C3F2D]">
+                        Pair with living trays
+                      </p>
+                      <span className="font-mono text-[10.5px] text-[#2D7A4D] font-bold">
+                        Zero pesticides
+                      </span>
+                    </div>
 
-                  <div className="flex gap-2.5 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1">
-                    {bestsellers
-                      .filter((b) => !items.some((i) => i.productSlug === b.slug))
-                      .map((prod) => (
+                    <div className="flex gap-2.5 overflow-x-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pb-1">
+                      {pairedUpsellProducts.map((prod) => (
                         <div
                           key={prod.id}
                           className="w-52 shrink-0 bg-[#FFFDF8] rounded-xl p-2.5 border border-[#E4DDC8] shadow-2xs flex items-center gap-2.5"
@@ -504,9 +609,13 @@ export default function CartDrawer() {
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-serif text-xs font-bold text-[#151F19] truncate">
+                            <Link
+                              href={`/products/${prod.slug}`}
+                              onClick={() => setIsOpen(false)}
+                              className="font-serif text-xs font-bold text-[#151F19] truncate block hover:text-[#1C3F2D] transition-colors"
+                            >
                               {prod.name}
-                            </p>
+                            </Link>
                             <p className="font-mono text-xs font-bold text-[#1C3F2D]">
                               {formatPrice(prod.pricePaise)}
                             </p>
@@ -514,14 +623,15 @@ export default function CartDrawer() {
                           <button
                             type="button"
                             onClick={() => handleQuickAdd(prod)}
-                            className="bg-[#1C3F2D] hover:bg-[#122A1F] text-[#FFFDF8] font-mono text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg shrink-0 transition-colors shadow-2xs"
+                            className="bg-[#1C3F2D] hover:bg-[#122A1F] text-[#FFFDF8] font-mono text-[10px] font-bold uppercase px-2.5 py-1.5 rounded-lg shrink-0 transition-colors shadow-2xs cursor-pointer active:scale-95"
                           >
-                            + ADD
+                            {addedIds[prod.id] ? 'ADDED ✓' : '+ ADD'}
                           </button>
                         </div>
                       ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 

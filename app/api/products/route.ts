@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     if (goal && goal !== 'all' && goal !== 'all-trays') {
       products = await sql`
         SELECT id, slug, name, categories, health_goals, badge_label, highlight_1, highlight_2, description, nutrition_notes,
-               thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at
+               thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at, pairs_well_with
         FROM products
         WHERE is_active = true AND ${goal} = ANY(health_goals)
         ORDER BY created_at DESC
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     } else if (category) {
       products = await sql`
         SELECT id, slug, name, categories, health_goals, badge_label, highlight_1, highlight_2, description, nutrition_notes,
-               thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at
+               thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at, pairs_well_with
         FROM products
         WHERE is_active = true AND ${category} = ANY(categories)
         ORDER BY created_at DESC
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     } else {
       products = await sql`
         SELECT id, slug, name, categories, health_goals, badge_label, highlight_1, highlight_2, description, nutrition_notes,
-               thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at
+               thumbnail_url, thumbnail_alt_text, tags, is_bundle, is_active, created_at, pairs_well_with
         FROM products
         WHERE is_active = true
         ORDER BY created_at DESC

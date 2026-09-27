@@ -138,7 +138,26 @@ async function getProduct(slug: string): Promise<Product | null> {
   }
 }
 
-async function getRelatedProducts(currentSlug: string, pairedIds?: string[] | null): Promise<RelatedProduct[]> {
+function shuffleArray<T extends { id: string }>(array: T[]): T[] {
+  if (array.length <= 1) return [...array];
+  const shuffled = [...array];
+  let attempts = 0;
+  do {
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = shuffled[i];
+      shuffled[i] = shuffled[j];
+      shuffled[j] = temp;
+    }
+    attempts++;
+  } while (
+    attempts < 5 &&
+    shuffled.every((item, idx) => item.id === array[idx]?.id)
+  );
+  return shuffled;
+}
+
+async function getInventoryProducts(currentSlug: string): Promise<RelatedProduct[]> {
   try {
     const sql = getSQL();
     const products = await sql`
@@ -156,33 +175,32 @@ async function getRelatedProducts(currentSlug: string, pairedIds?: string[] | nu
       WHERE p.slug != ${currentSlug} AND p.is_active = true
       GROUP BY p.id, p.slug, p.name, p.categories, p.description, p.thumbnail_url, p.thumbnail_alt_text, p.highlight_1, p.highlight_2, p.badge_label, p.is_bundle, p.created_at
       ORDER BY p.created_at ASC
-      LIMIT 20
     `;
-    const allRelated = products as unknown as RelatedProduct[];
-
-    if (Array.isArray(pairedIds) && pairedIds.length > 0) {
-      const selected: RelatedProduct[] = [];
-      for (const pid of pairedIds) {
-        if (!pid) continue;
-        const found = allRelated.find((p) => p.id === pid || p.slug === pid);
-        if (found && !selected.some((s) => s.id === found.id)) {
-          selected.push(found);
-        }
-      }
-      for (const p of allRelated) {
-        if (selected.length >= 3) break;
-        if (!selected.some((s) => s.id === p.id)) {
-          selected.push(p);
-        }
-      }
-      return selected;
-    }
-
-    return allRelated;
+    return products as unknown as RelatedProduct[];
   } catch (err) {
-    console.error('Error fetching related products:', err);
+    console.error('Error fetching inventory products:', err);
     return [];
   }
+}
+
+function getPairedProducts(allOther: RelatedProduct[], pairedIds?: string[] | null): RelatedProduct[] {
+  const selected: RelatedProduct[] = [];
+  if (Array.isArray(pairedIds) && pairedIds.length > 0) {
+    for (const pid of pairedIds) {
+      if (!pid) continue;
+      const found = allOther.find((p) => p.id === pid || p.slug === pid);
+      if (found && !selected.some((s) => s.id === found.id)) {
+        selected.push(found);
+      }
+    }
+  }
+  for (const p of allOther) {
+    if (selected.length >= 3) break;
+    if (!selected.some((s) => s.id === p.id)) {
+      selected.push(p);
+    }
+  }
+  return selected;
 }
 
 async function getContentMap(): Promise<Record<string, string>> {
@@ -266,17 +284,23 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const product = await getProduct(params.slug);
   if (!product) notFound();
 
-  const [relatedProducts, content, reviews, whyChoosePins] = await Promise.all([
-    getRelatedProducts(params.slug, product.pairs_well_with),
+  const [allOtherProducts, content, reviews, whyChoosePins] = await Promise.all([
+    getInventoryProducts(params.slug),
     getContentMap(),
     getProductReviews(product.id),
     getWhyChoosePins(),
   ]);
 
+  const pairedProducts = getPairedProducts(allOtherProducts, product.pairs_well_with);
+  const otherProducts = shuffleArray(allOtherProducts);
+
   return (
     <ProductDetailClient
+      key={product.id}
       product={product}
-      relatedProducts={relatedProducts}
+      pairedProducts={pairedProducts}
+      otherProducts={otherProducts}
+      relatedProducts={pairedProducts}
       content={content}
       reviews={reviews}
       initialWhyChoosePins={whyChoosePins}

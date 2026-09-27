@@ -26,6 +26,15 @@ export interface FeaturedRecipe {
   excerpt: string | null;
 }
 
+export interface PartnerLogo {
+  id: string;
+  name: string;
+  logo_url: string;
+  website_url?: string | null;
+  display_order: number;
+  is_active: boolean;
+}
+
 interface HomePageClientProps {
   content: Record<string, string>;
   dbPins: ContentPin[];
@@ -33,6 +42,7 @@ interface HomePageClientProps {
   featuredRecipes?: FeaturedRecipe[];
   initialHealthGoals?: HealthGoalContentItem[];
   allProducts?: (Product & { health_goals?: string[] })[];
+  partnerLogos?: PartnerLogo[];
 }
 
 const DEFAULT_HEALTH_GOALS: HealthGoalContentItem[] = HEALTH_GOALS.map((g, idx) => ({
@@ -71,10 +81,14 @@ export default function HomePageClient({
   featuredRecipes = [],
   initialHealthGoals = [],
   allProducts = [],
+  partnerLogos: initialPartnerLogos = [],
 }: HomePageClientProps) {
   const shouldReduceMotion = useReducedMotion();
   const [healthGoals, setHealthGoals] = useState<HealthGoalContentItem[]>(
     initialHealthGoals.length > 0 ? initialHealthGoals : []
+  );
+  const [partnerLogos, setPartnerLogos] = useState<PartnerLogo[]>(
+    initialPartnerLogos.length > 0 ? initialPartnerLogos : []
   );
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
 
@@ -87,6 +101,15 @@ export default function HomePageClient({
         }
       })
       .catch((err) => console.error('Error fetching health goals:', err));
+
+    fetch('/api/partner-logos')
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setPartnerLogos(data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const effectiveHealthGoals = healthGoals.length > 0 ? healthGoals : DEFAULT_HEALTH_GOALS;
@@ -792,6 +815,98 @@ export default function HomePageClient({
           </motion.div>
         </div>
       </section>
+
+      {/* ================= PARTNER LOGOS (TRUSTED BY) ================= */}
+      {content.homepage_partner_logos_enabled !== 'false' && partnerLogos.length > 0 && (
+        <section className="bg-[#FAF7EE] py-16 sm:py-20 border-t border-[#E8E2D2]">
+          <div className="wrap">
+            <motion.div
+              variants={scrollContainerVariants(0.08)}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              className="max-w-4xl mx-auto text-center"
+            >
+              {/* Eyebrow with subtle divider lines */}
+              <motion.div
+                variants={scrollItemVariants}
+                className="flex items-center justify-center gap-3 mb-4"
+              >
+                <span className="w-8 sm:w-12 h-px bg-[#D5CEC0]" />
+                <span className="font-mono text-[11px] sm:text-xs tracking-[0.2em] uppercase text-[#5C6B60] font-semibold">
+                  {content.homepage_partner_logos_eyebrow || 'TRUSTED BY'}
+                </span>
+                <span className="w-8 sm:w-12 h-px bg-[#D5CEC0]" />
+              </motion.div>
+
+              {/* Fraunces Headline */}
+              <motion.h2
+                variants={scrollItemVariants}
+                className="font-serif text-3xl sm:text-4xl md:text-[42px] font-medium text-[#151F19] leading-tight mb-10 sm:mb-12"
+              >
+                {content.homepage_partner_logos_title ? (
+                  content.homepage_partner_logos_title.includes('choose') ? (
+                    <>
+                      {content.homepage_partner_logos_title.split('choose')[0]}
+                      <br />
+                      <em className="italic text-[#1C3F2D] font-normal">
+                        choose{content.homepage_partner_logos_title.split('choose')[1]}
+                      </em>
+                    </>
+                  ) : (
+                    content.homepage_partner_logos_title
+                  )
+                ) : (
+                  <>
+                    Leading organizations
+                    <br />
+                    <em className="italic text-[#1C3F2D] font-normal">choose Wild About Greens.</em>
+                  </>
+                )}
+              </motion.h2>
+
+              {/* Logos Row / Grid */}
+              <motion.div
+                variants={scrollItemVariants}
+                className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 md:gap-14"
+              >
+                {partnerLogos
+                  .filter((l) => l.is_active !== false)
+                  .sort((a, b) => a.display_order - b.display_order)
+                  .map((logo) => {
+                    const imgElement = (
+                      <div className="h-10 sm:h-12 md:h-14 flex items-center justify-center p-1.5 transition-all duration-300 group">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={logo.logo_url}
+                          alt={logo.name}
+                          title={logo.name}
+                          className="max-h-full max-w-[130px] sm:max-w-[155px] md:max-w-[175px] object-contain grayscale opacity-65 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                        />
+                      </div>
+                    );
+
+                    if (logo.website_url) {
+                      return (
+                        <a
+                          key={logo.id}
+                          href={logo.website_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="cursor-pointer focus:outline-none"
+                        >
+                          {imgElement}
+                        </a>
+                      );
+                    }
+
+                    return <div key={logo.id}>{imgElement}</div>;
+                  })}
+              </motion.div>
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* ================= FINAL CTA (Scroll-triggered) ================= */}
       <section className="relative bg-[#122A1F] py-20 text-[#FFFDF8] text-center overflow-hidden">
