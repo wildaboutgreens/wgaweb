@@ -13,6 +13,7 @@ interface ImageFieldProps {
   altText?: string;
   onAltTextChange?: (altText: string) => void;
   acceptVideo?: boolean;
+  objectFit?: 'cover' | 'contain';
 }
 
 const MAX_UPLOAD_BYTES = 4.5 * 1024 * 1024; // 4.5 MB Netlify function payload safety limit
@@ -96,6 +97,7 @@ export default function ImageField({
   altText,
   onAltTextChange,
   acceptVideo = false,
+  objectFit = 'cover',
 }: ImageFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -183,7 +185,7 @@ export default function ImageField({
               <img
                 src={value}
                 alt={label || 'Image'}
-                className="w-full h-full object-cover"
+                className={`w-full h-full ${objectFit === 'contain' ? 'object-contain p-3' : 'object-cover'}`}
               />
             )}
             {/* Hover overlay */}

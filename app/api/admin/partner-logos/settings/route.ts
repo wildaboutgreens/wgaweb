@@ -8,7 +8,7 @@ export async function PUT(request: NextRequest) {
   try {
     const sql = getSQL();
     const body = await request.json();
-    const { enabled, eyebrow, title } = body;
+    const { enabled, eyebrow, title, card_style, logo_size } = body;
 
     if (enabled !== undefined) {
       const val = enabled ? 'true' : 'false';
@@ -35,6 +35,24 @@ export async function PUT(request: NextRequest) {
         VALUES ('homepage', 'homepage_partner_logos_title', 'string', ${title}, now())
         ON CONFLICT (page, key)
         DO UPDATE SET value = ${title}, updated_at = now()
+      `;
+    }
+
+    if (card_style !== undefined) {
+      await sql`
+        INSERT INTO content_blocks (page, key, value_type, value, updated_at)
+        VALUES ('homepage', 'homepage_partner_logos_card_style', 'string', ${card_style}, now())
+        ON CONFLICT (page, key)
+        DO UPDATE SET value = ${card_style}, updated_at = now()
+      `;
+    }
+
+    if (logo_size !== undefined) {
+      await sql`
+        INSERT INTO content_blocks (page, key, value_type, value, updated_at)
+        VALUES ('homepage', 'homepage_partner_logos_size', 'string', ${logo_size}, now())
+        ON CONFLICT (page, key)
+        DO UPDATE SET value = ${logo_size}, updated_at = now()
       `;
     }
 

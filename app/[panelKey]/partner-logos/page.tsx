@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { adminFetch } from '@/lib/adminAuth';
 import ImageField from '@/components/admin/ImageField';
+import { getOptimizedLogoUrl } from '@/lib/format';
 
 export interface PartnerLogo {
   id: string;
@@ -19,6 +20,8 @@ interface SectionSettings {
   homepage_partner_logos_enabled: string;
   homepage_partner_logos_eyebrow: string;
   homepage_partner_logos_title: string;
+  homepage_partner_logos_card_style?: string;
+  homepage_partner_logos_size?: string;
 }
 
 const emptyLogo = {
@@ -35,6 +38,8 @@ export default function AdminPartnerLogosPage() {
     homepage_partner_logos_enabled: 'true',
     homepage_partner_logos_eyebrow: 'TRUSTED BY',
     homepage_partner_logos_title: 'Leading organizations choose Wild About Greens.',
+    homepage_partner_logos_card_style: 'cards',
+    homepage_partner_logos_size: 'standard',
   });
   const [loading, setLoading] = useState(true);
 
@@ -48,6 +53,8 @@ export default function AdminPartnerLogosPage() {
   const [settingsForm, setSettingsForm] = useState({
     eyebrow: 'TRUSTED BY',
     title: 'Leading organizations choose Wild About Greens.',
+    card_style: 'cards',
+    logo_size: 'standard',
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSavedFeedback, setSettingsSavedFeedback] = useState(false);
@@ -64,6 +71,8 @@ export default function AdminPartnerLogosPage() {
           setSettingsForm({
             eyebrow: data.settings.homepage_partner_logos_eyebrow || 'TRUSTED BY',
             title: data.settings.homepage_partner_logos_title || 'Leading organizations choose Wild About Greens.',
+            card_style: data.settings.homepage_partner_logos_card_style || 'cards',
+            logo_size: data.settings.homepage_partner_logos_size || 'standard',
           });
         }
       }
@@ -111,6 +120,8 @@ export default function AdminPartnerLogosPage() {
         body: JSON.stringify({
           eyebrow: settingsForm.eyebrow,
           title: settingsForm.title,
+          card_style: settingsForm.card_style,
+          logo_size: settingsForm.logo_size,
         }),
       });
       if (res.ok) {
@@ -118,6 +129,8 @@ export default function AdminPartnerLogosPage() {
           ...prev,
           homepage_partner_logos_eyebrow: settingsForm.eyebrow,
           homepage_partner_logos_title: settingsForm.title,
+          homepage_partner_logos_card_style: settingsForm.card_style,
+          homepage_partner_logos_size: settingsForm.logo_size,
         }));
         setSettingsSavedFeedback(true);
         setTimeout(() => setSettingsSavedFeedback(false), 2000);
@@ -318,6 +331,41 @@ export default function AdminPartnerLogosPage() {
               Main heading displayed in serif typography
             </p>
           </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
+              Logo Card Style
+            </label>
+            <select
+              value={settingsForm.card_style}
+              onChange={(e) => setSettingsForm({ ...settingsForm, card_style: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+            >
+              <option value="cards">White Cards (Recommended — uniform tiles for all logos)</option>
+              <option value="seamless">Seamless (No card border)</option>
+            </select>
+            <p className="text-[11px] text-gray-400 mt-1">
+              White cards guarantee all logos look clean and balanced, even with JPG white backgrounds.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-gray-700 mb-1">
+              Fixed Logo Size
+            </label>
+            <select
+              value={settingsForm.logo_size}
+              onChange={(e) => setSettingsForm({ ...settingsForm, logo_size: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+            >
+              <option value="standard">Standard (Fixed 220 × 96px — Recommended)</option>
+              <option value="large">Large (Fixed 260 × 112px)</option>
+              <option value="compact">Compact (Fixed 180 × 82px)</option>
+            </select>
+            <p className="text-[11px] text-gray-400 mt-1">
+              Guarantees every logo has the exact same fixed dimension on the homepage.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-2">
@@ -332,7 +380,7 @@ export default function AdminPartnerLogosPage() {
             disabled={savingSettings}
             className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
           >
-            {savingSettings ? 'Saving...' : 'Save Headings'}
+            {savingSettings ? 'Saving...' : 'Save Settings'}
           </button>
         </div>
       </div>
@@ -392,12 +440,12 @@ export default function AdminPartnerLogosPage() {
               >
                 <div>
                   {/* Logo Preview Container */}
-                  <div className="aspect-[3/2] w-full rounded-lg bg-[#FAF7EE] border border-[#E8E2D2] flex items-center justify-center p-3 mb-3 relative overflow-hidden group">
+                  <div className="aspect-[3/2] w-full rounded-lg bg-white border border-[#E8E2D2] flex items-center justify-center p-3 mb-3 relative overflow-hidden group">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={logo.logo_url}
+                      src={getOptimizedLogoUrl(logo.logo_url)}
                       alt={logo.name}
-                      className="max-h-full max-w-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
+                      className="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-all duration-300"
                     />
                     <span className="absolute top-1.5 right-1.5 font-mono text-[10px] bg-white/90 border border-gray-200 px-1.5 py-0.5 rounded text-gray-600 font-semibold">
                       #{logo.display_order}
@@ -503,6 +551,7 @@ export default function AdminPartnerLogosPage() {
                   onChange={(url) => setForm({ ...form, logo_url: url })}
                   folder="wga/partner-logos"
                   aspectRatio="16/9"
+                  objectFit="contain"
                   label="Upload Company Logo (PNG, SVG, or JPG with transparent/clean background recommended)"
                 />
               </div>

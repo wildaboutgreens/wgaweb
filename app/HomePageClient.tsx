@@ -8,6 +8,7 @@ import WhyMicrogreensChart from '@/components/WhyMicrogreensChart';
 import HealthGoalModal from '@/components/HealthGoalModal';
 import { Instagram, ShoppingBag, Subscription } from '@/components/icons';
 import { HEALTH_GOALS } from '@/lib/healthGoals';
+import { getOptimizedLogoUrl } from '@/lib/format';
 import type { HealthGoalContentItem } from '@/app/[panelKey]/health-goals/page';
 import type { Product } from '@/app/products/page';
 
@@ -868,20 +869,43 @@ export default function HomePageClient({
               {/* Logos Row / Grid */}
               <motion.div
                 variants={scrollItemVariants}
-                className="flex flex-wrap items-center justify-center gap-8 sm:gap-12 md:gap-14"
+                className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8"
               >
                 {partnerLogos
                   .filter((l) => l.is_active !== false)
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((logo) => {
+                    const cardStyle = content.homepage_partner_logos_card_style || 'cards';
+                    const logoSize = content.homepage_partner_logos_size || 'standard';
+
+                    let sizeBoxClass = 'w-[180px] sm:w-[220px] md:w-[240px] h-[86px] sm:h-[96px] md:h-[104px]';
+                    let sizeImgClass = 'max-h-[52px] sm:max-h-[62px] md:max-h-[68px] max-w-[145px] sm:max-w-[175px] md:max-w-[195px]';
+
+                    if (logoSize === 'large') {
+                      sizeBoxClass = 'w-[210px] sm:w-[250px] md:w-[280px] h-[100px] sm:h-[114px] md:h-[122px]';
+                      sizeImgClass = 'max-h-[62px] sm:max-h-[74px] md:max-h-[82px] max-w-[175px] sm:max-w-[210px] md:max-w-[235px]';
+                    } else if (logoSize === 'compact') {
+                      sizeBoxClass = 'w-[150px] sm:w-[180px] md:w-[200px] h-[72px] sm:h-[82px] md:h-[88px]';
+                      sizeImgClass = 'max-h-[42px] sm:max-h-[50px] md:max-h-[56px] max-w-[120px] sm:max-w-[145px] md:max-w-[165px]';
+                    }
+
+                    const styleBoxClass =
+                      cardStyle === 'seamless'
+                        ? 'rounded-xl hover:bg-white/40 border border-transparent hover:border-[#E8E2D2]/60 p-2 sm:p-3'
+                        : 'bg-white rounded-2xl border border-[#E8E2D2] shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-[#1C3F2D]/35 p-3.5 sm:p-5';
+
+                    const optimizedUrl = getOptimizedLogoUrl(logo.logo_url);
+
                     const imgElement = (
-                      <div className="h-10 sm:h-12 md:h-14 flex items-center justify-center p-1.5 transition-all duration-300 group">
+                      <div
+                        className={`${sizeBoxClass} ${styleBoxClass} transition-all duration-300 flex items-center justify-center group`}
+                      >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={logo.logo_url}
+                          src={optimizedUrl}
                           alt={logo.name}
                           title={logo.name}
-                          className="max-h-full max-w-[130px] sm:max-w-[155px] md:max-w-[175px] object-contain grayscale opacity-65 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                          className={`w-full h-full ${sizeImgClass} object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300`}
                         />
                       </div>
                     );
@@ -893,14 +917,18 @@ export default function HomePageClient({
                           href={logo.website_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="cursor-pointer focus:outline-none"
+                          className="cursor-pointer focus:outline-none transition-transform hover:-translate-y-0.5"
                         >
                           {imgElement}
                         </a>
                       );
                     }
 
-                    return <div key={logo.id}>{imgElement}</div>;
+                    return (
+                      <div key={logo.id} className="transition-transform hover:-translate-y-0.5">
+                        {imgElement}
+                      </div>
+                    );
                   })}
               </motion.div>
             </motion.div>
