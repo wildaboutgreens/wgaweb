@@ -88,15 +88,39 @@ const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
   },
 ];
 
+interface ProductVariant {
+  id: string;
+  label?: string;
+  price_paise: number;
+  stock_qty?: number;
+  is_active?: boolean;
+}
+
+interface ProductImage {
+  image_url: string;
+}
+
+interface CartProductItem {
+  id: string;
+  slug: string;
+  name: string;
+  badge_label?: string | null;
+  thumbnail_url?: string | null;
+  images?: ProductImage[];
+  variants?: ProductVariant[];
+  pairs_well_with?: string[] | string | null;
+  is_active?: boolean;
+}
+
 function formatProductForCart(
-  found: any,
+  found: CartProductItem,
   badgeText?: string,
   bg: string = '#EEF5EF',
   badgeBg: string = '#1C3F2D',
   badgeColor: string = '#FFFDF8'
 ): BestsellerProduct {
   const activeVar =
-    (Array.isArray(found.variants) && found.variants.find((v: any) => v.is_active)) ||
+    (Array.isArray(found.variants) && found.variants.find((v: ProductVariant) => v.is_active)) ||
     (Array.isArray(found.variants) && found.variants[0]) ||
     {
       id: found.id,
@@ -159,8 +183,7 @@ export default function CartDrawer() {
     cart_rec_title: 'Our Bestsellers',
   });
   const [bestsellers, setBestsellers] = useState<BestsellerProduct[]>(DEFAULT_BESTSELLERS);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [allProducts, setAllProducts] = useState<CartProductItem[]>([]);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
@@ -201,8 +224,7 @@ export default function CartDrawer() {
         .catch(() => []),
     ]).then(([rawContent, rawProducts]) => {
       const contentData = (rawContent || {}) as Record<string, string>;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const productsData = (rawProducts || []) as any[];
+      const productsData = (rawProducts || []) as CartProductItem[];
 
       if (contentData && typeof contentData === 'object' && Object.keys(contentData).length > 0) {
         setCartContent((prev) => ({ ...prev, ...contentData }));
@@ -224,8 +246,7 @@ export default function CartDrawer() {
           const chosenSlug = contentData?.[slot.prodKey] !== undefined ? contentData[slot.prodKey] : slot.defaultSlug;
           if (!chosenSlug) return; // Client explicitly chose None / hide slot
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const found = productsData.find((p: any) => p.slug === chosenSlug);
+          const found = productsData.find((p) => p.slug === chosenSlug);
           if (found && found.variants && found.variants.length > 0) {
             mapped.push(
               formatProductForCart(
@@ -259,8 +280,7 @@ export default function CartDrawer() {
       for (let i = items.length - 1; i >= 0; i--) {
         const cartItem = items[i];
         const prodInDb = allProducts.find(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (p: any) => p.slug === cartItem.productSlug || p.id === cartItem.id
+          (p) => p.slug === cartItem.productSlug || p.id === cartItem.id
         );
 
         if (prodInDb && prodInDb.pairs_well_with) {
@@ -276,8 +296,7 @@ export default function CartDrawer() {
           for (const pid of pairedIds) {
             if (!pid) continue;
             const companion = allProducts.find(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (p: any) => (p.id === pid || p.slug === pid) && p.is_active !== false
+              (p) => (p.id === pid || p.slug === pid) && p.is_active !== false
             );
             if (
               companion &&
