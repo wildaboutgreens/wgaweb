@@ -128,7 +128,7 @@ export const HEALTH_GOALS: HealthGoal[] = [
     heroEyebrow: '🌱 FULL CELLULAR SPECTRUM · ALL TRAYS',
     heroTitle: 'Every living variety harvested on the morning of delivery.',
     heroSubtitle:
-      'Browse our complete living microgreen lineup. Grown with 100% mineral RO water and zero pesticides on vertical climate racks in the Tricity.',
+      'Browse our complete living microgreen lineup. Grown with 100% mineral RO water and zero pesticides on vertical indoor climate racks.',
     heroImage:
       'https://plus.unsplash.com/premium_photo-1661635029307-2183e966e5a8?fm=jpg&q=85&w=1400&auto=format&fit=crop',
     aliases: ['all', 'all-trays'],

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Shop Living Microgreens · Wild About Greens',
-  description: 'Browse our range of living microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning in Chandigarh, Mohali & Panchkula.',
+  description: 'Browse our range of living microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered fresh to your doorstep on harvest morning.',
   openGraph: {
     title: 'Shop Living Microgreens · Wild About Greens',
     description: 'Browse our range of living microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning.',

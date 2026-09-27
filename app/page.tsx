@@ -7,16 +7,16 @@ import type { Product, Variant, ProductImage } from '@/app/products/page';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Wild About Greens · Living Microgreens Delivered Fresh in Chandigarh',
-  description: 'Farm-fresh living microgreens harvested on the morning of delivery. Non GMO seeds, mineral water, zero pesticides. Serving Chandigarh, Mohali & Panchkula.',
+  title: 'Wild About Greens · Living Microgreens Delivered Fresh to Your Doorstep',
+  description: 'Farm-fresh living microgreens harvested on the morning of delivery. Non GMO seeds, mineral water, zero pesticides. Delivered fresh to your doorstep.',
   openGraph: {
-    title: 'Wild About Greens · Living Microgreens Delivered Fresh in Chandigarh',
-    description: 'Farm-fresh living microgreens harvested on the morning of delivery. Serving Chandigarh, Mohali & Panchkula.',
+    title: 'Wild About Greens · Living Microgreens Delivered Fresh to Your Doorstep',
+    description: 'Farm-fresh living microgreens harvested on the morning of delivery. Delivered fresh to your doorstep.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Wild About Greens · Living Microgreens Delivered Fresh in Chandigarh',
-    description: 'Farm-fresh living microgreens harvested on the morning of delivery. Serving Chandigarh, Mohali & Panchkula.',
+    title: 'Wild About Greens · Living Microgreens Delivered Fresh to Your Doorstep',
+    description: 'Farm-fresh living microgreens harvested on the morning of delivery. Delivered fresh to your doorstep.',
   },
 };
 

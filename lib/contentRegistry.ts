@@ -12,7 +12,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'hero_eyebrow',
       label: 'Hero Eyebrow / Pill',
       type: 'text',
-      defaultValue: 'Grown Locally · Chandigarh · Mohali · Panchkula',
+      defaultValue: 'Grown Locally · Delivered Fresh Daily',
     },
     {
       key: 'hero_title',
@@ -32,7 +32,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Hero Trust Line / Social Proof',
       type: 'text',
       defaultValue:
-        'Join over 1000+ families eating microgreens across Chandigarh · Mohali · Panchkula',
+        'Join over 1000+ families eating fresh living microgreens daily',
     },
     {
       key: 'hero_image_url',
@@ -222,7 +222,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'hero_eyebrow',
       label: 'Hero Eyebrow / Pill',
       type: 'text',
-      defaultValue: '🌱 LIVING HARVEST · TRICITY GROWN',
+      defaultValue: '🌱 LIVING HARVEST · HARVESTED TO ORDER',
     },
     {
       key: 'hero_title',
@@ -235,7 +235,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Hero Subtitle',
       type: 'textarea',
       defaultValue:
-        'Living microgreen trays delivered on harvest morning across Chandigarh, Mohali & Panchkula. Snip fresh into your daily meals for up to 10 days.',
+        'Living microgreen trays delivered on harvest morning to your doorstep. Snip fresh into your daily meals for up to 10 days.',
     },
     {
       key: 'hero_image_url',
@@ -304,7 +304,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'trust_bullet_4',
       label: 'Trust Hero Bullet 4',
       type: 'text',
-      defaultValue: 'Zero days in transit, grown right here in the tricity.',
+      defaultValue: 'Zero days in transit, harvested fresh on the morning of delivery.',
     },
     {
       key: 'trust_bullet_5',
@@ -360,7 +360,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'FAQ Answer 1',
       type: 'textarea',
       defaultValue:
-        'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+        'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach your doorstep freshly packed for peak vitality.',
     },
     {
       key: 'faq_q2',
@@ -392,14 +392,14 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'faq_q4',
       label: 'FAQ Question 4',
       type: 'text',
-      defaultValue: 'Do you deliver outside the tricity?',
+      defaultValue: 'How is delivery handled?',
     },
     {
       key: 'faq_a4',
       label: 'FAQ Answer 4',
       type: 'textarea',
       defaultValue:
-        "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+        'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
     },
     {
       key: 'faq_q5',
@@ -425,34 +425,34 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Newsletter Subtitle',
       type: 'textarea',
       defaultValue:
-        'Get 15% off your first order, plus early access to new varieties, growing tips and tricity-only drops.',
+        'Get 15% off your first order, plus early access to new varieties, growing tips and exclusive seasonal drops.',
     },
   ],
 
   'product-detail': [
     {
       key: 'bundle_banner_title',
-      label: 'Tricity Trio Banner Title',
+      label: 'Trio Bundle Banner Title',
       type: 'text',
       defaultValue: 'Go For All Three',
     },
     {
       key: 'bundle_banner_subtitle',
-      label: 'Tricity Trio Banner Subtitle',
+      label: 'Trio Bundle Banner Subtitle',
       type: 'textarea',
       defaultValue:
         'Broccoli for sulforaphane, Radish for spice and zinc, Sunflower shoots for protein and crunch. Get our signature 3-tray variety pack delivered together.',
     },
     {
       key: 'bundle_banner_image',
-      label: 'Tricity Trio Banner Image',
+      label: 'Trio Bundle Banner Image',
       type: 'image_url',
       defaultValue: '',
-      description: 'Media image for the Tricity Trio bundle promo banner.',
+      description: 'Media image for the Trio bundle promo banner.',
     },
     {
       key: 'bundle_banner_cta_text',
-      label: 'Tricity Trio Banner CTA Button',
+      label: 'Trio Bundle Banner CTA Button',
       type: 'text',
       defaultValue: 'Try the Hat Trick Pack →',
     },
@@ -540,7 +540,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'reviews_subtitle',
       label: 'Customer Reviews Section Subtitle',
       type: 'text',
-      defaultValue: 'Verified reviews from our Tricity community',
+      defaultValue: 'Verified reviews from our community',
     },
   ],
 
@@ -679,7 +679,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Newsletter Section Subtitle',
       type: 'textarea',
       defaultValue:
-        'Get 15% off your first order, plus early access to new varieties, growing tips and tricity-only drops.',
+        'Get 15% off your first order, plus early access to new varieties, growing tips and exclusive seasonal drops.',
     },
   ],
   'emails': [
@@ -926,7 +926,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Page Subtitle',
       type: 'textarea',
       defaultValue:
-        'Enter your order number along with your phone number and email address to view the live harvest and delivery status across Chandigarh, Mohali & Panchkula.',
+        'Enter your order number along with your phone number and email address to view the live harvest and delivery status.',
       description: 'The descriptive sentence under the headline.',
     },
     {
@@ -947,7 +947,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'track_harvest_note',
       label: 'Harvest Promise Note',
       type: 'text',
-      defaultValue: 'Grown with mineral water & clean air · Harvested morning of delivery in Tricity',
+      defaultValue: 'Grown with mineral water & clean air · Harvested morning of delivery',
       description: 'Short trust badge displayed on the tracking result card.',
     },
   ],

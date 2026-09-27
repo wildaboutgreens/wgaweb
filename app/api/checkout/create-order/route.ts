@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     // ── Validate pincode ──
     if (!isServiceable(deliveryPincode)) {
       return NextResponse.json(
-        { error: 'Sorry, we only deliver to Chandigarh, Mohali, and Panchkula at this time.' },
+        { error: 'Please provide a valid 6-digit delivery pincode.' },
         { status: 400 }
       );
     }

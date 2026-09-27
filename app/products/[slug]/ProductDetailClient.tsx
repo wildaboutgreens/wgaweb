@@ -22,12 +22,12 @@ const DEFAULT_DETAIL_ACCORDIONS: DetailAccordion[] = [
   {
     title: 'Growing Method & Purity',
     content:
-      'We operate vertical indoor climate racks in the Tricity. No soil, no organic compost pathogens, and absolutely zero pesticide or fertilizer residues.\n\nGrown on sterilized coco peat with 100% reverse osmosis mineral drinking water.',
+      'We operate vertical indoor climate racks. No soil, no organic compost pathogens, and absolutely zero pesticide or fertilizer residues.\n\nGrown on sterilized coco peat with 100% reverse osmosis mineral drinking water.',
   },
   {
     title: 'Delivery & Packaging',
     content:
-      'Delivered in our reusable food-grade living trays. We dispatch orders within hours of the final quality check across Chandigarh, Mohali, and Panchkula.',
+      'Delivered in our reusable food-grade living trays. We dispatch orders within hours of the final quality check directly to your doorstep.',
   },
 ];
 
@@ -35,7 +35,7 @@ const DEFAULT_PRODUCT_FAQS: ProductFAQ[] = [
   {
     question: 'How fresh are the greens when they arrive?',
     answer:
-      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, freshly packed for peak vitality.',
   },
   {
     question: 'How long do they stay fresh at home?',
@@ -48,9 +48,9 @@ const DEFAULT_PRODUCT_FAQS: ProductFAQ[] = [
       "Yes, grown indoors on soil-free racks, with nothing sprayed at any stage. We're working toward publishing third-party lab results as we scale.",
   },
   {
-    question: 'Do you deliver outside the tricity?',
+    question: 'How is delivery handled?',
     answer:
-      "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+      'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
   },
   {
     question: 'Can restaurants order in bulk?',
@@ -1040,15 +1040,15 @@ export default function ProductDetailClient({
         </div>
       </section>
 
-      {/* ================= SECTION 2a: FULL-BLEED "TRY THE TRICITY TRIO" BANNER ================= */}
+      {/* ================= SECTION 2a: FULL-BLEED "TRY THE TRIO BUNDLE" BANNER ================= */}
       <section className="w-full bg-[#00A234] text-[#FFFDF8] overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 md:h-[310px] lg:h-[330px]">
           {/* Media Side */}
           <div className="relative bg-[#1C3F2D] h-60 sm:h-72 md:h-full overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={content.bundle_banner_image || '/tricity-trio-banner.png'}
-              alt={content.bundle_banner_image_alt || content.bundle_banner_title || 'Tricity Trio - Go For All Three'}
+              src={content.bundle_banner_image || '/trio-bundle-banner.png'}
+              alt={content.bundle_banner_image_alt || content.bundle_banner_title || 'Classic Trio - Go For All Three'}
               className="w-full h-full object-cover"
             />
           </div>
@@ -1081,7 +1081,7 @@ export default function ProductDetailClient({
             </h2>
             <p className="font-sans text-xs sm:text-sm text-[#4A5C50] leading-relaxed">
               {content.reasons_subtitle ||
-                "Regular salad greens are fine. They're just not doing enough. Here's why thousands of tricity households added a spoonful to every plate."}
+                "Regular salad greens are fine. They're just not doing enough. Here's why thousands of health-conscious households add a spoonful to every plate."}
             </p>
           </div>
 

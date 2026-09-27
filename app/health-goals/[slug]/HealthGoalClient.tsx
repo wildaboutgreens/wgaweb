@@ -69,7 +69,7 @@ const DEFAULT_REVIEWS: Review[] = [
     product_id: null,
     reviewer_name: 'Dr Thanvi',
     reviewer_location: null,
-    review_text: "Best quality microgreens in the Tricity. <strong>Super fresh, non-bloating</strong>, incredible cellular vitality.",
+    review_text: "Best quality microgreens I've ever tasted. <strong>Super fresh, non-bloating</strong>, incredible cellular vitality.",
     rating: 5,
     display_order: 3,
     is_active: true,
@@ -93,7 +93,7 @@ const DEFAULT_FAQS = [
     aKey: 'faq_a1',
     defaultQ: 'How fresh are the greens when they arrive?',
     defaultA:
-      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, freshly packed for peak vitality.',
   },
   {
     qKey: 'faq_q2',
@@ -112,9 +112,9 @@ const DEFAULT_FAQS = [
   {
     qKey: 'faq_q4',
     aKey: 'faq_a4',
-    defaultQ: 'Do you deliver outside the tricity?',
+    defaultQ: 'How is delivery handled?',
     defaultA:
-      "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+      'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
   },
   {
     qKey: 'faq_q5',
@@ -745,7 +745,7 @@ export default function HealthGoalClient({
                   Verified Reviews
                 </span>
                 <h3 className="font-serif text-3xl sm:text-4xl text-[#151F19] mt-1">
-                  What Tricity Greens Lovers Say
+                  What Our Customers Say
                 </h3>
               </div>
               <div className="flex items-center gap-1 text-[#F59E0B] text-lg font-bold">

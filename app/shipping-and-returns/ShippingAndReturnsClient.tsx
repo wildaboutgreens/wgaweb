@@ -177,7 +177,7 @@ export default function ShippingAndReturnsClient() {
                 Morning Harvest &amp; Shipping Guidelines
               </h2>
               <p className="mb-3">
-                Wild About Greens fulfills morning harvest deliveries across designated serviceable delivery areas (Chandigarh, Mohali, and Panchkula):
+                Wild About Greens fulfills morning harvest deliveries across all designated serviceable delivery areas:
               </p>
               <ul className="list-disc pl-5 space-y-2">
                 <li>

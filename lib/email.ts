@@ -247,7 +247,7 @@ export async function sendNewsletterWelcome(
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; color: #333;">
           ${bodyHtml}
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="color: #888; font-size: 12px;">Wild About Greens: Fresh living harvest in Chandigarh, Mohali &amp; Panchkula</p>
+          <p style="color: #888; font-size: 12px;">Wild About Greens: Fresh living harvest delivered to your doorstep</p>
         </div>
       `,
     });

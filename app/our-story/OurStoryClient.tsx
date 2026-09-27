@@ -586,7 +586,7 @@ export default function OurStoryClient({
               </h2>
               <p className="text-[#FFFDF8]/65 text-sm sm:text-base max-w-md">
                 {content.newsletter_subtitle ||
-                  'Get 15% off your first order, plus early access to new varieties, growing tips and tricity-only drops.'}
+                  'Get 15% off your first order, plus early access to new varieties, growing tips and exclusive seasonal drops.'}
               </p>
             </motion.div>
 

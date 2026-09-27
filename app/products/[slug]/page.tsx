@@ -262,7 +262,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     return { title: 'Product Not Found · Wild About Greens' };
   }
   const title = `${product.name} · Wild About Greens`;
-  const description = product.description || `Shop ${product.name}: fresh living microgreens delivered in Chandigarh, Mohali & Panchkula.`;
+  const description = product.description || `Shop ${product.name}: fresh living microgreens cut to order and delivered to your doorstep.`;
   return {
     title,
     description,

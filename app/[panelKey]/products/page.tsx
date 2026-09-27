@@ -46,7 +46,7 @@ const defaultProductFaqs: ProductFAQ[] = [
   {
     question: 'How fresh are the greens when they arrive?',
     answer:
-      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach your doorstep freshly packed for peak vitality.',
   },
   {
     question: 'How long do they stay fresh at home?',
@@ -59,9 +59,9 @@ const defaultProductFaqs: ProductFAQ[] = [
       "Yes, grown indoors on soil-free racks, with nothing sprayed at any stage. We're working toward publishing third-party lab results as we scale.",
   },
   {
-    question: 'Do you deliver outside the tricity?',
+    question: 'How does shipping and delivery work?',
     answer:
-      "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+      'We harvest and pack to order so your greens reach your doorstep fresh at peak vitality.',
   },
   {
     question: 'Can restaurants order in bulk?',
@@ -94,12 +94,12 @@ const defaultDetailAccordions: DetailAccordion[] = [
   {
     title: 'Growing Method & Purity',
     content:
-      'We operate vertical indoor climate racks in the Tricity. No soil, no organic compost pathogens, and absolutely zero pesticide or fertilizer residues.\n\nGrown on sterilized coco peat with 100% reverse osmosis mineral drinking water.',
+      'We operate vertical indoor climate racks. No soil, no organic compost pathogens, and absolutely zero pesticide or fertilizer residues.\n\nGrown on sterilized coco peat with 100% reverse osmosis mineral drinking water.',
   },
   {
     title: 'Delivery & Packaging',
     content:
-      'Delivered in our reusable food-grade living trays. We dispatch orders within hours of the final quality check across Chandigarh, Mohali, and Panchkula.',
+      'Delivered in our reusable food-grade living trays. We dispatch orders within hours of the final quality check straight to your doorstep.',
   },
 ];
 

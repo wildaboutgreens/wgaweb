@@ -11,9 +11,8 @@ declare global {
   }
 }
 
-// Serviceable pincodes: Chandigarh (160xxx), Mohali/Zirakpur (140xxx)
 function isServiceablePincode(pincode: string): boolean {
-  return /^(160|140)\d{3}$/.test(pincode);
+  return /^\d{6}$/.test(pincode.trim());
 }
 
 export default function CheckoutPage() {
@@ -79,7 +78,7 @@ export default function CheckoutPage() {
       return;
     }
     if (!isServiceablePincode(form.pincode)) {
-      setError('Sorry, we only deliver to Chandigarh, Mohali, and Panchkula.');
+      setError('Please enter a valid 6-digit delivery pincode.');
       return;
     }
 
@@ -249,7 +248,7 @@ export default function CheckoutPage() {
             placeholder="6-digit delivery pincode"
             maxLength={6}
           />
-          <p className="text-xs text-gray-400 mt-1">We deliver to Chandigarh, Mohali & Panchkula only.</p>
+          <p className="text-xs text-gray-400 mt-1">Enter your 6-digit delivery pincode.</p>
         </div>
 
         {/* Order Summary */}

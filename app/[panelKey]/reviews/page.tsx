@@ -216,7 +216,7 @@ export default function AdminReviewsPage() {
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Sector 8, Chandigarh"
+                  placeholder="e.g. Verified Customer"
                   value={form.reviewer_location}
                   onChange={(e) => setForm({ ...form, reviewer_location: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg text-sm bg-white"

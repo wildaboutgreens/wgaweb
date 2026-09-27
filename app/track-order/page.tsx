@@ -100,7 +100,7 @@ const TIMELINE_STEPS = [
   {
     key: 'harvest',
     title: 'Morning Harvest',
-    desc: 'Selected & harvested fresh at our Tricity farm',
+    desc: 'Selected & harvested fresh at our indoor vertical farm',
     icon: '🌱',
   },
   {
@@ -112,7 +112,7 @@ const TIMELINE_STEPS = [
   {
     key: 'shipped',
     title: 'Out for Delivery',
-    desc: 'In transit with our Tricity delivery partner',
+    desc: 'In transit with our fresh delivery partner',
     icon: '🚚',
   },
   {
@@ -303,7 +303,7 @@ function TrackOrderContent() {
 
             <p className="text-[#151F19]/75 text-sm sm:text-base leading-relaxed">
               {content.track_subtitle ||
-                'Enter your order number along with your phone number and email address to view the live harvest and delivery status across Chandigarh, Mohali & Panchkula.'}
+                'Enter your order number along with your phone number and email address to view the live harvest and delivery status.'}
             </p>
           </div>
 
@@ -597,7 +597,7 @@ function TrackOrderContent() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-[#FAF6EF]/50 border border-[#E4DDC8]/60 mb-6 text-xs sm:text-sm">
                             <div>
                               <span className="text-[11px] font-bold uppercase tracking-wider text-[#1C3F2D] block mb-1">
-                                Delivery Address (Tricity)
+                                Delivery Address
                               </span>
                               <p className="font-medium text-[#151F19]">
                                 {order.customer_name} · {order.customer_phone}
@@ -613,7 +613,7 @@ function TrackOrderContent() {
                               </span>
                               <p className="text-[#151F19]/80 leading-relaxed">
                                 {content.track_harvest_note ||
-                                  'Grown with mineral water & clean air · Harvested morning of delivery in Tricity'}
+                                  'Grown with mineral water & clean air · Harvested morning of delivery'}
                               </p>
                               {order.subscription_frequency && (
                                 <span className="inline-block mt-1 text-xs font-semibold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">

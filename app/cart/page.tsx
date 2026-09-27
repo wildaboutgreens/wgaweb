@@ -218,7 +218,7 @@ export default function CartPage() {
               Shopping Cart
             </h1>
             <p className="font-mono text-xs text-[#5C6B60] uppercase tracking-wider mt-1">
-              Chandigarh · Mohali · Panchkula
+              Fresh Living Harvest · Delivered to Your Doorstep
             </p>
           </div>
 
@@ -423,7 +423,7 @@ export default function CartPage() {
             </div>
             <div className="flex justify-between text-sm text-[#5C6B60]">
               <span className="flex items-center gap-1.5">
-                <span>Delivery (Tricity Radius)</span>
+                <span>Delivery</span>
                 <span className="text-[10px] font-mono bg-[#EBF5EE] text-[#1C3F2D] px-1.5 py-0.5 rounded font-bold">
                   FREE
                 </span>
@@ -438,7 +438,7 @@ export default function CartPage() {
             <div>
               <span className="font-serif font-bold text-xl text-[#151F19] block">Total</span>
               <span className="font-mono text-[11px] text-[#5C6B60]">
-                Taxes &amp; Tricity delivery included
+                Taxes &amp; delivery included
               </span>
             </div>
             <span className="font-mono font-bold text-2xl sm:text-3xl text-[#122A1F]">
@@ -486,8 +486,8 @@ export default function CartPage() {
           </div>
           <div className="p-3.5 bg-[#FFFDF8] border border-[#E4DDC8] rounded-2xl text-center">
             <span className="text-xl block mb-1">🚚</span>
-            <p className="font-serif font-bold text-xs text-[#151F19]">Hyperlocal Tricity</p>
-            <p className="font-mono text-[10px] text-[#5C6B60] mt-0.5">Morning delivery</p>
+            <p className="font-serif font-bold text-xs text-[#151F19]">Fast Delivery</p>
+            <p className="font-mono text-[10px] text-[#5C6B60] mt-0.5">Fresh to your door</p>
           </div>
         </div>
       </main>

@@ -315,7 +315,7 @@ export default function HomePageClient({
           >
             <span>🌱</span>
             <span>
-              {content.hero_eyebrow || 'Grown Locally · Chandigarh · Mohali · Panchkula'}
+              {content.hero_eyebrow || 'Grown Locally · Delivered Fresh Daily'}
             </span>
           </motion.div>
 
@@ -360,7 +360,7 @@ export default function HomePageClient({
             <div className="text-white text-sm tracking-[3px]">★★★★★</div>
             <div className="font-mono text-[11.5px] tracking-[0.09em] uppercase text-[#FFFDF8]/85 font-medium text-center max-w-lg">
               {content.hero_trust_text ||
-                'Join over 1000+ families eating microgreens across Chandigarh · Mohali · Panchkula'}
+                'Join over 1000+ families eating fresh living microgreens daily'}
             </div>
           </motion.div>
         </motion.div>
@@ -724,7 +724,7 @@ export default function HomePageClient({
                       15 mins · Easy · Serves 2
                     </div>
                     <p className="text-sm text-[#FFFDF8]/90 leading-relaxed">
-                      The tricity breakfast you already make, quietly upgraded. Temper mustard seeds, curry
+                      The everyday breakfast you already make, quietly upgraded. Temper mustard seeds, curry
                       leaves and peanuts, fold through soaked poha with turmeric, then kill the heat and stir in
                       a fistful of radish and pea shoots so they stay raw, crunchy and intact.
                     </p>

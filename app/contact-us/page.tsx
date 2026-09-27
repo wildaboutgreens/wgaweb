@@ -44,17 +44,17 @@ const FAQ_CATEGORIES = [
       {
         question: 'How fresh are the greens when they arrive?',
         answer:
-          'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+          'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, freshly packed for peak vitality.',
       },
       {
-        question: 'Do you deliver outside the tricity?',
+        question: 'How is delivery handled?',
         answer:
-          "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+          'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
       },
       {
         question: 'What are your harvest & delivery hours?',
         answer:
-          'Morning cut-and-deliver runs take place between 7:00 AM – 1:00 PM daily across all serviceable locations in the Tricity to ensure living greens reach you at peak vitality.',
+          'Morning cut-and-deliver runs take place between 7:00 AM – 1:00 PM daily across our delivery network to ensure living greens reach you at peak vitality.',
       },
     ],
   },
@@ -420,7 +420,7 @@ export default function ContactUsPage() {
                     Track an order
                   </h3>
                   <p className="text-xs leading-relaxed text-[#151F19]/70 mb-4">
-                    Check real-time morning harvest status and live delivery dispatch across Chandigarh, Mohali &amp; Panchkula.
+                    Check real-time morning harvest status and live delivery dispatch directly to your doorstep.
                   </p>
                 </div>
                 <Link
@@ -531,7 +531,7 @@ export default function ContactUsPage() {
                   Harvest &amp; Delivery Window
                 </h3>
                 <p className="text-xs text-[#151F19]/65 leading-relaxed">
-                  Morning cut-and-deliver runs: <strong className="text-[#122A1F]">7:00 AM – 1:00 PM</strong> daily across Chandigarh, Mohali &amp; Panchkula.
+                  Morning cut-and-deliver runs: <strong className="text-[#122A1F]">7:00 AM – 1:00 PM</strong> daily across our delivery network.
                 </p>
               </div>
 

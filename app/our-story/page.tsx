@@ -7,10 +7,10 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
   title: 'Our Story · Wild About Greens',
   description:
-    'Helping India rediscover the power of living food. We grow living microgreens locally on vertical indoor racks across Chandigarh, Mohali & Panchkula.',
+    'Helping India rediscover the power of living food. We grow living microgreens locally on vertical indoor racks.',
   openGraph: {
     title: 'Our Story · Wild About Greens',
-    description: 'Helping India rediscover the power of living food. We grow living microgreens locally across Chandigarh, Mohali & Panchkula.',
+    description: 'Helping India rediscover the power of living food. We grow fresh living microgreens on vertical indoor racks.',
   },
   twitter: {
     card: 'summary_large_image',

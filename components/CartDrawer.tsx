@@ -514,7 +514,7 @@ export default function CartDrawer() {
               <div className="flex-1 flex flex-col overflow-y-auto scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {/* Delivery announcement banner */}
                 <div className="bg-[#EBF5EE] text-[#1C3F2D] font-mono text-xs font-medium px-4 py-2.5 border-b border-[#C5DEC9] flex items-center justify-center gap-1.5 shrink-0">
-                  <span>Delivered within hours in Chandigarh, Mohali &amp; Panchkula</span>
+                  <span>Harvested fresh &amp; delivered directly to your doorstep</span>
                 </div>
 
                 {/* Items List */}

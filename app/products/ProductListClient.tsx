@@ -134,7 +134,7 @@ const DEFAULT_FAQS = [
     aKey: 'faq_a1',
     defaultQ: 'How fresh are the greens when they arrive?',
     defaultA:
-      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, across Chandigarh, Mohali and Panchkula.',
+      'Every tray is cut after you place your order, not pulled from cold storage. Most orders reach you within a few hours of harvest, freshly packed for peak vitality.',
   },
   {
     qKey: 'faq_q2',
@@ -153,9 +153,9 @@ const DEFAULT_FAQS = [
   {
     qKey: 'faq_q4',
     aKey: 'faq_a4',
-    defaultQ: 'Do you deliver outside the tricity?',
+    defaultQ: 'How is delivery handled?',
     defaultA:
-      "Not yet. We're starting hyperlocal in Chandigarh, Mohali and Panchkula so every tray reaches you within hours of being cut.",
+      'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
   },
   {
     qKey: 'faq_q5',
@@ -350,7 +350,7 @@ export default function ProductListClient({
     }
     return {
       title: catKey.replace(/-/g, ' ').toUpperCase(),
-      desc: 'Living, nutrient dense microgreens grown with pure mineral RO water in the Tricity.',
+      desc: 'Living, nutrient dense microgreens grown with pure mineral RO water on vertical indoor racks.',
     };
   };
 
@@ -429,7 +429,7 @@ export default function ProductListClient({
         {/* Left Column: Forest Copy */}
         <div className="bg-[#1C3F2D] text-[#FFFDF8] flex flex-col justify-center pt-36 pb-20 px-8 sm:px-14 lg:px-20">
           <div className="font-mono text-[11.5px] tracking-[0.14em] uppercase text-[#B7E23F] mb-5 font-semibold">
-            {content.hero_eyebrow || '🌱 LIVING HARVEST · TRICITY GROWN'}
+            {content.hero_eyebrow || '🌱 LIVING HARVEST · HARVESTED TO ORDER'}
           </div>
 
           <h1 className="font-serif font-medium text-4xl sm:text-5xl lg:text-6xl leading-[1.06] tracking-tight max-w-lg mb-6">
@@ -446,8 +446,7 @@ export default function ProductListClient({
           <p className="text-sm sm:text-base text-white/80 max-w-md leading-relaxed mb-8">
             {content.hero_subtitle || (
               <>
-                Living microgreen trays delivered on harvest morning across Chandigarh, Mohali &amp;
-                Panchkula. Snip fresh into your daily meals for up to 10 days.
+                Living microgreen trays delivered fresh on harvest morning. Snip fresh into your daily meals for up to 10 days.
               </>
             )}
           </p>
@@ -796,7 +795,7 @@ export default function ProductListClient({
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="text-[#CFFA57] text-base leading-none mt-0.5 select-none">✦</span>
-                <span>{content.trust_bullet_4 || 'Zero days in transit, grown right here in the tricity.'}</span>
+                <span>{content.trust_bullet_4 || 'Zero days in transit, harvested fresh on the morning of delivery.'}</span>
               </li>
               <li className="flex items-start gap-2.5">
                 <span className="text-[#CFFA57] text-base leading-none mt-0.5 select-none">✦</span>
@@ -1142,7 +1141,7 @@ export default function ProductListClient({
             </h2>
             <p className="text-[#FFFDF8]/65 text-sm sm:text-base max-w-md leading-relaxed">
               {content.newsletter_subtitle ||
-                'Get 15% off your first order, plus early access to new varieties, growing tips and tricity-only drops.'}
+                'Get 15% off your first order, plus early access to new varieties, growing tips and exclusive seasonal drops.'}
             </p>
           </div>
 
