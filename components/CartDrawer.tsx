@@ -88,15 +88,41 @@ const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
   },
 ];
 
+interface ProductVariant {
+  id: string;
+  label: string;
+  price_paise: number;
+  stock_qty: number;
+  is_active: boolean;
+}
+
+interface ProductImage {
+  id: string;
+  image_url: string;
+  display_order: number;
+}
+
+interface ProductWithVariants {
+  id: string;
+  slug: string;
+  name: string;
+  badge_label?: string | null;
+  thumbnail_url?: string | null;
+  pairs_well_with?: string[] | string | null;
+  is_active?: boolean;
+  variants: ProductVariant[];
+  images: ProductImage[];
+}
+
 function formatProductForCart(
-  found: any,
+  found: ProductWithVariants,
   badgeText?: string,
   bg: string = '#EEF5EF',
   badgeBg: string = '#1C3F2D',
   badgeColor: string = '#FFFDF8'
 ): BestsellerProduct {
   const activeVar =
-    (Array.isArray(found.variants) && found.variants.find((v: any) => v.is_active)) ||
+    (Array.isArray(found.variants) && found.variants.find((v) => v.is_active)) ||
     (Array.isArray(found.variants) && found.variants[0]) ||
     {
       id: found.id,
