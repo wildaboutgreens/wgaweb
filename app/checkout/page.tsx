@@ -151,9 +151,40 @@ export default function CheckoutPage() {
             const verifyData = await verifyRes.json();
 
             if (verifyRes.ok) {
-              clearCart();
               const confirmNumber = verifyData.orderNumber || data.orderNumber;
-              router.push(`/order-confirmation?orderNumber=${confirmNumber}`);
+              const customerEmail = verifyData.customerEmail || form.email.trim();
+
+              try {
+                sessionStorage.setItem(
+                  'wga_last_order',
+                  JSON.stringify({
+                    orderNumber: confirmNumber,
+                    customerName: verifyData.customerName || form.name.trim(),
+                    customerEmail: customerEmail,
+                    customerPhone: form.phone.trim(),
+                    deliveryAddress: form.address.trim(),
+                    deliveryPincode: form.pincode.trim(),
+                    totalPaise: verifyData.totalPaise || data.amount || total,
+                    purchaseType: hasSubscription ? 'subscription' : 'one_time',
+                    subscriptionFrequency: hasSubscription ? 'weekly' : null,
+                    items: items.map((i) => ({
+                      productName: i.productName,
+                      variantLabel: i.variantLabel,
+                      quantity: i.quantity,
+                      pricePaise: i.pricePaise,
+                      image: i.thumbnailUrl || undefined,
+                    })),
+                    createdAt: new Date().toISOString(),
+                  })
+                );
+              } catch {
+                // Silently ignore storage issues
+              }
+
+              clearCart();
+              router.push(
+                `/order-confirmation?orderNumber=${encodeURIComponent(confirmNumber)}&email=${encodeURIComponent(customerEmail)}`
+              );
             } else {
               setError('Payment verification failed. If you were charged, please contact us.');
               setLoading(false);

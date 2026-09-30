@@ -27,6 +27,18 @@ const emptyPin = {
   is_active: true,
 };
 
+const EXCLUDED_GROUPS = ['homepage_shop_by_goal', 'shop_by_health_goal', 'shop_by_goal'];
+
+function isExcludedGroup(key: string): boolean {
+  if (!key) return false;
+  const normalized = key.toLowerCase();
+  return (
+    EXCLUDED_GROUPS.includes(normalized) ||
+    normalized.includes('shop_by_goal') ||
+    normalized.includes('shop_by_health_goal')
+  );
+}
+
 export default function AdminPinsPage() {
   const [pins, setPins] = useState<Pin[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
@@ -35,16 +47,16 @@ export default function AdminPinsPage() {
   const [form, setForm] = useState(emptyPin);
   const [isNew, setIsNew] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [newGroupName, setNewGroupName] = useState('');
 
   const loadAllPins = useCallback(async () => {
     const res = await adminFetch('/api/admin/pins');
     if (res.ok) {
       const data: Pin[] = await res.json();
-      setPins(data);
-      const uniqueGroups = Array.from(new Set(data.map((p) => p.group_key))).sort();
+      const visiblePins = data.filter((p) => !isExcludedGroup(p.group_key));
+      setPins(visiblePins);
+      const uniqueGroups = Array.from(new Set(visiblePins.map((p) => p.group_key))).sort();
       setGroups(uniqueGroups);
-      if (!activeGroup && uniqueGroups.length > 0) {
+      if ((!activeGroup || isExcludedGroup(activeGroup)) && uniqueGroups.length > 0) {
         setActiveGroup(uniqueGroups[0]);
       }
     }
@@ -97,14 +109,6 @@ export default function AdminPinsPage() {
     if (!confirm('Delete this pin?')) return;
     await adminFetch(`/api/admin/pins/${id}`, { method: 'DELETE' });
     loadAllPins();
-  };
-
-  const addGroup = () => {
-    const key = newGroupName.trim().toLowerCase().replace(/\s+/g, '_');
-    if (!key || groups.includes(key)) return;
-    setGroups([...groups, key]);
-    setActiveGroup(key);
-    setNewGroupName('');
   };
 
   // Editing / Creating view
@@ -181,7 +185,7 @@ export default function AdminPinsPage() {
             <ImageField
               value={form.image_url || null}
               onChange={(url) => setForm((prev) => ({ ...prev, image_url: url }))}
-              aspectRatio={(form.group_key || activeGroup) === 'homepage_shop_by_goal' ? '1/1' : '4/3'}
+              aspectRatio="4/3"
               folder={`pins/${form.group_key || activeGroup || 'general'}`}
             />
           </div>
@@ -251,25 +255,10 @@ export default function AdminPinsPage() {
             {g.replace(/_/g, ' ')}
           </button>
         ))}
-
-        <div className="flex items-center gap-2 ml-2">
-          <input
-            value={newGroupName}
-            onChange={(e) => setNewGroupName(e.target.value)}
-            placeholder="New group key..."
-            className="px-3 py-2 border rounded-lg text-sm w-44"
-          />
-          <button
-            onClick={addGroup}
-            className="px-3 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200"
-          >
-            + Group
-          </button>
-        </div>
       </div>
 
       {!activeGroup ? (
-        <p className="text-gray-400 text-sm">No pin groups yet. Create one above.</p>
+        <p className="text-gray-400 text-sm">No pin groups available.</p>
       ) : (
         <>
           <div className="flex items-center justify-between mb-4">

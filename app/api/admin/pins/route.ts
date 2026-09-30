@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSQL } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/pins: list all pins, optionally filter by ?group_key=
 export async function GET(request: NextRequest) {
   try {
@@ -17,6 +19,7 @@ export async function GET(request: NextRequest) {
     } else {
       pins = await sql`
         SELECT * FROM content_pins
+        WHERE group_key NOT IN ('homepage_shop_by_goal', 'shop_by_health_goal', 'shop_by_goal')
         ORDER BY group_key ASC, display_order ASC
       `;
     }

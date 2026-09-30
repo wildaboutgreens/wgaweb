@@ -26,7 +26,7 @@ export async function GET() {
     const settings: Record<string, string> = {
       homepage_partner_logos_enabled: 'true',
       homepage_partner_logos_eyebrow: 'TRUSTED BY',
-      homepage_partner_logos_title: 'Leading organizations choose Wild About Greens.',
+      homepage_partner_logos_title: 'Leading organizations choose wild about greens.',
     };
 
     for (const r of settingsRows as { key: string; value: string }[]) {

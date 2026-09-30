@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'Returns & Exchanges | Wild About Greens',
-  description: 'Submit an exchange or return request for your living microgreens order.',
+  description: 'Morning harvest delivery policies and 24-hour return guidelines for Wild About Greens.',
 };
 
 export default function ReturnsAndExchangePage() {

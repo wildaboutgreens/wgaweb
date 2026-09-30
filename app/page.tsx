@@ -210,7 +210,10 @@ export interface PartnerLogo {
   is_active: boolean;
 }
 
-async function getPartnerLogos(): Promise<PartnerLogo[]> {
+async function getPartnerLogos(content: Record<string, string>): Promise<PartnerLogo[]> {
+  if (content.homepage_partner_logos_enabled === 'false') {
+    return [];
+  }
   try {
     const sql = getSQL();
     const logos = await sql`
@@ -235,7 +238,7 @@ export default async function HomePage() {
       getFeaturedRecipes(content),
       getHealthGoalsContent(),
       getActiveProducts(),
-      getPartnerLogos(),
+      getPartnerLogos(content),
     ]);
 
   return (

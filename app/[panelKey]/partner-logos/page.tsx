@@ -37,7 +37,7 @@ export default function AdminPartnerLogosPage() {
   const [settings, setSettings] = useState<SectionSettings>({
     homepage_partner_logos_enabled: 'true',
     homepage_partner_logos_eyebrow: 'TRUSTED BY',
-    homepage_partner_logos_title: 'Leading organizations choose Wild About Greens.',
+    homepage_partner_logos_title: 'Leading organizations choose wild about greens.',
     homepage_partner_logos_card_style: 'cards',
     homepage_partner_logos_size: 'standard',
   });
@@ -52,13 +52,14 @@ export default function AdminPartnerLogosPage() {
   // Settings form states
   const [settingsForm, setSettingsForm] = useState({
     eyebrow: 'TRUSTED BY',
-    title: 'Leading organizations choose Wild About Greens.',
+    title: 'Leading organizations choose wild about greens.',
     card_style: 'cards',
     logo_size: 'standard',
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSavedFeedback, setSettingsSavedFeedback] = useState(false);
   const [togglingSection, setTogglingSection] = useState(false);
+  const [toggleFeedback, setToggleFeedback] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     try {
@@ -70,7 +71,7 @@ export default function AdminPartnerLogosPage() {
           setSettings(data.settings);
           setSettingsForm({
             eyebrow: data.settings.homepage_partner_logos_eyebrow || 'TRUSTED BY',
-            title: data.settings.homepage_partner_logos_title || 'Leading organizations choose Wild About Greens.',
+            title: data.settings.homepage_partner_logos_title || 'Leading organizations choose wild about greens.',
             card_style: data.settings.homepage_partner_logos_card_style || 'cards',
             logo_size: data.settings.homepage_partner_logos_size || 'standard',
           });
@@ -91,6 +92,7 @@ export default function AdminPartnerLogosPage() {
 
   const handleToggleSection = async () => {
     setTogglingSection(true);
+    setToggleFeedback(null);
     const newStatus = !isSectionEnabled;
     try {
       const res = await adminFetch('/api/admin/partner-logos/settings', {
@@ -103,6 +105,12 @@ export default function AdminPartnerLogosPage() {
           ...prev,
           homepage_partner_logos_enabled: newStatus ? 'true' : 'false',
         }));
+        setToggleFeedback(
+          newStatus
+            ? 'Section is now ENABLED and visible on the homepage.'
+            : 'Section is now DISABLED and hidden from the homepage.'
+        );
+        setTimeout(() => setToggleFeedback(null), 4000);
       }
     } catch (err) {
       console.error('Failed to toggle section:', err);
@@ -248,45 +256,97 @@ export default function AdminPartnerLogosPage() {
       </div>
 
       {/* 1. Master Section Enable/Disable Banner */}
-      <div className={`p-5 rounded-xl border transition-all ${
-        isSectionEnabled
-          ? 'bg-emerald-50/70 border-emerald-200'
-          : 'bg-amber-50/70 border-amber-200'
-      }`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5">
-              <span className="text-xl">{isSectionEnabled ? '🟢' : '⚪'}</span>
-              <h2 className="text-base font-bold text-gray-900">
-                Homepage Section Status:{' '}
-                <span className={isSectionEnabled ? 'text-emerald-700' : 'text-amber-700'}>
-                  {isSectionEnabled ? 'Visible (Enabled)' : 'Hidden (Disabled)'}
+      <div
+        className={`p-6 rounded-2xl border-2 transition-all shadow-sm ${
+          isSectionEnabled
+            ? 'bg-gradient-to-r from-emerald-50/90 via-emerald-50/40 to-white border-emerald-300'
+            : 'bg-gradient-to-r from-gray-50 via-amber-50/30 to-white border-gray-300'
+        }`}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="flex items-start gap-4">
+            {/* Interactive Toggle Switch */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isSectionEnabled}
+              onClick={handleToggleSection}
+              disabled={togglingSection}
+              className={`relative inline-flex h-8 w-16 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner mt-0.5 ${
+                isSectionEnabled ? 'bg-emerald-600' : 'bg-gray-300'
+              }`}
+              title={isSectionEnabled ? 'Click to disable section from homepage' : 'Click to enable section on homepage'}
+            >
+              <span
+                className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  isSectionEnabled ? 'translate-x-8' : 'translate-x-0'
+                }`}
+              />
+            </button>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h2 className="text-base font-bold text-gray-900">
+                  Homepage Section Status:
+                </h2>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-xs ${
+                    isSectionEnabled
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-gray-100 text-gray-700 border border-gray-300'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${isSectionEnabled ? 'bg-emerald-600 animate-pulse' : 'bg-gray-400'}`} />
+                  {isSectionEnabled ? 'Enabled & Visible on Homepage' : 'Disabled & Hidden from Homepage'}
                 </span>
-              </h2>
+              </div>
+              <p className="text-xs text-gray-600 leading-relaxed max-w-2xl">
+                {isSectionEnabled
+                  ? 'This section is currently live and displayed on the homepage with your partner logos marquee.'
+                  : 'This section is currently turned off. It will not show up anywhere on the homepage.'}
+              </p>
+              {toggleFeedback && (
+                <p className="text-xs font-semibold text-emerald-700 animate-fade-in flex items-center gap-1 pt-1">
+                  <span>✓</span> {toggleFeedback}
+                </p>
+              )}
             </div>
-            <p className="text-xs text-gray-600 max-w-2xl">
-              {isSectionEnabled
-                ? 'The partner logos section is currently visible to visitors on the homepage.'
-                : 'The section is currently turned off and completely hidden from the homepage.'}
-            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleToggleSection}
-            disabled={togglingSection}
-            className={`px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-sm shrink-0 cursor-pointer ${
-              isSectionEnabled
-                ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-            }`}
-          >
-            {togglingSection
-              ? 'Updating...'
-              : isSectionEnabled
-              ? 'Turn Off Section'
-              : 'Turn On Section'}
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={handleToggleSection}
+              disabled={togglingSection}
+              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer ${
+                isSectionEnabled
+                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 hover:border-rose-300'
+                  : 'bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-md'
+              }`}
+            >
+              {togglingSection ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  <span>Updating...</span>
+                </>
+              ) : isSectionEnabled ? (
+                <>
+                  <svg className="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                  </svg>
+                  <span>Disable Section on Homepage</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <span>Enable Section on Homepage</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -324,7 +384,7 @@ export default function AdminPartnerLogosPage() {
               type="text"
               value={settingsForm.title}
               onChange={(e) => setSettingsForm({ ...settingsForm, title: e.target.value })}
-              placeholder="Leading organizations choose Wild About Greens."
+              placeholder="Leading organizations choose wild about greens."
               className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
             />
             <p className="text-[11px] text-gray-400 mt-1">

@@ -42,7 +42,7 @@ export default function RecipeClient({
   });
 
   return (
-    <div className="bg-white text-[#151F19] min-h-screen pt-[64px] lg:pt-[70px] pb-24">
+    <div className="bg-[#F3EEE0] text-[#151F19] min-h-screen pt-[64px] lg:pt-[70px] pb-24">
       {/* Full-Width Edge-to-Edge Panoramic Hero Banner (W S Bentley Style) */}
       <div className="w-full relative overflow-hidden bg-[#EAE8E1] h-[220px] sm:h-[280px] md:h-[340px] lg:h-[380px]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -73,7 +73,7 @@ export default function RecipeClient({
             className={`px-4 sm:px-5 py-1.5 sm:py-2 border text-[11px] sm:text-xs font-semibold uppercase tracking-[0.14em] transition-all duration-200 ${
               activeCategory === 'all'
                 ? 'bg-[#74A832] text-white border-[#74A832] shadow-xs'
-                : 'bg-white text-[#2C3E2D] border-[#74A832] hover:bg-[#74A832] hover:text-white'
+                : 'bg-transparent text-[#2C3E2D] border-[#74A832] hover:bg-[#74A832] hover:text-white'
             }`}
           >
             All
@@ -87,7 +87,7 @@ export default function RecipeClient({
                 className={`px-4 sm:px-5 py-1.5 sm:py-2 border text-[11px] sm:text-xs font-semibold uppercase tracking-[0.14em] transition-all duration-200 ${
                   isActive
                     ? 'bg-[#74A832] text-white border-[#74A832] shadow-xs'
-                    : 'bg-white text-[#2C3E2D] border-[#74A832] hover:bg-[#74A832] hover:text-white'
+                    : 'bg-transparent text-[#2C3E2D] border-[#74A832] hover:bg-[#74A832] hover:text-white'
                 }`}
               >
                 {cat}

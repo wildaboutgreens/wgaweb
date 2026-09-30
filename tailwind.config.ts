@@ -43,7 +43,8 @@ const config: Config = {
         display: ["'Anton'", 'sans-serif'],
         serif: ["'Fraunces'", 'serif'],
         editorial: ["'Newsreader'", 'Georgia', 'serif'],
-        handwriting: ["'Caveat'", 'cursive'],
+        handwriting: ["'Dancing Script'", "'Homemade Apple'", "'Caveat'", 'cursive'],
+        script: ["'Dancing Script'", "'Homemade Apple'", 'cursive'],
         sans: ["'Inter'", 'sans-serif'],
         mono: ["'IBM Plex Mono'", 'monospace'],
         spacemono: ["'Space Mono'", 'monospace'],
@@ -51,6 +52,7 @@ const config: Config = {
       animation: {
         kenburns: 'kenburns 20s ease-in-out infinite alternate',
         shimmer: 'shimmer 3s ease-in-out infinite',
+        marquee: 'marquee 35s linear infinite',
       },
       keyframes: {
         kenburns: {
@@ -60,6 +62,10 @@ const config: Config = {
         shimmer: {
           '0%': { transform: 'translateX(-150%) skewX(-20deg)' },
           '40%, 100%': { transform: 'translateX(250%) skewX(-20deg)' },
+        },
+        marquee: {
+          '0%': { transform: 'translate3d(0, 0, 0)' },
+          '100%': { transform: 'translate3d(-50%, 0, 0)' },
         },
       },
     },

@@ -117,6 +117,7 @@ export default function AdminBlogPage() {
     try {
       const payload = {
         ...form,
+        excerpt: form.post_type === 'article' ? null : form.excerpt,
         recipe_ingredients: form.post_type === 'recipe' ? form.recipe_ingredients.filter(s => s.trim().length > 0) : [],
         recipe_method_steps: form.post_type === 'recipe' ? form.recipe_method_steps.filter(s => s.trim().length > 0) : [],
         recipe_categories: form.recipe_categories.filter(s => s.trim().length > 0),
@@ -240,14 +241,16 @@ export default function AdminBlogPage() {
               />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Excerpt</label>
-            <input
-              value={form.excerpt}
-              onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg text-sm"
-            />
-          </div>
+          {form.post_type === 'recipe' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Excerpt / Short Summary</label>
+              <input
+                value={form.excerpt}
+                onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                className="w-full px-3 py-2 border rounded-lg text-sm"
+              />
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {form.post_type === 'recipe' ? 'Introduction / Story' : 'Content'}

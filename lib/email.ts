@@ -54,8 +54,8 @@ export async function sendOrderConfirmation(
       AND confirmation_email_sent = false
       AND payment_status = 'paid'
     RETURNING id, order_number, customer_name, customer_email, customer_phone,
-              delivery_address, total_paise, purchase_type,
-              subscription_frequency
+              delivery_address, delivery_pincode, total_paise, purchase_type,
+              subscription_frequency, created_at
   `;
 
   if (updated.length === 0) {
@@ -63,14 +63,14 @@ export async function sendOrderConfirmation(
     return false;
   }
 
-  const order = updated[0] as unknown as OrderForEmail;
+  const order = updated[0] as unknown as OrderForEmail & { delivery_pincode?: string; created_at?: string };
 
   if (!order.customer_email) {
     console.log(`Order ${orderId}: no customer email, skipping confirmation`);
     return false;
   }
 
-  // Fetch order items with product info
+  // Fetch order items with product and variant info
   const items = await sql`
     SELECT oi.quantity, oi.unit_price_paise,
            pv.label, p.name AS product_name
@@ -80,19 +80,85 @@ export async function sendOrderConfirmation(
     WHERE oi.order_id = ${orderId}
   ` as unknown as OrderItemForEmail[];
 
-  const fromEmail = process.env.FROM_EMAIL || 'orders@wildaboutgreens.com';
+  // Fetch email content templates configured in admin
+  const emailBlocks = await sql`
+    SELECT key, value
+    FROM content_blocks
+    WHERE page = 'emails'
+  `;
+  const emailConfig: Record<string, string> = {};
+  for (const b of emailBlocks as unknown as { key: string; value: string }[]) {
+    emailConfig[b.key] = b.value;
+  }
 
-  // Build a simple plain-text + HTML email
-  const itemLines = items.map(
-    (item) =>
-      `${item.product_name} (${item.label}) × ${item.quantity}: ₹${(item.unit_price_paise * item.quantity / 100).toFixed(2)}`
-  );
+  const rawSubject = emailConfig.order_confirmation_subject || 'Wild About Greens: Order #{order_number} Confirmed! 🌱';
+  const rawHeading = emailConfig.order_confirmation_heading || 'Thanks for your order, {customer_name}!';
+  const rawIntro = emailConfig.order_confirmation_intro || "We've received your order and payment. Our urban farm team will harvest and prepare your living microgreens fresh for delivery.";
+  const rawFooter = emailConfig.order_confirmation_footer || "Questions about your delivery? Reply directly to this email or reach us on WhatsApp. Thank you for supporting sustainable urban farming!";
 
   const totalFormatted = `₹${(order.total_paise / 100).toFixed(2)}`;
+  const cleanPincode = order.delivery_pincode ? ` — ${order.delivery_pincode}` : '';
+  const fullAddress = `${order.delivery_address}${cleanPincode}`;
+
+  // Replace dynamic tags
+  const subject = rawSubject
+    .replace(/{order_number}/gi, order.order_number)
+    .replace(/{customer_name}/gi, order.customer_name)
+    .replace(/{total}/gi, totalFormatted);
+
+  const heading = rawHeading
+    .replace(/{order_number}/gi, order.order_number)
+    .replace(/{customer_name}/gi, order.customer_name)
+    .replace(/{total}/gi, totalFormatted);
+
+  const intro = rawIntro
+    .replace(/{order_number}/gi, order.order_number)
+    .replace(/{customer_name}/gi, order.customer_name)
+    .replace(/{total}/gi, totalFormatted);
+
+  const footer = rawFooter
+    .replace(/{order_number}/gi, order.order_number)
+    .replace(/{customer_name}/gi, order.customer_name)
+    .replace(/{total}/gi, totalFormatted);
+
+  const introHtml = intro
+    .split('\n')
+    .map((line) => (line.trim() === '' ? '<br />' : `<p style="margin: 0 0 10px; line-height: 1.6;">${line}</p>`))
+    .join('');
+
+  const footerHtml = footer
+    .split('\n')
+    .map((line) => (line.trim() === '' ? '' : `<p style="margin: 0 0 6px;">${line}</p>`))
+    .join('');
+
   const subscriptionNote =
     order.purchase_type === 'subscription'
-      ? `\nThis is a ${order.subscription_frequency} subscription order.`
+      ? `<span style="display: inline-block; background-color: #FEF3C7; color: #92400E; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase; margin-left: 6px;">${order.subscription_frequency} subscription</span>`
       : '';
+
+  // Build items rows
+  const itemRowsHtml = items
+    .map(
+      (item) => `
+        <tr style="border-bottom: 1px solid #F3EEE0;">
+          <td style="padding: 12px 8px; vertical-align: top;">
+            <strong style="color: #151F19; font-size: 14px;">${item.product_name}</strong>
+          </td>
+          <td style="padding: 12px 8px; color: #5C6B60; font-size: 13px; vertical-align: top;">
+            ${item.label}
+          </td>
+          <td style="padding: 12px 8px; text-align: center; color: #151F19; font-size: 13px; font-weight: 600; vertical-align: top;">
+            ${item.quantity}
+          </td>
+          <td style="padding: 12px 8px; text-align: right; color: #151F19; font-size: 13px; font-weight: 600; vertical-align: top;">
+            ₹${((item.unit_price_paise * item.quantity) / 100).toFixed(2)}
+          </td>
+        </tr>
+      `
+    )
+    .join('');
+
+  const fromEmail = process.env.FROM_EMAIL || 'orders@wildaboutgreens.com';
 
   const resend = getResend();
   if (!resend) {
@@ -104,38 +170,132 @@ export async function sendOrderConfirmation(
     return false;
   }
 
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+    </head>
+    <body style="margin: 0; padding: 24px 12px; background-color: #F8F6F0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; border: 1px solid #E8E2D2; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+        <!-- Brand Header -->
+        <tr>
+          <td style="background-color: #1C3F2D; padding: 28px 24px; text-align: center;">
+            <p style="margin: 0; font-size: 11px; letter-spacing: 3px; color: #CFFA57; font-weight: 700; text-transform: uppercase;">
+              FRESH LIVING HARVEST
+            </p>
+            <h1 style="margin: 6px 0 0; font-size: 22px; letter-spacing: 2px; color: #FFFFFF; font-weight: 800; text-transform: uppercase;">
+              WILD ABOUT GREENS
+            </h1>
+          </td>
+        </tr>
+
+        <!-- Main Content -->
+        <tr>
+          <td style="padding: 32px 28px;">
+            <!-- Greeting -->
+            <h2 style="margin: 0 0 14px; font-size: 22px; font-weight: 700; color: #151F19;">
+              ${heading}
+            </h2>
+            <div style="font-size: 15px; color: #4A5568; line-height: 1.6; margin-bottom: 24px;">
+              ${introHtml}
+            </div>
+
+            <!-- Order Number Banner -->
+            <div style="background-color: #FAF7EE; border: 1.5px solid #E4DDC8; border-radius: 12px; padding: 18px 20px; margin-bottom: 28px;">
+              <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="vertical-align: middle;">
+                    <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; color: #5C6B60; display: block;">
+                      ORDER NUMBER
+                    </span>
+                    <span style="font-size: 22px; font-weight: 800; color: #1C3F2D; font-family: monospace; letter-spacing: 1px;">
+                      #${order.order_number}
+                    </span>
+                  </td>
+                  <td style="text-align: right; vertical-align: middle;">
+                    <span style="display: inline-block; background-color: #DCFCE7; color: #166534; font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 9999px; border: 1px solid #86EFAC;">
+                      PAID ✅
+                    </span>
+                    ${subscriptionNote ? `<div style="margin-top: 4px;">${subscriptionNote}</div>` : ''}
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Items Table -->
+            <h3 style="margin: 0 0 12px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #151F19;">
+              Ordered Items
+            </h3>
+            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 24px;">
+              <thead>
+                <tr style="border-bottom: 2px solid #E8E2D2; text-align: left;">
+                  <th style="padding: 8px 8px; font-size: 11px; font-weight: 700; color: #5C6B60; text-transform: uppercase;">Product</th>
+                  <th style="padding: 8px 8px; font-size: 11px; font-weight: 700; color: #5C6B60; text-transform: uppercase;">Pack</th>
+                  <th style="padding: 8px 8px; font-size: 11px; font-weight: 700; color: #5C6B60; text-transform: uppercase; text-align: center;">Qty</th>
+                  <th style="padding: 8px 8px; font-size: 11px; font-weight: 700; color: #5C6B60; text-transform: uppercase; text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemRowsHtml}
+                <tr style="border-top: 2px solid #1C3F2D;">
+                  <td colspan="3" style="padding: 14px 8px 4px; font-size: 15px; font-weight: 700; color: #151F19;">
+                    Total Paid
+                  </td>
+                  <td style="padding: 14px 8px 4px; font-size: 18px; font-weight: 800; color: #1C3F2D; text-align: right;">
+                    ${totalFormatted}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Delivery Address Card -->
+            <div style="background-color: #F8F9FA; border-radius: 10px; padding: 18px 20px; margin-bottom: 28px; border: 1px solid #EDF2F7;">
+              <h4 style="margin: 0 0 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #2D3748;">
+                Delivery Details
+              </h4>
+              <p style="margin: 0; font-size: 14px; color: #4A5568; line-height: 1.5;">
+                <strong style="color: #1A202C;">${order.customer_name}</strong><br />
+                Phone: ${order.customer_phone}<br />
+                Address: ${fullAddress}
+              </p>
+            </div>
+
+            <!-- Track Order Button -->
+            <div style="text-align: center; margin: 30px 0 20px;">
+              <a href="https://wildaboutgreens.com/track-order" style="display: inline-block; background-color: #1C3F2D; color: #FFFFFF; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 34px; border-radius: 9999px; letter-spacing: 0.5px;">
+                Track Your Order →
+              </a>
+            </div>
+
+            <!-- Footer / Help -->
+            <div style="border-top: 1px solid #E8E2D2; padding-top: 20px; text-align: center; color: #718096; font-size: 13px; line-height: 1.6;">
+              ${footerHtml}
+              <p style="margin: 12px 0 0; font-size: 11px; color: #A0AEC0;">
+                Wild About Greens • Urban Microgreens Farm • <a href="https://wildaboutgreens.com" style="color: #1C3F2D; text-decoration: underline;">wildaboutgreens.com</a>
+              </p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+
   try {
     await resend.emails.send({
       from: fromEmail,
       to: order.customer_email,
-      subject: `Wild About Greens: Order Confirmed! 🌱`,
-      html: `
-        <h2>Thanks for your order, ${order.customer_name}!</h2>
-        <div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0;">
-          <p style="margin: 0; font-size: 14px; color: #666;">Your Order Number</p>
-          <p style="margin: 4px 0 0; font-size: 28px; font-weight: bold; color: #15803d; letter-spacing: 2px;">${order.order_number}</p>
-        </div>
-        <p>We've received your payment of <strong>${totalFormatted}</strong>.</p>
-        ${subscriptionNote ? `<p>${subscriptionNote}</p>` : ''}
-        <h3>Order Details</h3>
-        <ul>
-          ${itemLines.map((line) => `<li>${line}</li>`).join('\n')}
-        </ul>
-        <p><strong>Total: ${totalFormatted}</strong></p>
-        <h3>Delivery Address</h3>
-        <p>${order.delivery_address}</p>
-        <p>We'll deliver your fresh microgreens soon! 🌿</p>
-        <p style="margin-top: 16px; font-size: 13px; color: #666;">Use your order number <strong>${order.order_number}</strong> to <a href="https://wildaboutgreens.com/track-order">track your order</a>.</p>
-        <hr />
-        <p style="color: #888; font-size: 12px;">Wild About Greens: Fresh microgreens, delivered.</p>
-      `,
+      subject,
+      html: htmlContent,
     });
 
-    console.log(`Order ${orderId}: confirmation email sent to ${order.customer_email}`);
+    console.log(`Order ${orderId}: confirmation email sent successfully to ${order.customer_email}`);
     return true;
   } catch (error) {
     console.error(`Order ${orderId}: failed to send confirmation email`, error);
-    // Don't throw: email failure shouldn't break the payment flow
     // Reset the flag so a retry can be attempted
     await sql`
       UPDATE orders SET confirmation_email_sent = false WHERE id = ${orderId}
@@ -222,7 +382,7 @@ export async function sendNewsletterWelcome(
     const blocks = await sql`
       SELECT key, value
       FROM content_blocks
-      WHERE page = 'emails' AND key IN ('newsletter_thankyou_subject', 'newsletter_thankyou_body')
+      WHERE page = 'emails'
     `;
 
     const contentMap: Record<string, string> = {};
@@ -231,25 +391,74 @@ export async function sendNewsletterWelcome(
     }
 
     const subject = contentMap.newsletter_thankyou_subject || 'Welcome to Wild About Greens! 🌱';
-    const bodyText = contentMap.newsletter_thankyou_body || 'Welcome to Wild About Greens! We\'re glad you\'re here.';
+    const heading = contentMap.newsletter_thankyou_heading || 'Welcome to the Wild About Greens Family!';
+    const bodyText = contentMap.newsletter_thankyou_body || "Hi there!\n\nWelcome to Wild About Greens, we're thrilled to have you with us. 🌱\n\nHere is your exclusive 15% discount for your first order: USE CODE: WELCOME15\n\nStay fresh,\nThe Wild About Greens Team";
+    const footerText = contentMap.newsletter_thankyou_footer || 'Fresh living harvest delivered straight from our indoor farm to your doorstep.';
 
-    // Convert plain text body to simple HTML
+    // Convert plain text body to simple HTML paragraphs
     const bodyHtml = bodyText
       .split('\n')
-      .map((line: string) => line.trim() === '' ? '<br />' : `<p>${line}</p>`)
-      .join('\n');
+      .map((line: string) => (line.trim() === '' ? '<br />' : `<p style="margin: 0 0 12px; line-height: 1.6; color: #4A5568;">${line}</p>`))
+      .join('');
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${subject}</title>
+      </head>
+      <body style="margin: 0; padding: 24px 12px; background-color: #F8F6F0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px; margin: 0 auto; background-color: #FFFFFF; border-radius: 16px; overflow: hidden; border: 1px solid #E8E2D2; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #1C3F2D; padding: 26px 20px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; letter-spacing: 3px; color: #CFFA57; font-weight: 700; text-transform: uppercase;">
+                FRESH LIVING HARVEST
+              </p>
+              <h1 style="margin: 6px 0 0; font-size: 20px; letter-spacing: 2px; color: #FFFFFF; font-weight: 800; text-transform: uppercase;">
+                WILD ABOUT GREENS
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 32px 28px;">
+              <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #151F19;">
+                ${heading}
+              </h2>
+              <div style="font-size: 15px; color: #4A5568; margin-bottom: 28px;">
+                ${bodyHtml}
+              </div>
+
+              <!-- Shop Button -->
+              <div style="text-align: center; margin: 24px 0;">
+                <a href="https://wildaboutgreens.com/products" style="display: inline-block; background-color: #1C3F2D; color: #FFFFFF; font-size: 14px; font-weight: 700; text-decoration: none; padding: 13px 32px; border-radius: 9999px;">
+                  Explore Living Greens →
+                </a>
+              </div>
+
+              <!-- Footer -->
+              <div style="border-top: 1px solid #E8E2D2; padding-top: 20px; text-align: center; color: #718096; font-size: 13px; line-height: 1.6;">
+                <p style="margin: 0 0 8px;">${footerText}</p>
+                <p style="margin: 8px 0 0; font-size: 11px; color: #A0AEC0;">
+                  Wild About Greens • Urban Microgreens Farm • <a href="https://wildaboutgreens.com" style="color: #1C3F2D; text-decoration: underline;">wildaboutgreens.com</a>
+                </p>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
 
     await resend.emails.send({
       from: fromEmail,
       to: email,
       subject,
-      html: `
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; color: #333;">
-          ${bodyHtml}
-          <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="color: #888; font-size: 12px;">Wild About Greens: Fresh living harvest delivered to your doorstep</p>
-        </div>
-      `,
+      html: htmlContent,
     });
 
     console.log(`Newsletter welcome email sent to ${email}`);

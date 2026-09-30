@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import StoryModal from '@/components/StoryModal';
 import WhyMicrogreensChart from '@/components/WhyMicrogreensChart';
 import HealthGoalModal from '@/components/HealthGoalModal';
-import { Instagram, ShoppingBag, Subscription } from '@/components/icons';
+import { Instagram, ShoppingBag, Subscription, WhatsApp } from '@/components/icons';
 import { HEALTH_GOALS } from '@/lib/healthGoals';
 import { getOptimizedLogoUrl } from '@/lib/format';
 import type { HealthGoalContentItem } from '@/app/[panelKey]/health-goals/page';
@@ -73,8 +73,19 @@ const GOAL_BG_COLORS = [
 
 function isVideoMedia(url?: string | null): boolean {
   if (!url) return false;
-  return url.includes('/video/upload/') || /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url);
+  const clean = url.trim().toLowerCase();
+  return (
+    clean.includes('/video/upload/') ||
+    clean.includes('/video/') ||
+    /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(clean)
+  );
 }
+
+// =========================================================================
+// FLOATING WHATSAPP BUTTON CONFIG (HOMEPAGE ONLY)
+// Update this phone number with your WhatsApp business number (with country code).
+// =========================================================================
+const HOMEPAGE_WHATSAPP_NUMBER = '919800000000'; // TODO: Update WhatsApp number
 
 export default function HomePageClient({
   content,
@@ -85,6 +96,8 @@ export default function HomePageClient({
   partnerLogos: initialPartnerLogos = [],
 }: HomePageClientProps) {
   const shouldReduceMotion = useReducedMotion();
+  // Priority: CMS content_block 'whatsapp_number' > HOMEPAGE_WHATSAPP_NUMBER constant
+  const whatsappNumber = (content?.whatsapp_number || HOMEPAGE_WHATSAPP_NUMBER).replace(/\D/g, '');
   const [healthGoals, setHealthGoals] = useState<HealthGoalContentItem[]>(
     initialHealthGoals.length > 0 ? initialHealthGoals : []
   );
@@ -117,13 +130,51 @@ export default function HomePageClient({
   const currentModalGoal =
     effectiveHealthGoals.find((g) => g.id === selectedGoalId || g.slug === selectedGoalId) || null;
 
-  // Hero background: support video or image
+  // Hero background: give top preference to hero background video over hero bg image
+  const rawVideo = content.hero_video_url?.trim() || '';
+  const rawImage = content.hero_image_url?.trim() || '';
+
+  // 1. If hero_video_url is provided, ALWAYS give it top preference as the background video
+  // 2. If hero_video_url is empty but hero_image_url contains a video, use it as video
   const heroVideo =
-    (content.hero_video_url && isVideoMedia(content.hero_video_url) ? content.hero_video_url : null) ||
-    (content.hero_image_url && isVideoMedia(content.hero_image_url) ? content.hero_image_url : null);
+    rawVideo.length > 0
+      ? rawVideo
+      : rawImage.length > 0 && isVideoMedia(rawImage)
+      ? rawImage
+      : null;
+
+  // Background/poster image: use hero_image_url if not a video, otherwise default fallback photo
   const heroImage =
-    (!isVideoMedia(content.hero_image_url) && content.hero_image_url) ||
-    'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=85&w=2400&auto=format&fit=crop';
+    rawImage.length > 0 && !isVideoMedia(rawImage)
+      ? rawImage
+      : 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=85&w=2400&auto=format&fit=crop';
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !heroVideo) return;
+
+    // React does not set DOM property video.muted = true, which triggers browser autoplay blockage.
+    video.muted = true;
+    video.defaultMuted = true;
+
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay policy prevented immediate playback; start on first interaction
+        const startPlay = () => {
+          video.play().catch(() => {});
+          window.removeEventListener('click', startPlay);
+          window.removeEventListener('touchstart', startPlay);
+          window.removeEventListener('scroll', startPlay);
+        };
+        window.addEventListener('click', startPlay, { once: true });
+        window.addEventListener('touchstart', startPlay, { once: true });
+        window.addEventListener('scroll', startPlay, { once: true });
+      });
+    }
+  }, [heroVideo]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash) {
@@ -272,16 +323,21 @@ export default function HomePageClient({
     <main className="overflow-x-hidden">
       {/* ================= HERO ================= */}
       <section className="relative min-h-screen flex items-center justify-center text-center overflow-hidden text-[#FFFDF8] pt-28 pb-16">
-        {/* Background photo or video */}
+        {/* Background photo or video (video takes top priority if uploaded) */}
         {heroVideo ? (
           <video
+            ref={videoRef}
+            key={heroVideo}
             autoPlay
             muted
             loop
             playsInline
-            className="absolute inset-0 z-0 w-full h-full object-cover"
+            preload="auto"
+            className="absolute inset-0 z-0 w-full h-full object-cover pointer-events-none"
             poster={heroImage}
           >
+            <source src={heroVideo} type="video/mp4" />
+            <source src={heroVideo} type="video/webm" />
             <source src={heroVideo} />
           </video>
         ) : (
@@ -817,124 +873,145 @@ export default function HomePageClient({
         </div>
       </section>
 
-      {/* ================= PARTNER LOGOS (TRUSTED BY) ================= */}
-      {content.homepage_partner_logos_enabled !== 'false' && partnerLogos.length > 0 && (
-        <section className="bg-[#FAF7EE] py-16 sm:py-20 border-t border-[#E8E2D2]">
-          <div className="wrap">
-            <motion.div
-              variants={scrollContainerVariants(0.08)}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              className="max-w-4xl mx-auto text-center"
+      {/* ================= PARTNER LOGOS (TRUSTED BY) - RUNNING STRIP ================= */}
+      {(() => {
+        if (content.homepage_partner_logos_enabled === 'false' || partnerLogos.length === 0) return null;
+        const activeLogos = partnerLogos
+          .filter((l) => l.is_active !== false)
+          .sort((a, b) => a.display_order - b.display_order);
+        if (activeLogos.length === 0) return null;
+
+        // Repeat active logos to make sure each track is wide enough for any screen size
+        const repeatCount = Math.max(2, Math.ceil(10 / activeLogos.length));
+        const trackLogos = Array.from({ length: repeatCount }).flatMap(() => activeLogos);
+
+        const cardStyle = content.homepage_partner_logos_card_style || 'cards';
+        const logoSize = content.homepage_partner_logos_size || 'standard';
+
+        let sizeBoxClass = 'w-[180px] sm:w-[220px] md:w-[240px] h-[86px] sm:h-[96px] md:h-[104px]';
+        let sizeImgClass = 'max-h-[52px] sm:max-h-[62px] md:max-h-[68px] max-w-[145px] sm:max-w-[175px] md:max-w-[195px]';
+
+        if (logoSize === 'large') {
+          sizeBoxClass = 'w-[210px] sm:w-[250px] md:w-[280px] h-[100px] sm:h-[114px] md:h-[122px]';
+          sizeImgClass = 'max-h-[62px] sm:max-h-[74px] md:max-h-[82px] max-w-[175px] sm:max-w-[210px] md:max-w-[235px]';
+        } else if (logoSize === 'compact') {
+          sizeBoxClass = 'w-[150px] sm:w-[180px] md:w-[200px] h-[72px] sm:h-[82px] md:h-[88px]';
+          sizeImgClass = 'max-h-[42px] sm:max-h-[50px] md:max-h-[56px] max-w-[120px] sm:max-w-[145px] md:max-w-[165px]';
+        }
+
+        const styleBoxClass =
+          cardStyle === 'seamless'
+            ? 'rounded-xl hover:bg-white/40 border border-transparent hover:border-[#E8E2D2]/60 p-2 sm:p-3'
+            : 'bg-white rounded-2xl border border-[#E8E2D2] shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-[#1C3F2D]/35 p-3.5 sm:p-5';
+
+        const renderLogoItem = (logo: PartnerLogo, uniqueKey: string) => {
+          const optimizedUrl = getOptimizedLogoUrl(logo.logo_url);
+          const imgElement = (
+            <div
+              className={`${sizeBoxClass} ${styleBoxClass} shrink-0 transition-all duration-300 flex items-center justify-center group`}
             >
-              {/* Eyebrow with subtle divider lines */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={optimizedUrl}
+                alt={logo.name}
+                title={logo.name}
+                className={`w-full h-full ${sizeImgClass} object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300 pointer-events-none select-none`}
+                draggable={false}
+              />
+            </div>
+          );
+
+          if (logo.website_url) {
+            return (
+              <a
+                key={uniqueKey}
+                href={logo.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 cursor-pointer focus:outline-none transition-transform hover:-translate-y-0.5"
+              >
+                {imgElement}
+              </a>
+            );
+          }
+
+          return (
+            <div key={uniqueKey} className="shrink-0 transition-transform hover:-translate-y-0.5">
+              {imgElement}
+            </div>
+          );
+        };
+
+        return (
+          <section className="bg-[#FAF7EE] py-16 sm:py-20 border-t border-[#E8E2D2] overflow-hidden">
+            <div className="wrap mb-10 sm:mb-12">
               <motion.div
-                variants={scrollItemVariants}
-                className="flex items-center justify-center gap-3 mb-4"
+                variants={scrollContainerVariants(0.08)}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.2 }}
+                className="max-w-4xl mx-auto text-center"
               >
-                <span className="w-8 sm:w-12 h-px bg-[#D5CEC0]" />
-                <span className="font-mono text-[11px] sm:text-xs tracking-[0.2em] uppercase text-[#5C6B60] font-semibold">
-                  {content.homepage_partner_logos_eyebrow || 'TRUSTED BY'}
-                </span>
-                <span className="w-8 sm:w-12 h-px bg-[#D5CEC0]" />
-              </motion.div>
+                {/* Eyebrow with subtle divider lines */}
+                <motion.div
+                  variants={scrollItemVariants}
+                  className="flex items-center justify-center gap-3 mb-4"
+                >
+                  <span className="w-8 sm:w-12 h-px bg-[#D5CEC0]" />
+                  <span className="font-mono text-[11px] sm:text-xs tracking-[0.2em] uppercase text-[#5C6B60] font-semibold">
+                    {content.homepage_partner_logos_eyebrow || 'TRUSTED BY'}
+                  </span>
+                  <span className="w-8 sm:w-12 h-px bg-[#D5CEC0]" />
+                </motion.div>
 
-              {/* Fraunces Headline */}
-              <motion.h2
-                variants={scrollItemVariants}
-                className="font-serif text-3xl sm:text-4xl md:text-[42px] font-medium text-[#151F19] leading-tight mb-10 sm:mb-12"
-              >
-                {content.homepage_partner_logos_title ? (
-                  content.homepage_partner_logos_title.includes('choose') ? (
-                    <>
-                      {content.homepage_partner_logos_title.split('choose')[0]}
-                      <br />
-                      <em className="italic text-[#1C3F2D] font-normal">
-                        choose{content.homepage_partner_logos_title.split('choose')[1]}
-                      </em>
-                    </>
-                  ) : (
-                    content.homepage_partner_logos_title
-                  )
-                ) : (
-                  <>
-                    Leading organizations
-                    <br />
-                    <em className="italic text-[#1C3F2D] font-normal">choose Wild About Greens.</em>
-                  </>
-                )}
-              </motion.h2>
+                {/* Fraunces Headline */}
+                <motion.h2
+                  variants={scrollItemVariants}
+                  className="font-serif text-3xl sm:text-4xl md:text-[42px] font-medium text-[#151F19] leading-[1.3] sm:leading-[1.35]"
+                >
+                  {(() => {
+                    const rawTitle = (
+                      content.homepage_partner_logos_title || 'Leading organizations choose wild about greens.'
+                    ).replace(/Wild About Greens/gi, 'wild about greens');
 
-              {/* Logos Row / Grid */}
-              <motion.div
-                variants={scrollItemVariants}
-                className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8"
-              >
-                {partnerLogos
-                  .filter((l) => l.is_active !== false)
-                  .sort((a, b) => a.display_order - b.display_order)
-                  .map((logo) => {
-                    const cardStyle = content.homepage_partner_logos_card_style || 'cards';
-                    const logoSize = content.homepage_partner_logos_size || 'standard';
-
-                    let sizeBoxClass = 'w-[180px] sm:w-[220px] md:w-[240px] h-[86px] sm:h-[96px] md:h-[104px]';
-                    let sizeImgClass = 'max-h-[52px] sm:max-h-[62px] md:max-h-[68px] max-w-[145px] sm:max-w-[175px] md:max-w-[195px]';
-
-                    if (logoSize === 'large') {
-                      sizeBoxClass = 'w-[210px] sm:w-[250px] md:w-[280px] h-[100px] sm:h-[114px] md:h-[122px]';
-                      sizeImgClass = 'max-h-[62px] sm:max-h-[74px] md:max-h-[82px] max-w-[175px] sm:max-w-[210px] md:max-w-[235px]';
-                    } else if (logoSize === 'compact') {
-                      sizeBoxClass = 'w-[150px] sm:w-[180px] md:w-[200px] h-[72px] sm:h-[82px] md:h-[88px]';
-                      sizeImgClass = 'max-h-[42px] sm:max-h-[50px] md:max-h-[56px] max-w-[120px] sm:max-w-[145px] md:max-w-[165px]';
-                    }
-
-                    const styleBoxClass =
-                      cardStyle === 'seamless'
-                        ? 'rounded-xl hover:bg-white/40 border border-transparent hover:border-[#E8E2D2]/60 p-2 sm:p-3'
-                        : 'bg-white rounded-2xl border border-[#E8E2D2] shadow-[0_2px_10px_rgba(0,0,0,0.03)] hover:shadow-md hover:border-[#1C3F2D]/35 p-3.5 sm:p-5';
-
-                    const optimizedUrl = getOptimizedLogoUrl(logo.logo_url);
-
-                    const imgElement = (
-                      <div
-                        className={`${sizeBoxClass} ${styleBoxClass} transition-all duration-300 flex items-center justify-center group`}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={optimizedUrl}
-                          alt={logo.name}
-                          title={logo.name}
-                          className={`w-full h-full ${sizeImgClass} object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300`}
-                        />
-                      </div>
-                    );
-
-                    if (logo.website_url) {
+                    const chooseMatch = rawTitle.match(/choose/i);
+                    if (chooseMatch && chooseMatch.index !== undefined) {
+                      const firstPart = rawTitle.slice(0, chooseMatch.index).trim();
+                      const secondPart = rawTitle.slice(chooseMatch.index).trim();
                       return (
-                        <a
-                          key={logo.id}
-                          href={logo.website_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="cursor-pointer focus:outline-none transition-transform hover:-translate-y-0.5"
-                        >
-                          {imgElement}
-                        </a>
+                        <>
+                          <span className="block mb-2 sm:mb-2.5">
+                            {firstPart}
+                          </span>
+                          <em className="italic text-[#1C3F2D] font-normal block">
+                            {secondPart}
+                          </em>
+                        </>
                       );
                     }
 
-                    return (
-                      <div key={logo.id} className="transition-transform hover:-translate-y-0.5">
-                        {imgElement}
-                      </div>
-                    );
-                  })}
+                    return rawTitle;
+                  })()}
+                </motion.h2>
               </motion.div>
-            </motion.div>
-          </div>
-        </section>
-      )}
+            </div>
+
+            {/* Continuous Running Strip / Marquee with soft edge gradient mask */}
+            <div className="relative w-full overflow-hidden marquee-mask py-3">
+              <div className="flex w-max animate-marquee hover:[animation-play-state:paused] focus-within:[animation-play-state:paused] motion-reduce:animate-none">
+                {/* Track 1 */}
+                <div className="flex shrink-0 items-center gap-4 sm:gap-6 md:gap-8 pr-4 sm:pr-6 md:pr-8">
+                  {trackLogos.map((logo, idx) => renderLogoItem(logo, `track1-${logo.id}-${idx}`))}
+                </div>
+                {/* Track 2 (seamless infinite loop mirror) */}
+                <div className="flex shrink-0 items-center gap-4 sm:gap-6 md:gap-8 pr-4 sm:pr-6 md:pr-8" aria-hidden="true">
+                  {trackLogos.map((logo, idx) => renderLogoItem(logo, `track2-${logo.id}-${idx}`))}
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ================= FINAL CTA (Scroll-triggered) ================= */}
       <section className="relative bg-[#122A1F] py-20 text-[#FFFDF8] text-center overflow-hidden">
@@ -1002,6 +1079,23 @@ export default function HomePageClient({
         onSelectGoal={(id) => setSelectedGoalId(id)}
         allProducts={allProducts || []}
       />
+
+      {/* ================= FLOATING WHATSAPP BUTTON (HOMEPAGE ONLY) ================= */}
+      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50">
+        <a
+          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hello! I would like to inquire about Wild About Greens microgreens.')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Chat with us on WhatsApp"
+          className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] hover:shadow-[0_8px_30px_rgba(37,211,102,0.65)] hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/40 cursor-pointer"
+        >
+          {/* Tooltip on desktop hover */}
+          <span className="absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-[#122A1F] text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 hidden sm:inline-block border border-white/10">
+            Chat on WhatsApp
+          </span>
+          <WhatsApp className="w-8 h-8 fill-white" />
+        </a>
+      </div>
     </main>
   );
 }

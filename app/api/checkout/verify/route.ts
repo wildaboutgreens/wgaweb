@@ -58,33 +58,62 @@ export async function POST(request: NextRequest) {
           razorpay_payment_id = ${razorpay_payment_id}
       WHERE razorpay_order_id = ${razorpay_order_id}
         AND payment_status = 'pending'
-      RETURNING id, order_number
+      RETURNING id, order_number, customer_name, customer_email, customer_phone, total_paise
     `;
 
+    let orderId: string;
+    let orderNumber: string;
+    let customerEmail: string | null = null;
+    let customerName: string = '';
+    let totalPaise: number = 0;
+
     if (result.length === 0) {
-      return NextResponse.json(
-        { error: 'Order not found or already processed' },
-        { status: 404 }
+      // Check if already processed (e.g. webhook race or client retry)
+      const existing = await sql`
+        SELECT id, order_number, customer_name, customer_email, customer_phone, total_paise
+        FROM orders
+        WHERE razorpay_order_id = ${razorpay_order_id}
+          AND payment_status = 'paid'
+      `;
+      if (existing.length > 0) {
+        orderId = existing[0].id as string;
+        orderNumber = existing[0].order_number as string;
+        customerEmail = existing[0].customer_email as string | null;
+        customerName = existing[0].customer_name as string;
+        totalPaise = existing[0].total_paise as number;
+      } else {
+        return NextResponse.json(
+          { error: 'Order not found or already processed' },
+          { status: 404 }
+        );
+      }
+    } else {
+      orderId = result[0].id as string;
+      orderNumber = result[0].order_number as string;
+      customerEmail = result[0].customer_email as string | null;
+      customerName = result[0].customer_name as string;
+      totalPaise = result[0].total_paise as number;
+
+      // Decrement stock for ordered variants (dedup-guarded via stock_decremented flag)
+      decrementStock(orderId).catch((err) =>
+        console.error('Failed to decrement stock:', err)
       );
+
+      // Send confirmation email via Resend (await to guarantee execution before response terminates)
+      try {
+        await sendOrderConfirmation(orderId);
+      } catch (emailErr) {
+        console.error('Failed to send confirmation email:', emailErr);
+      }
     }
-
-    const orderId = result[0].id as string;
-    const orderNumber = result[0].order_number as string;
-
-    // Decrement stock for ordered variants (dedup-guarded via stock_decremented flag)
-    decrementStock(orderId).catch((err) =>
-      console.error('Failed to decrement stock:', err)
-    );
-
-    // Send confirmation email (fire-and-forget, guarded against duplicates)
-    sendOrderConfirmation(orderId).catch((err) =>
-      console.error('Failed to send confirmation email:', err)
-    );
 
     return NextResponse.json({
       status: 'paid',
       orderId,
       orderNumber,
+      customerEmail,
+      customerName,
+      totalPaise,
     });
   } catch (error: unknown) {
     console.error('verify error:', error);

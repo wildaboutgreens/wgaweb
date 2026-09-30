@@ -4,6 +4,9 @@ import type { UploadApiOptions } from 'cloudinary';
 
 const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // 4.5 MB Netlify payload safety limit
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -15,9 +18,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Validate file type (image or video)
-    const isImage = file.type.startsWith('image/');
-    const isVideo = file.type.startsWith('video/');
+    // Validate file type (image or video) by mime type or file extension
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    const videoExtensions = ['mp4', 'webm', 'ogg', 'mov', 'm4v', 'mkv', 'avi'];
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'svg', 'gif', 'avif'];
+
+    const isVideo = file.type.startsWith('video/') || videoExtensions.includes(ext);
+    const isImage = file.type.startsWith('image/') || imageExtensions.includes(ext);
+
     if (!isImage && !isVideo) {
       return NextResponse.json(
         { error: 'File must be an image or video' },
@@ -36,15 +44,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Resolve mime type for base64 data URI
+    let mimeType = file.type;
+    if (!mimeType || mimeType === 'application/octet-stream') {
+      if (isVideo) {
+        mimeType =
+          ext === 'webm'
+            ? 'video/webm'
+            : ext === 'ogg'
+            ? 'video/ogg'
+            : ext === 'mov'
+            ? 'video/quicktime'
+            : 'video/mp4';
+      } else {
+        mimeType =
+          ext === 'png'
+            ? 'image/png'
+            : ext === 'webp'
+            ? 'image/webp'
+            : ext === 'svg'
+            ? 'image/svg+xml'
+            : ext === 'gif'
+            ? 'image/gif'
+            : 'image/jpeg';
+      }
+    }
+
     // Convert to base64 data URI for Cloudinary upload
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64 = `data:${file.type};base64,${buffer.toString('base64')}`;
+    const base64 = `data:${mimeType};base64,${buffer.toString('base64')}`;
 
     const uploadOptions: UploadApiOptions = {
       folder,
       resource_type: isVideo ? 'video' : 'image',
     };
+
+    if (isVideo) {
+      uploadOptions.format = 'mp4';
+    }
 
     if (publicId) {
       uploadOptions.public_id = publicId;

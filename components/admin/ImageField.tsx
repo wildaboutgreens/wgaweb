@@ -14,16 +14,26 @@ interface ImageFieldProps {
   onAltTextChange?: (altText: string) => void;
   acceptVideo?: boolean;
   objectFit?: 'cover' | 'contain';
+  onRemove?: () => void;
 }
 
 const MAX_UPLOAD_BYTES = 4.5 * 1024 * 1024; // 4.5 MB Netlify function payload safety limit
 
 function isVideoUrl(url: string | null): boolean {
   if (!url) return false;
-  return /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url) || url.includes('/video/upload/');
+  return (
+    /\.(mp4|webm|ogg|mov|m4v|mkv|avi)(\?.*)?$/i.test(url) ||
+    url.includes('/video/upload/') ||
+    url.includes('/video/')
+  );
 }
 
 async function resizeImageIfNeeded(file: File, maxDimension = 2000, quality = 0.85): Promise<File> {
+  const isVideo =
+    file.type.startsWith('video/') ||
+    /\.(mp4|webm|ogg|mov|m4v|mkv|avi)$/i.test(file.name);
+  if (isVideo) return file;
+
   // Only resize common raster images, not vector/animated/video
   if (!file.type.startsWith('image/')) return file;
   if (file.type === 'image/svg+xml' || file.type === 'image/gif') return file;
@@ -98,6 +108,7 @@ export default function ImageField({
   onAltTextChange,
   acceptVideo = false,
   objectFit = 'cover',
+  onRemove,
 }: ImageFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -107,6 +118,22 @@ export default function ImageField({
 
   const handleClick = () => {
     if (!uploading) fileRef.current?.click();
+  };
+
+  const handleRemove = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (onRemove) {
+      onRemove();
+    } else {
+      onChange('', '');
+    }
+    if (onAltTextChange) {
+      onAltTextChange('');
+    }
+    if (fileRef.current) {
+      fileRef.current.value = '';
+    }
+    setError(null);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,14 +199,29 @@ export default function ImageField({
         {value ? (
           <>
             {isVideo ? (
-              <video
-                src={value}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
+              <div className="relative w-full h-full">
+                <video
+                  ref={(el) => {
+                    if (el) {
+                      el.muted = true;
+                      el.defaultMuted = true;
+                      el.play().catch(() => {});
+                    }
+                  }}
+                  src={value}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+                <span className="absolute bottom-2 left-2 z-10 px-2 py-0.5 bg-black/70 text-white text-[11px] font-semibold rounded pointer-events-none flex items-center gap-1 shadow">
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                  Video Preview
+                </span>
+              </div>
             ) : (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -188,11 +230,27 @@ export default function ImageField({
                 className={`w-full h-full ${objectFit === 'contain' ? 'object-contain p-3' : 'object-cover'}`}
               />
             )}
+
+            {/* Top-Right Remove Button */}
+            {!uploading && (
+              <button
+                type="button"
+                onClick={handleRemove}
+                className="absolute top-2 right-2 z-20 px-2.5 py-1 bg-red-600/90 hover:bg-red-700 text-white rounded-lg shadow-md transition-all flex items-center gap-1.5 text-xs font-semibold hover:scale-105"
+                title={acceptVideo || isVideo ? 'Remove media' : 'Remove image'}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Remove</span>
+              </button>
+            )}
+
             {/* Hover overlay */}
             {!uploading && (
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                 <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 px-3 py-1.5 rounded-lg">
-                  {acceptVideo || isVideo ? 'Replace Media' : 'Replace Image'}
+                  {isVideo ? 'Replace Video' : acceptVideo ? 'Replace Media' : 'Replace Image'}
                 </span>
               </div>
             )}
@@ -203,7 +261,7 @@ export default function ImageField({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span className="text-xs font-medium">
-              {acceptVideo ? 'Click to upload photo or video' : 'Click to upload'}
+              {acceptVideo ? 'Click to upload video or photo' : 'Click to upload'}
             </span>
           </div>
         )}
@@ -216,6 +274,23 @@ export default function ImageField({
           </div>
         )}
       </div>
+
+      {/* Clear/Remove button below preview */}
+      {value && !uploading && (
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 hover:text-red-800 transition-colors px-2.5 py-1 rounded-md bg-red-50 hover:bg-red-100 border border-red-200"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            <span>Remove {acceptVideo || isVideo ? 'Media' : 'Image'}</span>
+          </button>
+          <span className="text-[11px] text-gray-400">or click preview to replace</span>
+        </div>
+      )}
 
       {/* Error message */}
       {error && (
