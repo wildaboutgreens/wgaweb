@@ -599,14 +599,14 @@ export default function ProductListClient({
                             )}
 
                             {/* Clamshell Lid Inset Sheen */}
-                            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_0_8px_rgba(255,255,255,0.45),inset_0_0_20px_rgba(255,255,255,0.3)]">
+                            <div className="absolute inset-0 pointer-events-none rounded-[18px] shadow-[inset_0_0_0_8px_rgba(255,255,255,0.45),inset_0_0_20px_rgba(255,255,255,0.3)]">
                               <div className="absolute top-2 left-2 right-1/2 bottom-3/5 rounded-md bg-gradient-to-br from-white/35 to-transparent -rotate-6" />
                             </div>
 
                             {/* Vertical Branded Sleeve Down Left Portion */}
-                            <div className="absolute top-[8%] bottom-[8%] left-[8%] w-[48%] rounded-xl overflow-hidden flex flex-col bg-white/95 backdrop-blur-sm shadow-xl z-10 border border-black/5">
+                            <div className="absolute top-[17%] left-[7%] w-[49%] rounded-xl overflow-hidden flex flex-col bg-white/95 backdrop-blur-sm shadow-xl z-10 border border-black/5">
                               {/* Sleeve Top Photo Thumbnail */}
-                              <div className="h-[28%] overflow-hidden relative bg-[#EDE7D6]">
+                              <div className="aspect-[16/10] overflow-hidden relative bg-[#EDE7D6]">
                                 {cardImage ? (
                                   // eslint-disable-next-line @next/next/no-img-element
                                   <img
@@ -622,22 +622,28 @@ export default function ProductListClient({
                               </div>
 
                               {/* Sleeve Body */}
-                              <div className="flex-1 p-2.5 flex flex-col justify-between">
-                                <div>
-                                  <div className="font-serif font-bold text-[8.5px] tracking-wide text-[#1C3F2D] flex items-center gap-1 mb-1">
-                                    <LeafFavicon className="w-2.5 h-2.5" /> WAG
-                                  </div>
-                                  <h5 className="font-serif font-bold text-[11.5px] leading-tight text-[#151F19] mb-1 line-clamp-2">
-                                    {product.name}
-                                  </h5>
-                                  <p className="text-[7.5px] text-[#33402F] leading-tight line-clamp-3">
-                                    {meta.sleeveDesc}
-                                  </p>
+                              <div className="p-2.5 sm:p-3 pb-3 sm:pb-3.5 flex flex-col">
+                                {/* Circular Company Logo */}
+                                <div className="w-10 h-10 sm:w-11 sm:h-11 relative mb-2 sm:mb-2.5 shrink-0">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src="/circle logo.png"
+                                    alt="Wild About Greens"
+                                    className="w-full h-full object-contain rounded-full shadow-xs"
+                                  />
                                 </div>
 
-                                <div className="font-mono text-[5.5px] uppercase tracking-wider text-[#5C6B60] pt-1.5 border-t border-black/10">
-                                  {isBundle ? 'LIVE BUNDLE · DAY 10' : '100G LIVE TRAY · DAY 10'}
-                                </div>
+                                {/* Product Name */}
+                                <h5 className="font-serif font-bold text-[11.5px] sm:text-[12.5px] leading-snug text-[#151F19] mb-1.5 sm:mb-2 line-clamp-2">
+                                  {product.name}
+                                </h5>
+
+                                {/* 1 Product Highlight (fetched from admin panel) */}
+                                {(product.highlight_1 || meta.benefit || meta.sleeveDesc) && (
+                                  <p className="text-[8px] sm:text-[9px] text-[#33402F] leading-relaxed font-medium line-clamp-2">
+                                    {product.highlight_1 || meta.benefit || meta.sleeveDesc}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </Link>

@@ -6,7 +6,7 @@ import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import StoryModal from '@/components/StoryModal';
 import WhyMicrogreensChart from '@/components/WhyMicrogreensChart';
 import HealthGoalModal from '@/components/HealthGoalModal';
-import { Instagram, ShoppingBag, Subscription, WhatsApp } from '@/components/icons';
+import { Instagram, ShoppingBag, Subscription } from '@/components/icons';
 import { HEALTH_GOALS } from '@/lib/healthGoals';
 import { getOptimizedLogoUrl } from '@/lib/format';
 import type { HealthGoalContentItem } from '@/app/[panelKey]/health-goals/page';
@@ -81,12 +81,6 @@ function isVideoMedia(url?: string | null): boolean {
   );
 }
 
-// =========================================================================
-// FLOATING WHATSAPP BUTTON CONFIG (HOMEPAGE ONLY)
-// Update this phone number with your WhatsApp business number (with country code).
-// =========================================================================
-const HOMEPAGE_WHATSAPP_NUMBER = '919800000000'; // TODO: Update WhatsApp number
-
 export default function HomePageClient({
   content,
   dbPins,
@@ -96,8 +90,6 @@ export default function HomePageClient({
   partnerLogos: initialPartnerLogos = [],
 }: HomePageClientProps) {
   const shouldReduceMotion = useReducedMotion();
-  // Priority: CMS content_block 'whatsapp_number' > HOMEPAGE_WHATSAPP_NUMBER constant
-  const whatsappNumber = (content?.whatsapp_number || HOMEPAGE_WHATSAPP_NUMBER).replace(/\D/g, '');
   const [healthGoals, setHealthGoals] = useState<HealthGoalContentItem[]>(
     initialHealthGoals.length > 0 ? initialHealthGoals : []
   );
@@ -1079,23 +1071,6 @@ export default function HomePageClient({
         onSelectGoal={(id) => setSelectedGoalId(id)}
         allProducts={allProducts || []}
       />
-
-      {/* ================= FLOATING WHATSAPP BUTTON (HOMEPAGE ONLY) ================= */}
-      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50">
-        <a
-          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hello! I would like to inquire about Wild About Greens microgreens.')}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Chat with us on WhatsApp"
-          className="group relative flex items-center justify-center w-14 h-14 rounded-full bg-[#25D366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.45)] hover:shadow-[0_8px_30px_rgba(37,211,102,0.65)] hover:scale-110 active:scale-95 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#25D366]/40 cursor-pointer"
-        >
-          {/* Tooltip on desktop hover */}
-          <span className="absolute right-full mr-3 px-3 py-1.5 rounded-xl bg-[#122A1F] text-white text-xs font-semibold whitespace-nowrap shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 hidden sm:inline-block border border-white/10">
-            Chat on WhatsApp
-          </span>
-          <WhatsApp className="w-8 h-8 fill-white" />
-        </a>
-      </div>
     </main>
   );
 }

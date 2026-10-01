@@ -3,6 +3,7 @@ import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CartDrawer from '@/components/CartDrawer';
+import WhatsAppButton from '@/components/WhatsAppButton';
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://wildaboutgreens.com';
 
@@ -46,6 +47,7 @@ export default function RootLayout({
         <CartDrawer />
         <div className="flex-1">{children}</div>
         <Footer />
+        <WhatsAppButton />
       </body>
     </html>
   );
