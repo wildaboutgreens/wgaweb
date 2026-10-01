@@ -84,7 +84,7 @@ const defaultDetailAccordions: DetailAccordion[] = [
   {
     title: 'How to Eat & Store',
     content:
-      'Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of water to the bottom drip tray once a day.\n\nWhen ready to eat, simply snip what you need with kitchen scissors right above the root line. Your tray stays living and fresh for 7 to 10 days!',
+      'Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of water to the bottom drip tray once a day.\n\nWhen ready to eat, simply snip what you need with kitchen scissors right above the root line. Your tray stays fresh and crisp for 7 to 10 days!',
   },
   {
     title: 'Nutrient Profile & Science',
@@ -99,7 +99,7 @@ const defaultDetailAccordions: DetailAccordion[] = [
   {
     title: 'Delivery & Packaging',
     content:
-      'Delivered in our reusable food-grade living trays. We dispatch orders within hours of the final quality check straight to your doorstep.',
+      'Delivered in our reusable food-grade trays. We dispatch orders within hours of the final quality check straight to your doorstep.',
   },
 ];
 
@@ -670,7 +670,7 @@ export default function AdminProductsPage() {
               <input
                 value={form.highlight_2}
                 onChange={(e) => setForm({ ...form, highlight_2: e.target.value })}
-                placeholder="e.g. Living tray · 7 to 10 days fresh"
+                placeholder="e.g. Fresh tray · 7 to 10 days fresh"
                 className="w-full px-3 py-2 border rounded-lg text-sm"
               />
             </div>

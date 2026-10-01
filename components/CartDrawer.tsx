@@ -35,7 +35,7 @@ const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
     slug: 'broccoli-microgreens',
     name: 'Broccoli Microgreens',
     variantId: 'var-broccoli-50g',
-    variantLabel: '50g living tray',
+    variantLabel: '50g tray',
     pricePaise: 9900,
     mrpPaise: 12000,
     discountOff: '₹21 OFF',
@@ -49,7 +49,7 @@ const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
     slug: 'sunflower-microgreens',
     name: 'Sunflower Microgreens',
     variantId: 'var-sunflower-50g',
-    variantLabel: '50g living tray',
+    variantLabel: '50g tray',
     pricePaise: 8900,
     mrpPaise: 11000,
     discountOff: '₹21 OFF',
@@ -63,7 +63,7 @@ const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
     slug: 'radish-microgreens',
     name: 'Radish Microgreens',
     variantId: 'var-radish-50g',
-    variantLabel: '50g living tray',
+    variantLabel: '50g tray',
     pricePaise: 7900,
     mrpPaise: 9900,
     discountOff: '₹20 OFF',
@@ -77,7 +77,7 @@ const DEFAULT_BESTSELLERS: BestsellerProduct[] = [
     slug: 'classic-trio-bundle',
     name: 'Classic Trio Bundle',
     variantId: 'var-trio-bundle',
-    variantLabel: '3 living trays',
+    variantLabel: '3 trays bundle',
     pricePaise: 24900,
     mrpPaise: 29900,
     discountOff: '₹50 OFF',
@@ -124,7 +124,7 @@ function formatProductForCart(
     (Array.isArray(found.variants) && found.variants[0]) ||
     {
       id: found.id,
-      label: '100g living tray',
+      label: '100g tray',
       price_paise: 9900,
       stock_qty: 25,
     };
@@ -152,7 +152,7 @@ function formatProductForCart(
     slug: found.slug,
     name: found.name,
     variantId: activeVar.id,
-    variantLabel: activeVar.label || '100g living tray',
+    variantLabel: activeVar.label || '100g tray',
     pricePaise: price,
     mrpPaise: approxMrp,
     discountOff: `₹${Math.round(discountPaise / 100)} OFF`,
@@ -177,7 +177,7 @@ export default function CartDrawer() {
   const [cartContent, setCartContent] = useState<Record<string, string>>({
     cart_empty_title: 'This cart is empty inside!',
     cart_empty_subtitle:
-      'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.',
+      'Fill it with fresh greens, before this poor cart decides to compost itself out of pure loneliness.',
     cart_mascot_variant: 'pleading',
     cart_rec_eyebrow: 'START WITH',
     cart_rec_title: 'Our Bestsellers',
@@ -405,7 +405,7 @@ export default function CartDrawer() {
 
                   <p className="font-handwriting text-xl sm:text-[22px] text-[#2D7A4D] font-bold leading-snug max-w-[280px] mx-auto">
                     {cartContent.cart_empty_subtitle ||
-                      'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.'}
+                      'Fill it with fresh greens, before this poor cart decides to compost itself out of pure loneliness.'}
                   </p>
                 </div>
 
@@ -606,7 +606,7 @@ export default function CartDrawer() {
                   <div className="bg-[#F3EEE0] border-t border-[#E4DDC8] p-4 mt-auto">
                     <div className="flex items-center justify-between mb-2.5">
                       <p className="font-mono text-xs font-bold uppercase tracking-wider text-[#1C3F2D]">
-                        Pair with living trays
+                        Pair with your order
                       </p>
                       <span className="font-mono text-[10.5px] text-[#2D7A4D] font-bold">
                         Zero pesticides
@@ -671,7 +671,10 @@ export default function CartDrawer() {
               /* Sticky Checkout button when filled */
               <div className="border-t border-[#E4DDC8] p-4 bg-[#FFFDF8] space-y-3 sticky bottom-0 z-20 shadow-md">
                 <div className="flex items-center justify-between text-base font-bold text-[#151F19]">
-                  <span className="font-serif">Total</span>
+                  <div>
+                    <span className="font-serif">Subtotal</span>
+                    <p className="font-mono text-[10.5px] text-[#5C6B60] font-normal">Delivery calculated at checkout</p>
+                  </div>
                   <span className="font-mono text-[#1C3F2D] text-lg font-bold">
                     {formatPrice(total)}
                   </span>

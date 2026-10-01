@@ -104,7 +104,7 @@ export default function PathshalaClient({
               No articles found
             </h2>
             <p className="text-xs sm:text-sm text-[#5C6B60] mb-6 leading-relaxed">
-              We are crafting new articles on living nutrition and vertical farming. Check back soon!
+              We are crafting new articles on microgreen nutrition and vertical farming. Check back soon!
             </p>
             <button
               onClick={() => setActiveCategory('all')}

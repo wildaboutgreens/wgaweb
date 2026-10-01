@@ -21,9 +21,9 @@ export const HEALTH_GOALS: HealthGoal[] = [
     icon: '🛡️',
     subtitle: 'Broccoli & radish blends',
     heroEyebrow: '🌱 TARGETED CELLULAR NUTRITION · IMMUNITY',
-    heroTitle: 'Strengthen natural defenses with living sulforaphane & vitamin C.',
+    heroTitle: 'Strengthen natural defenses with potent sulforaphane & vitamin C.',
     heroSubtitle:
-      'Living broccoli and peppery radish shoots packed with bioavailable antioxidants, glucosinolates, and immune-support enzymes harvested fresh on delivery morning.',
+      'Fresh broccoli and peppery radish shoots packed with bioavailable antioxidants, glucosinolates, and immune-support enzymes harvested fresh on delivery morning.',
     heroImage:
       'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=85&w=1400&auto=format&fit=crop',
     aliases: ['immunity', 'boost-immunity'],
@@ -38,7 +38,7 @@ export const HEALTH_GOALS: HealthGoal[] = [
     heroEyebrow: '🌱 CLEAN METABOLIC FUEL · WEIGHT MANAGEMENT',
     heroTitle: 'High satiety, dense micronutrients, near-zero calorie burden.',
     heroSubtitle:
-      'Fiber-rich, enzymatically active living greens that support gentle digestion, natural fullness, and sustained metabolic balance without empty fillers.',
+      'Fiber-rich, enzymatically active fresh greens that support gentle digestion, natural fullness, and sustained metabolic balance without empty fillers.',
     heroImage:
       'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=85&w=1400&auto=format&fit=crop',
     aliases: ['weight', 'weight-management'],
@@ -81,9 +81,9 @@ export const HEALTH_GOALS: HealthGoal[] = [
     icon: '📊',
     subtitle: 'Low glycemic greens',
     heroEyebrow: '🌱 LOW GLYCEMIC DENSITY · GLUCOSE BALANCE',
-    heroTitle: 'Naturally support stable glucose with zero-spike living greens.',
+    heroTitle: 'Naturally support stable glucose with zero-spike fresh greens.',
     heroSubtitle:
-      'Clinical studies show living brassica microgreens support insulin sensitivity and cellular vitality. Ultra low glycemic index, grown pure with mineral RO water.',
+      'Clinical studies show fresh brassica microgreens support insulin sensitivity and cellular vitality. Ultra low glycemic index, grown pure with mineral RO water.',
     heroImage:
       'https://plus.unsplash.com/premium_photo-1699976106481-02baab9811da?fm=jpg&q=85&w=1400&auto=format&fit=crop',
     aliases: ['low-gi', 'diabetes', 'diabetes-friendly'],
@@ -98,7 +98,7 @@ export const HEALTH_GOALS: HealthGoal[] = [
     heroEyebrow: '🌱 CARDIOVASCULAR VITALITY · HEART HEALTH',
     heroTitle: 'Potassium and bio-active nitrates for healthy circulation.',
     heroSubtitle:
-      'Naturally support vascular elasticity, balanced blood pressure, and cardiovascular health with living shoots rich in chlorophyll, potassium, and polyphenols.',
+      'Naturally support vascular elasticity, balanced blood pressure, and cardiovascular health with fresh shoots rich in chlorophyll, potassium, and polyphenols.',
     heroImage:
       'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=85&w=1400&auto=format&fit=crop',
     aliases: ['heart', 'heart-health'],
@@ -113,7 +113,7 @@ export const HEALTH_GOALS: HealthGoal[] = [
     heroEyebrow: '🌱 CELLULAR LONGEVITY · HEALTHY AGING',
     heroTitle: 'Combat oxidative stress and support youthful cellular vitality.',
     heroSubtitle:
-      'Up to 40x the antioxidant density of mature vegetables. Living sulforaphane, lutein, and glutathione precursors that nourish longevity and cellular repair from within.',
+      'Up to 40x the antioxidant density of mature vegetables. Potent sulforaphane, lutein, and glutathione precursors that nourish longevity and cellular repair from within.',
     heroImage:
       'https://plus.unsplash.com/premium_photo-1675368982408-ee5a9e0fab6c?fm=jpg&q=85&w=1400&auto=format&fit=crop',
     aliases: ['aging', 'healthy-aging'],
@@ -126,9 +126,9 @@ export const HEALTH_GOALS: HealthGoal[] = [
     icon: '🌱',
     subtitle: 'Every variety we grow',
     heroEyebrow: '🌱 FULL CELLULAR SPECTRUM · ALL TRAYS',
-    heroTitle: 'Every living variety harvested on the morning of delivery.',
+    heroTitle: 'Every variety harvested on the morning of delivery.',
     heroSubtitle:
-      'Browse our complete living microgreen lineup. Grown with 100% mineral RO water and zero pesticides on vertical indoor climate racks.',
+      'Browse our complete fresh microgreen lineup. Grown with 100% mineral RO water and zero pesticides on vertical indoor climate racks.',
     heroImage:
       'https://plus.unsplash.com/premium_photo-1661635029307-2183e966e5a8?fm=jpg&q=85&w=1400&auto=format&fit=crop',
     aliases: ['all', 'all-trays'],

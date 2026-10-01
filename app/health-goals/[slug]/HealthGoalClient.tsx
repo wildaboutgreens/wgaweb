@@ -48,7 +48,7 @@ const DEFAULT_REVIEWS: Review[] = [
     reviewer_name: 'Siddhant Tewari',
     reviewer_location: null,
     review_text:
-      "It's <strong>very light</strong> like almost drinking water and <strong>no heaviness</strong> on stomach. Fresh living greens cut right on morning of delivery.",
+      "It's <strong>very light</strong> like almost drinking water and <strong>no heaviness</strong> on stomach. Fresh microgreens cut right on morning of delivery.",
     rating: 5,
     display_order: 1,
     is_active: true,
@@ -59,7 +59,7 @@ const DEFAULT_REVIEWS: Review[] = [
     reviewer_name: 'Avi Dayal',
     reviewer_location: null,
     review_text:
-      '<strong>Clean and easy on gut.</strong> I love snipping fresh shoots every morning for breakfast. There is nothing like living greens!',
+      '<strong>Clean and easy on gut.</strong> I love snipping fresh shoots every morning for breakfast. There is nothing like fresh greens!',
     rating: 5,
     display_order: 2,
     is_active: true,
@@ -114,7 +114,7 @@ const DEFAULT_FAQS = [
     aKey: 'faq_a4',
     defaultQ: 'How is delivery handled?',
     defaultA:
-      'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
+      'We harvest on schedule so every fresh tray reaches your doorstep fresh within hours of harvest.',
   },
   {
     qKey: 'faq_q5',
@@ -130,7 +130,7 @@ const PRODUCT_METAS: Record<string, ProductMeta> = {
     photo: 'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=800&auto=format&fit=crop',
     benefit: '40x sulforaphane vs mature head',
     badge: { text: 'BESTSELLER', bg: '#9C4A5C', color: '#FFFDF8' },
-    sleeveDesc: 'Sulforaphane dense living shoots',
+    sleeveDesc: 'Sulforaphane dense fresh shoots',
   },
   'sunflower-microgreens': {
     photo: 'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=80&w=800&auto=format&fit=crop',
@@ -142,11 +142,11 @@ const PRODUCT_METAS: Record<string, ProductMeta> = {
     photo: 'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=800&auto=format&fit=crop',
     benefit: 'Vitamins A, C & peppery kick',
     badge: { text: 'PEAK FLAVOUR', bg: '#FF9F5A', color: '#122A1F' },
-    sleeveDesc: 'Zesty, spicy living garnish',
+    sleeveDesc: 'Zesty, spicy fresh garnish',
   },
   'classic-trio-bundle': {
     photo: 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=800&auto=format&fit=crop',
-    benefit: '3 living trays · all varieties',
+    benefit: '3 fresh trays · all varieties',
     badge: { text: 'VALUE BUNDLE', bg: '#9C4A5C', color: '#FFFDF8' },
     sleeveDesc: 'Broccoli, Radish & Sunflower trio',
   },
@@ -154,7 +154,7 @@ const PRODUCT_METAS: Record<string, ProductMeta> = {
     photo: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?fm=jpg&q=80&w=800&auto=format&fit=crop',
     benefit: 'Beta carotene & gentle sweetness',
     badge: { text: 'FRESH HARVEST', bg: '#E07A5F', color: '#FFFDF8' },
-    sleeveDesc: 'Sweet carrot living shoots',
+    sleeveDesc: 'Sweet carrot fresh shoots',
   },
 };
 
@@ -164,9 +164,9 @@ function getProductMeta(product: Product): ProductMeta {
   }
   return {
     photo: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?fm=jpg&q=80&w=800&auto=format&fit=crop',
-    benefit: 'Living greens · peak density',
+    benefit: 'Fresh greens · peak density',
     badge: { text: 'FRESH HARVEST', bg: '#3E8F52', color: '#FFFDF8' },
-    sleeveDesc: 'Locally grown living microgreens',
+    sleeveDesc: 'Locally grown fresh microgreens',
   };
 }
 
@@ -444,7 +444,7 @@ export default function HealthGoalClient({
               {currentGoal.title} Selection
             </h2>
             <p className="text-sm sm:text-base text-[#5C6B60] leading-relaxed">
-              Living microgreen varieties specifically mapped for {currentGoal.title.toLowerCase()}. Cut fresh to order on harvest morning for maximum cellular potency.
+              Fresh microgreen varieties specifically mapped for {currentGoal.title.toLowerCase()}. Cut fresh to order on harvest morning for maximum cellular potency.
             </p>
           </div>
 
@@ -547,7 +547,7 @@ export default function HealthGoalClient({
                             </div>
 
                             <div className="font-mono text-[5.5px] uppercase tracking-wider text-[#5C6B60] pt-1 border-t border-black/10">
-                              {isBundle ? 'LIVE BUNDLE · DAY 10' : '100G LIVE TRAY · DAY 10'}
+                              {isBundle ? 'HARVEST BUNDLE · DAY 10' : '100G FRESH TRAY · DAY 10'}
                             </div>
                           </div>
                         </div>
@@ -569,7 +569,7 @@ export default function HealthGoalClient({
                         <div className="flex items-center gap-2">
                           <span className="text-[#3E8F52] text-xs">🌿</span>
                           <span className="truncate">
-                            {product.highlight_2 || (isBundle ? 'Living bundle · 7-10 days fresh' : 'Living tray · 7-10 days fresh')}
+                            {product.highlight_2 || (isBundle ? 'Fresh bundle · 7-10 days fresh' : 'Fresh tray · 7-10 days fresh')}
                           </span>
                         </div>
                       </div>
@@ -616,7 +616,7 @@ export default function HealthGoalClient({
                 No trays currently mapped to {currentGoal.title}
               </h3>
               <p className="text-sm text-[#5C6B60] mb-6">
-                Our farm harvests living trays across all varieties weekly. You can browse our complete live tray catalogue or assign products in the admin panel.
+                Our farm harvests fresh trays across all varieties weekly. You can browse our complete tray catalogue or assign products in the admin panel.
               </p>
               <div className="flex justify-center gap-3">
                 <Link
@@ -679,13 +679,13 @@ export default function HealthGoalClient({
               </h2>
               <p className="text-sm sm:text-base text-white/80 max-w-lg mb-6 leading-relaxed">
                 {content.trust_subtitle ||
-                  'Living microgreens cut on delivery morning for optimal cellular density. Snip fresh daily into your meals.'}
+                  'Fresh microgreens cut on delivery morning for optimal cellular density. Snip fresh daily into your meals.'}
               </p>
               <Link
                 href="/products"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#FFFDF8] text-[#122A1F] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#CFFA57] transition-all shadow-md"
               >
-                <span>Shop All Living Greens</span>
+                <span>Shop All Microgreens</span>
                 <span>→</span>
               </Link>
             </div>
@@ -838,7 +838,7 @@ export default function HealthGoalClient({
               Join The Harvest Circle
             </span>
             <h3 className="font-serif text-3xl sm:text-4xl mt-2 mb-3">
-              Get 15% off your first living tray.
+              Get 15% off your first order.
             </h3>
             <p className="text-sm text-white/80 max-w-md mx-auto mb-6">
               Subscribe for harvest drops, microgreen care tips, and exclusive seasonal variety discounts.

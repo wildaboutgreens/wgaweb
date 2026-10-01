@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useCartStore, getProductThumbnail } from '@/lib/cartStore';
 import { formatPrice } from '@/lib/format';
-import { Plus, Minus, Truck } from '@/components/icons';
+import { Plus, Minus } from '@/components/icons';
 import CartMascot from '@/components/CartMascot';
 
 interface AddonProduct {
@@ -27,7 +27,7 @@ const DEFAULT_ADDONS: AddonProduct[] = [
     slug: 'broccoli-microgreens',
     name: 'Broccoli Microgreens',
     variantId: 'var-broccoli-50g',
-    variantLabel: '50g living tray',
+    variantLabel: '50g tray',
     pricePaise: 9900,
     mrpPaise: 12000,
     discountOff: '₹21 OFF',
@@ -40,7 +40,7 @@ const DEFAULT_ADDONS: AddonProduct[] = [
     slug: 'sunflower-microgreens',
     name: 'Sunflower Microgreens',
     variantId: 'var-sunflower-50g',
-    variantLabel: '50g living tray',
+    variantLabel: '50g tray',
     pricePaise: 8900,
     mrpPaise: 11000,
     discountOff: '₹21 OFF',
@@ -53,7 +53,7 @@ const DEFAULT_ADDONS: AddonProduct[] = [
     slug: 'radish-microgreens',
     name: 'Radish Microgreens',
     variantId: 'var-radish-50g',
-    variantLabel: '50g living tray',
+    variantLabel: '50g tray',
     pricePaise: 7900,
     mrpPaise: 9900,
     discountOff: '₹20 OFF',
@@ -66,7 +66,7 @@ const DEFAULT_ADDONS: AddonProduct[] = [
     slug: 'classic-trio-bundle',
     name: 'Classic Trio Bundle',
     variantId: 'var-trio-bundle',
-    variantLabel: '3 living trays',
+    variantLabel: '3 trays bundle',
     pricePaise: 24900,
     mrpPaise: 29900,
     discountOff: '₹50 OFF',
@@ -84,7 +84,7 @@ export default function CartPage() {
   const [cartContent, setCartContent] = useState<Record<string, string>>({
     cart_empty_title: 'This cart is empty inside!',
     cart_empty_subtitle:
-      'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.',
+      'Fill it with fresh greens, before this poor cart decides to compost itself out of pure loneliness.',
     cart_mascot_variant: 'pleading',
   });
 
@@ -157,7 +157,7 @@ export default function CartPage() {
         <main className="max-w-2xl mx-auto px-4">
           <div className="bg-[#FFFDF8] border border-[#E4DDC8] rounded-3xl p-10 sm:p-14 shadow-sm">
             <span className="text-6xl mb-5 block">🌱</span>
-            <p className="font-mono text-sm text-[#5C6B60]">Loading living cart...</p>
+            <p className="font-mono text-sm text-[#5C6B60]">Loading cart...</p>
           </div>
         </main>
       </div>
@@ -179,13 +179,13 @@ export default function CartPage() {
             </h1>
             <p className="font-handwriting text-2xl text-[#2D7A4D] font-bold mb-8 max-w-md mx-auto leading-snug">
               {cartContent.cart_empty_subtitle ||
-                'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.'}
+                'Fill it with fresh greens, before this poor cart decides to compost itself out of pure loneliness.'}
             </p>
             <Link
               href="/products"
               className="inline-block bg-[#122A1F] hover:bg-[#1C3F2D] text-[#FFFDF8] font-mono text-xs font-bold uppercase tracking-[0.14em] px-8 py-4 rounded-full transition-all shadow-md hover:-translate-y-0.5"
             >
-              Explore Living Trays →
+              Explore All Trays →
             </Link>
           </div>
         </main>
@@ -218,28 +218,13 @@ export default function CartPage() {
               Shopping Cart
             </h1>
             <p className="font-mono text-xs text-[#5C6B60] uppercase tracking-wider mt-1">
-              Fresh Living Harvest · Delivered to Your Doorstep
+              Fresh Harvest · Delivered to Your Doorstep
             </p>
           </div>
 
           <span className="self-start sm:self-auto font-mono text-xs font-bold text-[#1C3F2D] bg-[#EBF5EE] border border-[#C5DEC9] px-3 py-1 rounded-full">
             {items.reduce((sum, i) => sum + i.quantity, 0)} trays in box
           </span>
-        </div>
-
-        {/* Free Delivery Banner */}
-        <div className="mb-6 bg-gradient-to-r from-[#EBF5EE] to-[#E3EFE5] border border-[#C5DEC9] rounded-2xl px-4 py-3 flex items-center gap-3 shadow-2xs">
-          <div className="w-8 h-8 rounded-full bg-[#1C3F2D] text-[#FFFDF8] flex items-center justify-center shrink-0">
-            <Truck className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-mono text-xs font-bold text-[#1C3F2D] uppercase tracking-wider">
-              Free Hyperlocal Delivery Unlocked
-            </p>
-            <p className="text-xs text-[#5C6B60]">
-              Delivered within hours of live cutting directly to your doorstep.
-            </p>
-          </div>
         </div>
 
         {/* Item List */}
@@ -263,11 +248,13 @@ export default function CartPage() {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-mono text-[9.5px] uppercase font-bold text-[#1C3F2D] bg-[#EBF5EE] px-2 py-0.5 rounded border border-[#C5DEC9]">
-                        {item.isSubscription ? 'Living Subscription' : 'Living Tray'}
-                      </span>
-                    </div>
+                    {item.isSubscription && (
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-mono text-[9.5px] uppercase font-bold text-[#1C3F2D] bg-[#EBF5EE] px-2 py-0.5 rounded border border-[#C5DEC9]">
+                          Subscription
+                        </span>
+                      </div>
+                    )}
                     <Link
                       href={`/products/${item.productSlug}`}
                       className="font-serif font-bold text-base sm:text-lg text-[#151F19] hover:text-[#1C3F2D] transition-colors block truncate"
@@ -354,7 +341,7 @@ export default function CartPage() {
                   Frequently Added Together
                 </span>
                 <h3 className="font-serif font-bold text-xl text-[#151F19]">
-                  Add living bestsellers to your box
+                  Add bestsellers to your box
                 </h3>
               </div>
             </div>
@@ -422,14 +409,9 @@ export default function CartPage() {
               </span>
             </div>
             <div className="flex justify-between text-sm text-[#5C6B60]">
-              <span className="flex items-center gap-1.5">
-                <span>Delivery</span>
-                <span className="text-[10px] font-mono bg-[#EBF5EE] text-[#1C3F2D] px-1.5 py-0.5 rounded font-bold">
-                  FREE
-                </span>
-              </span>
-              <span className="font-mono text-xs text-[#3E8F52] font-bold uppercase">
-                FREE
+              <span>Delivery</span>
+              <span className="font-mono text-xs text-[#5C6B60]">
+                Calculated at checkout
               </span>
             </div>
           </div>
@@ -438,7 +420,7 @@ export default function CartPage() {
             <div>
               <span className="font-serif font-bold text-xl text-[#151F19] block">Total</span>
               <span className="font-mono text-[11px] text-[#5C6B60]">
-                Taxes &amp; delivery included
+                Delivery calculated at checkout
               </span>
             </div>
             <span className="font-mono font-bold text-2xl sm:text-3xl text-[#122A1F]">

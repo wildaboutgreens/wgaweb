@@ -416,7 +416,7 @@ export default function HomePageClient({
             <div className="text-white text-sm tracking-[3px]">★★★★★</div>
             <div className="font-mono text-[11.5px] tracking-[0.09em] uppercase text-[#FFFDF8]/85 font-medium text-center max-w-lg">
               {content.hero_trust_text ||
-                'Join over 1000+ families eating fresh living microgreens daily'}
+                'Join over 1000+ families eating fresh microgreens daily'}
             </div>
           </motion.div>
         </motion.div>

@@ -149,7 +149,7 @@ export default function Footer() {
                 />
               </Link>
               <p className="text-sm leading-relaxed text-[#FFFDF8]/60 max-w-[290px] mb-4">
-                Living microgreens, cut to order, grown on vertical indoor racks.
+                Fresh microgreens, cut to order, grown on vertical indoor racks.
               </p>
             </div>
 
@@ -236,7 +236,7 @@ export default function Footer() {
 
           {/* Bottom bar */}
           <div className="flex flex-col sm:flex-row justify-between items-center pt-6 text-[12.5px] text-[#FFFDF8]/40 gap-3">
-            <div>© Wild About Greens · Fresh living harvest</div>
+            <div>© Wild About Greens · Fresh harvest</div>
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <Link href="/privacy-policy" className="text-[#FFFDF8]/60 hover:text-[#CFFA57] transition-colors">
                 Privacy Policy

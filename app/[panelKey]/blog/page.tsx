@@ -356,7 +356,7 @@ export default function AdminBlogPage() {
               <span className="text-[11px] text-gray-500 font-medium mr-1">Quick Add:</span>
               {(form.post_type === 'recipe'
                 ? ['Salads', 'Breakfast', 'Lunch', 'Dinner', 'Quick Bites', 'Mains', 'Smoothies', 'Microgreens', 'Pea Shoots', 'Salad Cress']
-                : ['Nutrition', 'Antioxidants', 'Science', 'Farm Stories', 'Growing Guides', 'Living Nutrition']
+                : ['Nutrition', 'Antioxidants', 'Science', 'Farm Stories', 'Growing Guides', 'Cellular Nutrition']
               ).map((preset) => {
                 const isSelected = form.recipe_categories.includes(preset);
                 return (

@@ -1,0 +1,210 @@
+import React from 'react';
+
+interface LegalPageLayoutProps {
+  pageTitle: string;
+  docHeading?: string;
+  preamble?: string;
+  content: string;
+  lastUpdated?: string;
+}
+
+/**
+ * Formats inline bold (**text**) and markdown links ([text](url) or naked URLs) safely.
+ */
+function renderInlineFormatted(text: string): React.ReactNode {
+  // Regex to split by bold (**bold**) and markdown links [text](url) and plain links
+  const parts: React.ReactNode[] = [];
+  const regex = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|https?:\/\/[^\s)]+)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    const token = match[0];
+    if (token.startsWith('**') && token.endsWith('**')) {
+      parts.push(
+        <strong key={match.index} className="font-semibold text-gray-900">
+          {token.slice(2, -2)}
+        </strong>
+      );
+    } else if (token.startsWith('[') && token.includes('](')) {
+      const closeBracket = token.indexOf('](');
+      const linkText = token.slice(1, closeBracket);
+      const linkUrl = token.slice(closeBracket + 2, -1);
+      parts.push(
+        <a
+          key={match.index}
+          href={linkUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-black transition-colors"
+        >
+          {linkText}
+        </a>
+      );
+    } else if (token.startsWith('http')) {
+      parts.push(
+        <a
+          key={match.index}
+          href={token}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-black transition-colors"
+        >
+          {token}
+        </a>
+      );
+    }
+    lastIndex = match.index + token.length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
+
+/**
+ * Checks whether a single short line is an all-caps section header (like "OVERVIEW", "SECTION 1 - ...")
+ */
+function isSectionHeading(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.length > 120) return false;
+  if (trimmed.startsWith('#')) return true;
+
+  // Has letters, and all letters are uppercase
+  const letters = trimmed.replace(/[^a-zA-Z]/g, '');
+  if (letters.length >= 3 && letters === letters.toUpperCase()) {
+    // Exclude long legal disclaimers (e.g. over 150 chars or multi-sentence)
+    if (trimmed.split('. ').length > 1) return false;
+    return true;
+  }
+  return false;
+}
+
+export default function LegalPageLayout({
+  pageTitle,
+  docHeading,
+  preamble,
+  content,
+  lastUpdated,
+}: LegalPageLayoutProps) {
+  const isHtml = /<[a-z][\s\S]*>/i.test(content);
+
+  // Parse plain text / markdown into structured blocks if not raw HTML
+  const blocks = React.useMemo(() => {
+    if (isHtml) return [];
+    return content
+      .split(/\n{2,}/)
+      .map((b) => b.trim())
+      .filter(Boolean);
+  }, [content, isHtml]);
+
+  return (
+    <div className="bg-white min-h-screen text-gray-900 font-sans selection:bg-gray-200">
+      <main className="max-w-6xl xl:max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 pt-28 sm:pt-36 pb-20 sm:pb-28">
+        {/* Page Title: Top Left, Simple Bold Sans-Serif */}
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 mb-8 sm:mb-10 font-sans">
+          {pageTitle}
+        </h1>
+
+        {/* Centered Document Heading (e.g. TERMS OF SERVICE) */}
+        {docHeading && (
+          <div className="text-center mb-8 sm:mb-10">
+            <h2 className="inline-block font-sans font-bold text-sm sm:text-base uppercase tracking-wider underline text-gray-900">
+              {docHeading}
+            </h2>
+          </div>
+        )}
+
+        {/* Preamble / Electronic Record Disclaimer */}
+        {preamble && (
+          <div className="mb-8 sm:mb-10 font-sans font-bold uppercase text-xs sm:text-sm text-gray-900 leading-relaxed">
+            {preamble}
+          </div>
+        )}
+
+        {/* Policy Body */}
+        {isHtml ? (
+          <div
+            className="legal-content font-sans text-sm sm:text-base text-gray-900 leading-relaxed sm:leading-7 space-y-4
+              [&_h2]:font-bold [&_h2]:uppercase [&_h2]:underline [&_h2]:text-sm sm:[&_h2]:text-base [&_h2]:mt-8 [&_h2]:mb-4
+              [&_h3]:font-bold [&_h3]:uppercase [&_h3]:underline [&_h3]:text-sm sm:[&_h3]:text-base [&_h3]:mt-6 [&_h3]:mb-3
+              [&_p]:mb-4 [&_p]:leading-relaxed sm:[&_p]:leading-7
+              [&_ul]:list-disc [&_ul]:pl-5 sm:[&_ul]:pl-6 [&_ul]:space-y-2 [&_ul]:mb-4
+              [&_ol]:list-decimal [&_ol]:pl-5 sm:[&_ol]:pl-6 [&_ol]:space-y-2 [&_ol]:mb-4
+              [&_a]:underline hover:[&_a]:text-black"
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
+        ) : (
+          <div className="legal-content font-sans text-sm sm:text-base text-gray-900 leading-relaxed sm:leading-7 space-y-4">
+            {blocks.map((block, idx) => {
+              // Heading with Markdown ## or all-caps header
+              if (block.startsWith('#') || isSectionHeading(block)) {
+                const headingText = block.replace(/^#+\s*/, '').trim();
+                return (
+                  <h3
+                    key={idx}
+                    className="font-sans font-bold uppercase text-sm sm:text-base underline text-gray-900 mt-8 mb-4 block"
+                  >
+                    {headingText}
+                  </h3>
+                );
+              }
+
+              const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
+
+              // Bullet List
+              if (lines.length > 0 && lines.every((l) => /^[-*•]\s+/.test(l))) {
+                return (
+                  <ul key={idx} className="list-disc pl-5 sm:pl-6 space-y-2 mb-4 text-sm sm:text-base text-gray-900 leading-relaxed">
+                    {lines.map((item, itemIdx) => (
+                      <li key={itemIdx}>
+                        {renderInlineFormatted(item.replace(/^[-*•]\s+/, ''))}
+                      </li>
+                    ))}
+                  </ul>
+                );
+              }
+
+              // Numbered List
+              if (lines.length > 0 && lines.every((l) => /^\d+\.\s+/.test(l))) {
+                return (
+                  <ol key={idx} className="list-decimal pl-5 sm:pl-6 space-y-2 mb-4 text-sm sm:text-base text-gray-900 leading-relaxed">
+                    {lines.map((item, itemIdx) => (
+                      <li key={itemIdx}>
+                        {renderInlineFormatted(item.replace(/^\d+\.\s+/, ''))}
+                      </li>
+                    ))}
+                  </ol>
+                );
+              }
+
+              // Standard Paragraph with support for line breaks inside
+              return (
+                <p key={idx} className="font-sans text-sm sm:text-base text-gray-900 leading-relaxed sm:leading-7 mb-4">
+                  {lines.map((line, lineIdx) => (
+                    <React.Fragment key={lineIdx}>
+                      {renderInlineFormatted(line)}
+                      {lineIdx < lines.length - 1 && <br />}
+                    </React.Fragment>
+                  ))}
+                </p>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Optional Last Updated Note */}
+        {lastUpdated && (
+          <div className="mt-12 pt-6 border-t border-gray-200 text-xs text-gray-500 font-sans">
+            Last Updated: {lastUpdated}
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}

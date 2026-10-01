@@ -5,16 +5,16 @@ import ProductListClient from './ProductListClient';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Shop Living Microgreens · Wild About Greens',
-  description: 'Browse our range of living microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered fresh to your doorstep on harvest morning.',
+  title: 'Shop Microgreens · Wild About Greens',
+  description: 'Browse our range of fresh microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered fresh to your doorstep on harvest morning.',
   openGraph: {
-    title: 'Shop Living Microgreens · Wild About Greens',
-    description: 'Browse our range of living microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning.',
+    title: 'Shop Microgreens · Wild About Greens',
+    description: 'Browse our range of fresh microgreen trays, including broccoli, sunflower, radish and bundles. Cut to order, delivered on harvest morning.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Shop Living Microgreens · Wild About Greens',
-    description: 'Browse our range of living microgreen trays. Cut to order, delivered on harvest morning.',
+    title: 'Shop Microgreens · Wild About Greens',
+    description: 'Browse our range of fresh microgreen trays. Cut to order, delivered on harvest morning.',
   },
 };
 

@@ -2,13 +2,181 @@
 
 interface CartMascotProps {
   className?: string;
-  variant?: 'pleading' | 'dramatic' | 'angry' | string;
+  variant?: 'pleading' | 'dramatic' | 'angry' | 'happy' | 'waving' | string;
 }
 
 export default function CartMascot({
   className = 'w-40 h-40',
   variant = 'pleading',
 }: CartMascotProps) {
+  // 0. HAPPY / WAVING SPROUT (Brand Sprout Mascot for Menu & Greetings)
+  if (variant === 'happy' || variant === 'waving') {
+    return (
+      <svg
+        viewBox="0 0 200 200"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        className={className}
+      >
+        {/* Soft natural aura shadow */}
+        <ellipse cx="100" cy="180" rx="58" ry="8" fill="#E2EBE3" opacity="0.9" />
+
+        {/* Floating happy sparkles / fresh energy */}
+        <path
+          d="M146 44 Q152 36 148 28"
+          stroke="#3E8F52"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.75"
+        />
+        <circle cx="152" cy="54" r="2.5" fill="#CFFA57" />
+        <circle cx="50" cy="44" r="2" fill="#3E8F52" opacity="0.7" />
+        <path
+          d="M48 34 Q42 26 48 18"
+          stroke="#3E8F52"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          opacity="0.6"
+        />
+
+        {/* Main Body - living microgreens carton */}
+        <path
+          d="M75 55 
+             L90 42 L100 52 L112 38 L126 55 
+             L138 145 L62 145 Z"
+          fill="#EDF5EE"
+        />
+
+        {/* Hand-drawn sketchy hatching lines inside */}
+        <g stroke="#C2DCC7" strokeWidth="1.5" strokeLinecap="round" opacity="0.75">
+          <line x1="78" y1="62" x2="88" y2="85" />
+          <line x1="84" y1="60" x2="94" y2="88" />
+          <line x1="90" y1="62" x2="98" y2="82" />
+          <line x1="72" y1="95" x2="84" y2="125" />
+          <line x1="78" y1="95" x2="90" y2="128" />
+          <line x1="84" y1="100" x2="95" y2="132" />
+        </g>
+
+        {/* Outline in dark forest green */}
+        <path
+          d="M75 55 
+             L88 43 L99 53 L113 39 L126 55 
+             L138 145 
+             L62 145 
+             L75 55 Z"
+          stroke="#1C3F2D"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Cheerful Happy Eyebrows */}
+        <path
+          d="M78 80 Q86 74 94 80"
+          stroke="#1C3F2D"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+        />
+        <path
+          d="M122 80 Q114 74 106 80"
+          stroke="#1C3F2D"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+        />
+
+        {/* Big sparkling happy eyes */}
+        <ellipse cx="86" cy="95" rx="8.5" ry="9.5" fill="#1C3F2D" />
+        <circle cx="83.5" cy="91.5" r="3.2" fill="#FFFDF8" />
+        <circle cx="88.5" cy="97.5" r="1.6" fill="#FFFDF8" />
+
+        <ellipse cx="114" cy="95" rx="8.5" ry="9.5" fill="#1C3F2D" />
+        <circle cx="111.5" cy="91.5" r="3.2" fill="#FFFDF8" />
+        <circle cx="116.5" cy="97.5" r="1.6" fill="#FFFDF8" />
+
+        {/* Rosy blush on cheeks */}
+        <ellipse cx="73" cy="105" rx="5.5" ry="3" fill="#FFC9C0" opacity="0.85" />
+        <ellipse cx="127" cy="105" rx="5.5" ry="3" fill="#FFC9C0" opacity="0.85" />
+
+        {/* Cheerful open smile */}
+        <path
+          d="M92 110 Q100 124 108 110"
+          stroke="#1C3F2D"
+          strokeWidth="2.8"
+          strokeLinecap="round"
+        />
+        <path
+          d="M96 113 Q100 120 104 113"
+          fill="#FF9F93"
+        />
+
+        {/* Waving left arm */}
+        <path
+          d="M62 108 Q44 90 48 76 Q53 72 58 77 Q52 90 68 104"
+          stroke="#1C3F2D"
+          strokeWidth="2.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="#EDF5EE"
+        />
+        {/* Wave motion sparkle lines */}
+        <path
+          d="M40 68 Q44 64 42 60"
+          stroke="#3E8F52"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+        <path
+          d="M35 75 Q39 71 37 67"
+          stroke="#3E8F52"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+
+        {/* Right arm resting happily */}
+        <path
+          d="M138 108 Q148 120 134 128"
+          stroke="#1C3F2D"
+          strokeWidth="2.8"
+          strokeLinecap="round"
+        />
+
+        {/* Stumpy little legs */}
+        <path
+          d="M82 146 L79 164"
+          stroke="#1C3F2D"
+          strokeWidth="3.2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M118 146 L121 164"
+          stroke="#1C3F2D"
+          strokeWidth="3.2"
+          strokeLinecap="round"
+        />
+
+        {/* Perky living sprout on head */}
+        <path
+          d="M99 40 C93 23, 78 25, 78 33 C78 40, 90 41, 99 40 Z"
+          fill="#CFFA57"
+          stroke="#1C3F2D"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M99 40 C105 21, 120 24, 119 33 C118 40, 107 41, 99 40 Z"
+          fill="#93C285"
+          stroke="#1C3F2D"
+          strokeWidth="1.8"
+        />
+        <path
+          d="M99 38 C97 29, 101 29, 100 38 Z"
+          fill="#B7E23F"
+          stroke="#1C3F2D"
+          strokeWidth="1.4"
+        />
+      </svg>
+    );
+  }
+
   // 1. PLEADING / STARVING SPROUT (Default New Variation)
   if (variant === 'pleading') {
     return (

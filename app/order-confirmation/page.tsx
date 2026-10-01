@@ -87,7 +87,7 @@ function ConfirmationContent() {
               Thank You for Your Order{customerName ? `, ${customerName}` : ''}!
             </h1>
             <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto leading-relaxed">
-              We&apos;ve received your order and payment. Our urban farm team will harvest, carefully inspect, and pack your living greens fresh for peak vitality.
+              We&apos;ve received your order and payment. Our urban farm team will harvest, carefully inspect, and pack your fresh greens for peak vitality.
             </p>
           </div>
         </div>

@@ -155,7 +155,7 @@ const DEFAULT_FAQS = [
     aKey: 'faq_a4',
     defaultQ: 'How is delivery handled?',
     defaultA:
-      'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
+      'We harvest on schedule so every fresh tray reaches your doorstep fresh within hours of harvest.',
   },
   {
     qKey: 'faq_q5',
@@ -171,7 +171,7 @@ const PRODUCT_METAS: Record<string, ProductMeta> = {
     photo: 'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=800&auto=format&fit=crop',
     benefit: '40x sulforaphane vs mature head',
     badge: { text: 'BESTSELLER', bg: '#9C4A5C', color: '#FFFDF8' },
-    sleeveDesc: 'Sulforaphane dense living shoots',
+    sleeveDesc: 'Sulforaphane dense fresh shoots',
   },
   'sunflower-microgreens': {
     photo: 'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=80&w=800&auto=format&fit=crop',
@@ -183,11 +183,11 @@ const PRODUCT_METAS: Record<string, ProductMeta> = {
     photo: 'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=800&auto=format&fit=crop',
     benefit: 'Vitamins A, C & peppery kick',
     badge: { text: 'PEAK FLAVOUR', bg: '#FF9F5A', color: '#122A1F' },
-    sleeveDesc: 'Zesty, spicy living garnish',
+    sleeveDesc: 'Zesty, spicy fresh garnish',
   },
   'classic-trio-bundle': {
     photo: 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=800&auto=format&fit=crop',
-    benefit: '3 living trays · all varieties',
+    benefit: '3 fresh trays · all varieties',
     badge: { text: 'VALUE BUNDLE', bg: '#9C4A5C', color: '#FFFDF8' },
     sleeveDesc: 'Broccoli, Radish & Sunflower trio',
   },
@@ -199,9 +199,9 @@ function getProductMeta(product: Product): ProductMeta {
   }
   return {
     photo: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?fm=jpg&q=80&w=800&auto=format&fit=crop',
-    benefit: 'Living greens · peak density',
+    benefit: 'Fresh greens · peak density',
     badge: { text: 'FRESH HARVEST', bg: '#3E8F52', color: '#FFFDF8' },
-    sleeveDesc: 'Locally grown living microgreens',
+    sleeveDesc: 'Locally grown fresh microgreens',
   };
 }
 
@@ -337,7 +337,7 @@ export default function ProductListClient({
         title: content.salad_greens_title || 'SALAD GREENS',
         desc:
           content.salad_greens_desc ||
-          'Crunchy, peppery, living shoots harvested at peak biological density. Keep on your counter for 7 to 10 days living.',
+          'Crunchy, peppery, fresh shoots harvested at peak biological density. Keep on your counter for 7 to 10 days fresh.',
       };
     }
     if (catKey === 'samplers') {
@@ -345,12 +345,12 @@ export default function ProductListClient({
         title: content.samplers_title || 'SAMPLERS & BUNDLES',
         desc:
           content.samplers_desc ||
-          'Experience the full spectrum of cellular nutrition. Three signature living varieties delivered together at special bundle pricing.',
+          'Experience the full spectrum of cellular nutrition. Three signature varieties delivered together at special bundle pricing.',
       };
     }
     return {
       title: catKey.replace(/-/g, ' ').toUpperCase(),
-      desc: 'Living, nutrient dense microgreens grown with pure mineral RO water on vertical indoor racks.',
+      desc: 'Fresh, nutrient dense microgreens grown with pure mineral RO water on vertical indoor racks.',
     };
   };
 
@@ -429,7 +429,7 @@ export default function ProductListClient({
         {/* Left Column: Forest Copy */}
         <div className="bg-[#1C3F2D] text-[#FFFDF8] flex flex-col justify-center pt-36 pb-20 px-8 sm:px-14 lg:px-20">
           <div className="font-mono text-[11.5px] tracking-[0.14em] uppercase text-[#B7E23F] mb-5 font-semibold">
-            {content.hero_eyebrow || '🌱 LIVING HARVEST · HARVESTED TO ORDER'}
+            {content.hero_eyebrow || '🌱 FRESH HARVEST · HARVESTED TO ORDER'}
           </div>
 
           <h1 className="font-serif font-medium text-4xl sm:text-5xl lg:text-6xl leading-[1.06] tracking-tight max-w-lg mb-6">
@@ -446,7 +446,7 @@ export default function ProductListClient({
           <p className="text-sm sm:text-base text-white/80 max-w-md leading-relaxed mb-8">
             {content.hero_subtitle || (
               <>
-                Living microgreen trays delivered fresh on harvest morning. Snip fresh into your daily meals for up to 10 days.
+                Fresh microgreen trays delivered fresh on harvest morning. Snip fresh into your daily meals for up to 10 days.
               </>
             )}
           </p>
@@ -657,7 +657,7 @@ export default function ProductListClient({
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-[#3E8F52] text-xs">🌿</span>
-                              <span>{product.highlight_2 || (isBundle ? 'Living bundle · 7 to 10 days fresh' : 'Living tray · 7 to 10 days fresh')}</span>
+                              <span>{product.highlight_2 || (isBundle ? 'Bundle · 7 to 10 days fresh' : 'Fresh tray · 7 to 10 days fresh')}</span>
                             </div>
                           </div>
                         </div>

@@ -174,7 +174,7 @@ export default function OurStoryClient({
               {content.hero_eyebrow || 'Our Mission'}
             </div>
             <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl xl:text-[4.2rem] text-[#122A1F] leading-[1.06] tracking-[-0.015em] font-normal max-w-md lg:max-w-[12ch]">
-              {content.hero_title || 'Helping India rediscover the power of living food'}
+              {content.hero_title || 'Helping India rediscover the power of fresh food'}
             </h1>
             <div className="mt-8 sm:mt-10">
               <Link
@@ -441,7 +441,7 @@ export default function OurStoryClient({
             <ul className="list-none m-0 p-0 max-w-3xl space-y-3.5 font-editorial text-lg sm:text-xl text-[#1F271E]">
               <li className="grid grid-cols-[2.2rem_1fr] gap-2 items-baseline">
                 <span className="font-serif text-2xl text-[#2B5138] leading-none">+</span>
-                <span>We grow living food, not processed food.</span>
+                <span>We grow real food, not processed food.</span>
               </li>
               <li className="grid grid-cols-[2.2rem_1fr] gap-2 items-baseline">
                 <span className="font-serif text-2xl text-[#2B5138] leading-none">+</span>

@@ -241,7 +241,7 @@ export default function AdminHealthGoalsPage() {
                   value={form.popup_title}
                   onChange={(e) => setForm({ ...form, popup_title: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg text-sm bg-white"
-                  placeholder="e.g. Strengthen natural defenses with living sulforaphane & vitamin C."
+                  placeholder="e.g. Strengthen natural defenses with pure sulforaphane & vitamin C."
                 />
               </div>
 

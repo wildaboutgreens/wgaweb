@@ -16,14 +16,14 @@ const DEFAULT_TEMPLATES = {
   // Order Confirmation
   order_confirmation_subject: 'Wild About Greens: Order #{order_number} Confirmed! 🌱',
   order_confirmation_heading: 'Thanks for your order, {customer_name}!',
-  order_confirmation_intro: "We've received your order and payment. Our urban farm team will harvest and prepare your living microgreens fresh for delivery.",
+  order_confirmation_intro: "We've received your order and payment. Our urban farm team will harvest and prepare your microgreens fresh for delivery.",
   order_confirmation_footer: 'Questions about your delivery? Reply directly to this email or reach us on WhatsApp. Thank you for supporting sustainable urban farming!',
 
   // Newsletter
   newsletter_thankyou_subject: 'Welcome to Wild About Greens! 🌱',
   newsletter_thankyou_heading: 'Welcome to the Wild About Greens Family!',
   newsletter_thankyou_body: "Hi there!\n\nWelcome to Wild About Greens, we're thrilled to have you with us. 🌱\n\nHere is your exclusive 15% discount for your first order: USE CODE: WELCOME15\n\nStay fresh,\nThe Wild About Greens Team",
-  newsletter_thankyou_footer: 'Fresh living harvest delivered straight from our indoor farm to your doorstep.',
+  newsletter_thankyou_footer: 'Fresh harvest delivered straight from our indoor farm to your doorstep.',
 };
 
 export default function AdminEmailContentPage() {
@@ -363,7 +363,7 @@ export default function AdminEmailContentPage() {
                 rows={4}
                 value={form.order_confirmation_intro || ''}
                 onChange={(e) => handleChange('order_confirmation_intro', e.target.value)}
-                placeholder="We've received your order and payment. Our urban farm team will harvest and prepare your living microgreens fresh for delivery."
+                placeholder="We've received your order and payment. Our urban farm team will harvest and prepare your microgreens fresh for delivery."
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1C3F2D] focus:border-[#1C3F2D] outline-none resize-y"
               />
               <span className="text-[11px] text-gray-500 mt-1 block">
@@ -437,7 +437,7 @@ export default function AdminEmailContentPage() {
                       Wild About Greens
                     </h2>
                     <p className="text-[11px] tracking-wider text-[#CFFA57] uppercase font-mono mt-0.5">
-                      Fresh Living Harvest
+                      Fresh Harvest
                     </p>
                   </div>
 
@@ -484,13 +484,13 @@ export default function AdminEmailContentPage() {
                         <tbody className="divide-y divide-gray-100 text-gray-700">
                           <tr>
                             <td className="py-2.5 font-medium text-gray-900">Broccoli Microgreens</td>
-                            <td className="py-2.5 text-gray-500">50g Living Tray</td>
+                            <td className="py-2.5 text-gray-500">50g Tray</td>
                             <td className="py-2.5 text-center">2</td>
                             <td className="py-2.5 text-right font-medium">₹398.00</td>
                           </tr>
                           <tr>
                             <td className="py-2.5 font-medium text-gray-900">Radish Microgreens</td>
-                            <td className="py-2.5 text-gray-500">50g Living Tray</td>
+                            <td className="py-2.5 text-gray-500">50g Tray</td>
                             <td className="py-2.5 text-center">1</td>
                             <td className="py-2.5 text-right font-medium">₹199.00</td>
                           </tr>
@@ -611,7 +611,7 @@ export default function AdminEmailContentPage() {
                 rows={2}
                 value={form.newsletter_thankyou_footer || ''}
                 onChange={(e) => handleChange('newsletter_thankyou_footer', e.target.value)}
-                placeholder="Fresh living harvest delivered straight from our indoor farm to your doorstep."
+                placeholder="Fresh harvest delivered straight from our indoor farm to your doorstep."
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#1C3F2D] focus:border-[#1C3F2D] outline-none resize-y"
               />
               <span className="text-[11px] text-gray-500 mt-1 block">
@@ -667,7 +667,7 @@ export default function AdminEmailContentPage() {
                       Wild About Greens
                     </h2>
                     <p className="text-[11px] tracking-wider text-[#CFFA57] uppercase font-mono mt-0.5">
-                      Fresh Living Harvest
+                      Fresh Harvest
                     </p>
                   </div>
 
@@ -685,7 +685,7 @@ export default function AdminEmailContentPage() {
                     {/* Shop Microgreens Button */}
                     <div className="text-center pt-3">
                       <div className="inline-block bg-[#1C3F2D] text-[#FFFDF8] text-xs font-semibold px-6 py-3 rounded-full shadow-sm cursor-default">
-                        Explore Living Greens →
+                        Explore Fresh Greens →
                       </div>
                     </div>
 

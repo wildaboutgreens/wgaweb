@@ -6,15 +6,15 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: 'Recipe Khazana · Wild About Greens',
-  description: 'Fresh, vibrant, and effortless culinary ideas to snip living microgreens into your daily meals.',
+  description: 'Fresh, vibrant, and effortless culinary ideas to snip fresh microgreens into your daily meals.',
   openGraph: {
     title: 'Recipe Khazana · Wild About Greens',
-    description: 'Fresh, vibrant, and effortless culinary ideas to snip living microgreens into your daily meals.',
+    description: 'Fresh, vibrant, and effortless culinary ideas to snip fresh microgreens into your daily meals.',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Recipe Khazana · Wild About Greens',
-    description: 'Effortless culinary ideas with living microgreens.',
+    description: 'Effortless culinary ideas with fresh microgreens.',
   },
 };
 

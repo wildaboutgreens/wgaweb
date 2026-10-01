@@ -43,6 +43,9 @@ const PAGES = [
   { value: 'pathshala', label: 'Pathshala' },
   { value: 'our-story', label: 'Our Story' },
   { value: 'track-order', label: 'Track Order' },
+  { value: 'terms-and-conditions', label: 'Terms & Conditions' },
+  { value: 'privacy-policy', label: 'Privacy Policy' },
+  { value: 'shipping-and-returns', label: 'Shipping & Returns' },
 ];
 
 export default function AdminContentPage() {
@@ -209,6 +212,32 @@ export default function AdminContentPage() {
               Customize the empty cart headline, humor text, and mascot character variation. Pick up to 4 recommendation products via dropdowns — product prices, packaging labels, and packshot imagery automatically sync with the live database!
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Legal Policies Banner if active */}
+      {['terms-and-conditions', 'privacy-policy', 'shipping-and-returns'].includes(activePage) && (
+        <div className="bg-[#FAF8F2] border border-[#E4DDC8] rounded-xl p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">📜</span>
+            <div>
+              <h4 className="font-serif font-bold text-sm text-[#1C3F2D]">
+                Legal Policy Editor
+              </h4>
+              <p className="text-xs text-[#5C6B60] mt-0.5 leading-relaxed">
+                Simple, clean document layout with no fancy fonts. All-caps lines (or lines starting with ##) automatically become bold uppercase underlined section headers. Lines starting with &quot;-&quot; or &quot;*&quot; become bullet points.
+              </p>
+            </div>
+          </div>
+          <a
+            href={`/${activePage}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 px-3 py-1.5 rounded-lg border border-[#1C3F2D] text-[#1C3F2D] hover:bg-[#1C3F2D] hover:text-white text-xs font-semibold font-mono transition-colors flex items-center gap-1.5"
+          >
+            <span>View Live Page</span>
+            <span>↗</span>
+          </a>
         </div>
       )}
 
@@ -386,8 +415,10 @@ export default function AdminContentPage() {
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, [field.key]: e.target.value }))
                     }
-                    rows={4}
-                    className="w-full px-3 py-2 border rounded-lg text-sm leading-relaxed focus:ring-2 focus:ring-green-700/20 focus:border-green-700 outline-none"
+                    rows={field.key === 'body_content' ? 16 : field.key === 'preamble' ? 4 : 4}
+                    className={`w-full px-3 py-2 border rounded-lg text-sm leading-relaxed focus:ring-2 focus:ring-green-700/20 focus:border-green-700 outline-none ${
+                      field.key === 'body_content' ? 'font-mono text-xs leading-5' : ''
+                    }`}
                   />
                   {/* Quick-insert variation chips for cart_empty_subtitle */}
                   {field.key === 'cart_empty_subtitle' && (
@@ -397,9 +428,9 @@ export default function AdminContentPage() {
                       </span>
                       <div className="flex flex-col gap-1.5">
                         {[
-                          'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.',
+                          'Fill it with fresh greens, before this poor cart decides to compost itself out of pure loneliness.',
                           "Don't leave it starving — this little cart is one empty moment away from composting itself.",
-                          'A cart without living greens is an existential crisis on wheels. Feed it!',
+                          'A cart without fresh greens is an existential crisis on wheels. Feed it!',
                           "Fill it, before the cart takes a drastic step it'll regret the rest of its life.",
                         ].map((textOption, idx) => (
                           <button

@@ -12,7 +12,7 @@ const DEFAULT_DETAIL_ACCORDIONS: DetailAccordion[] = [
   {
     title: 'How to Eat & Store',
     content:
-      'Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of water to the bottom drip tray once a day.\n\nWhen ready to eat, simply snip what you need with kitchen scissors right above the root line. Your tray stays living and fresh for 7 to 10 days!',
+      'Keep your tray on the kitchen counter away from direct scorching sun. Add 50ml of water to the bottom drip tray once a day.\n\nWhen ready to eat, simply snip what you need with kitchen scissors right above the root line. Your tray stays crisp and fresh for 7 to 10 days!',
   },
   {
     title: 'Nutrient Profile & Science',
@@ -27,7 +27,7 @@ const DEFAULT_DETAIL_ACCORDIONS: DetailAccordion[] = [
   {
     title: 'Delivery & Packaging',
     content:
-      'Delivered in our reusable food-grade living trays. We dispatch orders within hours of the final quality check directly to your doorstep.',
+      'Delivered in our reusable food-grade fresh trays. We dispatch orders within hours of the final quality check directly to your doorstep.',
   },
 ];
 
@@ -50,7 +50,7 @@ const DEFAULT_PRODUCT_FAQS: ProductFAQ[] = [
   {
     question: 'How is delivery handled?',
     answer:
-      'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
+      'We harvest on schedule so every fresh tray reaches your doorstep fresh within hours of harvest.',
   },
   {
     question: 'Can restaurants order in bulk?',
@@ -403,7 +403,7 @@ export default function ProductDetailClient({
         const primaryCategory =
           Array.isArray(rel.categories) && rel.categories.length > 0
             ? rel.categories[0].replace(/-/g, ' ')
-            : 'Living greens';
+            : 'Fresh greens';
 
         // Subtitle line 1: Prefer admin panel highlight_1, else format type · category
         const typeNote =
@@ -416,7 +416,7 @@ export default function ProductDetailClient({
           rel.highlight_2 && rel.highlight_2.trim().length > 0
             ? rel.highlight_2
             : rel.is_bundle
-              ? rel.description || '3 fresh living trays'
+              ? rel.description || '3 fresh trays'
               : '7-day shelf · zero pesticide';
 
         // Badge label: Use admin panel badge_label
@@ -979,7 +979,7 @@ export default function ProductDetailClient({
                         rel.highlight_1 ||
                         fallback?.subtitle ||
                         rel.description ||
-                        'Locally grown living microgreens';
+                        'Locally grown fresh microgreens';
 
                       return (
                         <div
@@ -1278,10 +1278,10 @@ export default function ProductDetailClient({
                 ⚖️ The Real Difference
               </span>
               <h2 className="font-serif text-3xl sm:text-4xl font-medium leading-tight">
-                Why living greens beat the <em className="italic text-[#CFFA57] font-normal">supermarket shelf.</em>
+                Why fresh microgreens beat the <em className="italic text-[#CFFA57] font-normal">supermarket shelf.</em>
               </h2>
               <p className="text-sm text-white/70 mt-3 max-w-md leading-relaxed">
-                Vegetables cut days in advance hemorrhage vitamins in freight trucks. We deliver living
+                Vegetables cut days in advance hemorrhage vitamins in freight trucks. We deliver intact
                 roots that keep nourishing you until the final bite.
               </p>
             </div>
@@ -1311,7 +1311,7 @@ export default function ProductDetailClient({
                   <tr>
                     <td className="py-3.5 px-2 text-white/90 font-medium">Status at Delivery</td>
                     <td className="py-3.5 px-3 text-center bg-[#CFFA57]/10 font-bold text-[#CFFA57]">
-                      100% Living Tray
+                      Harvested Fresh Tray
                     </td>
                     <td className="py-3.5 px-2 text-center text-white/40">Dead / Cut Days Ago</td>
                   </tr>
@@ -1332,7 +1332,7 @@ export default function ProductDetailClient({
                   <tr>
                     <td className="py-3.5 px-2 text-white/90 font-medium">Shelf Life in Kitchen</td>
                     <td className="py-3.5 px-3 text-center bg-[#CFFA57]/10 font-bold text-[#CFFA57]">
-                      7 to 10 Days Living
+                      7 to 10 Days Fresh
                     </td>
                     <td className="py-3.5 px-2 text-center text-white/40">Wilts in 48 Hours</td>
                   </tr>

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCartStore } from '@/lib/cartStore';
 import { isAdminPath } from '@/lib/adminAuth';
 import { Truck, X } from '@/components/icons';
+import CartMascot from '@/components/CartMascot';
 
 export default function Header() {
   const pathname = usePathname();
@@ -287,71 +288,105 @@ export default function Header() {
                 </button>
               </div>
 
-              {/* Drawer Navigation Links */}
-              <div className="flex-1 px-4 py-5 space-y-1.5 overflow-y-auto">
-                <Link
-                  href="/pathshala"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between py-3 px-4 rounded-xl text-[14.5px] font-medium transition-all ${
-                    pathname === '/pathshala' || pathname.startsWith('/pathshala')
-                      ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
-                      : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
-                  }`}
-                >
-                  <span>Why Microgreens</span>
-                  <span className="text-xs opacity-60 font-mono">→</span>
-                </Link>
+              {/* Drawer Scrollable Content: Links with Separators + Bottom Doodle Art */}
+              <div className="flex-1 flex flex-col justify-between overflow-y-auto px-4 py-4 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {/* Navigation Links with dividing lines */}
+                <nav className="divide-y divide-[#E4DDC8] border-b border-[#E4DDC8]">
+                  {/* Shop Our Products at the top with matching design */}
+                  <div className="pb-1.5">
+                    <Link
+                      href="/products"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center justify-between py-3 px-3.5 rounded-xl text-[14.5px] font-medium transition-all ${
+                        pathname === '/products' || pathname.startsWith('/products')
+                          ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
+                          : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
+                      }`}
+                    >
+                      <span>Shop Our Products</span>
+                      <span className="text-xs opacity-60 font-mono">→</span>
+                    </Link>
+                  </div>
 
-                <Link
-                  href="/recipes"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between py-3 px-4 rounded-xl text-[14.5px] font-medium transition-all ${
-                    pathname === '/recipes' || pathname.startsWith('/recipes')
-                      ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
-                      : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
-                  }`}
-                >
-                  <span>Recipe Khazana</span>
-                  <span className="text-xs opacity-60 font-mono">→</span>
-                </Link>
+                  <div className="py-1.5">
+                    <Link
+                      href="/pathshala"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center justify-between py-3 px-3.5 rounded-xl text-[14.5px] font-medium transition-all ${
+                        pathname === '/pathshala' || pathname.startsWith('/pathshala')
+                          ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
+                          : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
+                      }`}
+                    >
+                      <span>Why Microgreens</span>
+                      <span className="text-xs opacity-60 font-mono">→</span>
+                    </Link>
+                  </div>
 
-                <Link
-                  href="/our-story"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between py-3 px-4 rounded-xl text-[14.5px] font-medium transition-all ${
-                    pathname === '/our-story' || pathname.startsWith('/our-story')
-                      ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
-                      : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
-                  }`}
-                >
-                  <span>Our Story</span>
-                  <span className="text-xs opacity-60 font-mono">→</span>
-                </Link>
+                  <div className="py-1.5">
+                    <Link
+                      href="/recipes"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center justify-between py-3 px-3.5 rounded-xl text-[14.5px] font-medium transition-all ${
+                        pathname === '/recipes' || pathname.startsWith('/recipes')
+                          ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
+                          : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
+                      }`}
+                    >
+                      <span>Recipe Khazana</span>
+                      <span className="text-xs opacity-60 font-mono">→</span>
+                    </Link>
+                  </div>
 
-                <Link
-                  href="/track-order"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between py-3 px-4 rounded-xl text-[14.5px] font-medium transition-all ${
-                    pathname === '/track-order' || pathname.startsWith('/track-order')
-                      ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
-                      : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Truck className="w-4 h-4 text-[#1C3F2D]" />
-                    <span>Track Order</span>
-                  </span>
-                  <span className="text-xs opacity-60 font-mono">→</span>
-                </Link>
+                  <div className="py-1.5">
+                    <Link
+                      href="/our-story"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center justify-between py-3 px-3.5 rounded-xl text-[14.5px] font-medium transition-all ${
+                        pathname === '/our-story' || pathname.startsWith('/our-story')
+                          ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
+                          : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
+                      }`}
+                    >
+                      <span>Our Story</span>
+                      <span className="text-xs opacity-60 font-mono">→</span>
+                    </Link>
+                  </div>
 
-                <div className="pt-4 mt-3 border-t border-[#E4DDC8]/70">
-                  <Link
-                    href="/products"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block text-center py-3 px-4 rounded-full font-semibold text-xs border border-[#1C3F2D] bg-[#1C3F2D] text-white hover:bg-[#122A1F] transition-all duration-200 shadow-sm active:scale-[0.98] select-none"
-                  >
-                    Shop Our Products
-                  </Link>
+                  <div className="py-1.5">
+                    <Link
+                      href="/track-order"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center justify-between py-3 px-3.5 rounded-xl text-[14.5px] font-medium transition-all ${
+                        pathname === '/track-order' || pathname.startsWith('/track-order')
+                          ? 'bg-[#1C3F2D] text-white font-semibold shadow-xs'
+                          : 'text-[#151F19] hover:bg-[#E8E1CE]/80 active:bg-[#E8E1CE]'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Truck
+                          className={`w-4 h-4 ${
+                            pathname === '/track-order' || pathname.startsWith('/track-order')
+                              ? 'text-white'
+                              : 'text-[#1C3F2D]'
+                          }`}
+                        />
+                        <span>Track Order</span>
+                      </span>
+                      <span className="text-xs opacity-60 font-mono">→</span>
+                    </Link>
+                  </div>
+                </nav>
+
+                {/* Mascot Doodle Art (Fills remaining space) */}
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-6 px-3 select-none my-auto">
+                  <CartMascot
+                    variant="happy"
+                    className="w-56 h-56 sm:w-64 sm:h-64 max-w-[240px] max-h-[240px] drop-shadow-sm transition-transform duration-300 hover:scale-105"
+                  />
+                  <p className="font-handwriting text-2xl sm:text-[26px] text-[#2D7A4D] font-bold mt-2 leading-snug">
+                    Fresh Greens, grown for you 🌱
+                  </p>
                 </div>
               </div>
             </motion.div>

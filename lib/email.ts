@@ -93,7 +93,7 @@ export async function sendOrderConfirmation(
 
   const rawSubject = emailConfig.order_confirmation_subject || 'Wild About Greens: Order #{order_number} Confirmed! 🌱';
   const rawHeading = emailConfig.order_confirmation_heading || 'Thanks for your order, {customer_name}!';
-  const rawIntro = emailConfig.order_confirmation_intro || "We've received your order and payment. Our urban farm team will harvest and prepare your living microgreens fresh for delivery.";
+  const rawIntro = emailConfig.order_confirmation_intro || "We've received your order and payment. Our urban farm team will harvest and prepare your microgreens fresh for delivery.";
   const rawFooter = emailConfig.order_confirmation_footer || "Questions about your delivery? Reply directly to this email or reach us on WhatsApp. Thank you for supporting sustainable urban farming!";
 
   const totalFormatted = `₹${(order.total_paise / 100).toFixed(2)}`;
@@ -184,7 +184,7 @@ export async function sendOrderConfirmation(
         <tr>
           <td style="background-color: #1C3F2D; padding: 28px 24px; text-align: center;">
             <p style="margin: 0; font-size: 11px; letter-spacing: 3px; color: #CFFA57; font-weight: 700; text-transform: uppercase;">
-              FRESH LIVING HARVEST
+              FRESH HARVEST
             </p>
             <h1 style="margin: 6px 0 0; font-size: 22px; letter-spacing: 2px; color: #FFFFFF; font-weight: 800; text-transform: uppercase;">
               WILD ABOUT GREENS
@@ -393,7 +393,7 @@ export async function sendNewsletterWelcome(
     const subject = contentMap.newsletter_thankyou_subject || 'Welcome to Wild About Greens! 🌱';
     const heading = contentMap.newsletter_thankyou_heading || 'Welcome to the Wild About Greens Family!';
     const bodyText = contentMap.newsletter_thankyou_body || "Hi there!\n\nWelcome to Wild About Greens, we're thrilled to have you with us. 🌱\n\nHere is your exclusive 15% discount for your first order: USE CODE: WELCOME15\n\nStay fresh,\nThe Wild About Greens Team";
-    const footerText = contentMap.newsletter_thankyou_footer || 'Fresh living harvest delivered straight from our indoor farm to your doorstep.';
+    const footerText = contentMap.newsletter_thankyou_footer || 'Fresh harvest delivered straight from our indoor farm to your doorstep.';
 
     // Convert plain text body to simple HTML paragraphs
     const bodyHtml = bodyText
@@ -415,7 +415,7 @@ export async function sendNewsletterWelcome(
           <tr>
             <td style="background-color: #1C3F2D; padding: 26px 20px; text-align: center;">
               <p style="margin: 0; font-size: 11px; letter-spacing: 3px; color: #CFFA57; font-weight: 700; text-transform: uppercase;">
-                FRESH LIVING HARVEST
+                FRESH HARVEST
               </p>
               <h1 style="margin: 6px 0 0; font-size: 20px; letter-spacing: 2px; color: #FFFFFF; font-weight: 800; text-transform: uppercase;">
                 WILD ABOUT GREENS
@@ -436,7 +436,7 @@ export async function sendNewsletterWelcome(
               <!-- Shop Button -->
               <div style="text-align: center; margin: 24px 0;">
                 <a href="https://wildaboutgreens.com/products" style="display: inline-block; background-color: #1C3F2D; color: #FFFFFF; font-size: 14px; font-weight: 700; text-decoration: none; padding: 13px 32px; border-radius: 9999px;">
-                  Explore Living Greens →
+                  Explore Fresh Greens →
                 </a>
               </div>
 

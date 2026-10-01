@@ -32,7 +32,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Hero Trust Line / Social Proof',
       type: 'text',
       defaultValue:
-        'Join over 1000+ families eating fresh living microgreens daily',
+        'Join over 1000+ families eating fresh microgreens daily',
     },
     {
       key: 'hero_image_url',
@@ -222,7 +222,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'hero_eyebrow',
       label: 'Hero Eyebrow / Pill',
       type: 'text',
-      defaultValue: '🌱 LIVING HARVEST · HARVESTED TO ORDER',
+      defaultValue: '🌱 FRESH HARVEST · HARVESTED TO ORDER',
     },
     {
       key: 'hero_title',
@@ -235,7 +235,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Hero Subtitle',
       type: 'textarea',
       defaultValue:
-        'Living microgreen trays delivered on harvest morning to your doorstep. Snip fresh into your daily meals for up to 10 days.',
+        'Fresh microgreen trays delivered on harvest morning to your doorstep. Snip fresh into your daily meals for up to 10 days.',
     },
     {
       key: 'hero_image_url',
@@ -255,7 +255,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Salad Greens Category Description',
       type: 'textarea',
       defaultValue:
-        'Crunchy, peppery, living shoots harvested at peak biological density. Keep on your counter for 7 to 10 days living.',
+        'Crunchy, peppery, fresh shoots harvested at peak biological density. Keep on your counter for 7 to 10 days fresh.',
     },
     {
       key: 'samplers_title',
@@ -268,7 +268,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'Samplers & Bundles Category Description',
       type: 'textarea',
       defaultValue:
-        'Experience the full spectrum of cellular nutrition. Three signature living varieties delivered together at special bundle pricing.',
+        'Experience the full spectrum of cellular nutrition. Three signature fresh varieties delivered together at special bundle pricing.',
     },
     {
       key: 'trust_title',
@@ -399,7 +399,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       label: 'FAQ Answer 4',
       type: 'textarea',
       defaultValue:
-        'We harvest on schedule so every living tray reaches your doorstep fresh within hours of harvest.',
+        'We harvest on schedule so every fresh tray reaches your doorstep within hours of harvest.',
     },
     {
       key: 'faq_q5',
@@ -555,7 +555,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'hero_title',
       label: 'Hero Headline',
       type: 'text',
-      defaultValue: 'Helping India rediscover the power of living food',
+      defaultValue: 'Helping India rediscover the power of fresh food',
     },
     {
       key: 'hero_cta_text',
@@ -702,7 +702,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'order_confirmation_intro',
       label: 'Order Confirmation Introductory Message',
       type: 'textarea',
-      defaultValue: "We've received your order and payment. Our urban farm team will harvest and prepare your living microgreens fresh for delivery.",
+      defaultValue: "We've received your order and payment. Our urban farm team will harvest and prepare your microgreens fresh for delivery.",
       description: 'Paragraph shown above the order number and items table.',
     },
     {
@@ -739,7 +739,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'newsletter_thankyou_footer',
       label: 'Newsletter Welcome Footer Note',
       type: 'textarea',
-      defaultValue: 'Fresh living harvest delivered straight from our indoor farm to your doorstep.',
+      defaultValue: 'Fresh harvest delivered straight from our indoor farm to your doorstep.',
       description: 'Footer text displayed at the bottom of the welcome email.',
     },
   ],
@@ -762,7 +762,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'hero_subtitle',
       label: 'Page Subtitle (Optional)',
       type: 'textarea',
-      defaultValue: 'Explore delicious and nutritious recipes crafted with fresh, living microgreens.',
+      defaultValue: 'Explore delicious and nutritious recipes crafted with fresh microgreens.',
       description: 'Optional short introductory subtitle displayed centered below the heading.',
     },
   ],
@@ -785,7 +785,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'hero_subtitle',
       label: 'Page Subtitle (Optional)',
       type: 'textarea',
-      defaultValue: 'Explore delicious and nutritious recipes crafted with fresh, living microgreens.',
+      defaultValue: 'Explore delicious and nutritious recipes crafted with fresh microgreens.',
       description: 'Optional short introductory subtitle displayed centered below the heading.',
     },
   ],
@@ -808,7 +808,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'hero_subtitle',
       label: 'Page Subtitle (Optional)',
       type: 'textarea',
-      defaultValue: 'Explore delicious and nutritious recipes crafted with fresh, living microgreens.',
+      defaultValue: 'Explore delicious and nutritious recipes crafted with fresh microgreens.',
       description: 'Optional short introductory subtitle displayed centered below the heading.',
     },
   ],
@@ -870,7 +870,7 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       key: 'cart_empty_subtitle',
       label: 'Empty Cart Punchline / Humor Text',
       type: 'textarea',
-      defaultValue: 'Fill it with living greens, before this poor cart decides to compost itself out of pure loneliness.',
+      defaultValue: 'Fill it with fresh greens, before this poor cart decides to compost itself out of pure loneliness.',
       description: 'Quirky cursive humor line displayed below the empty cart cartoon mascot.',
     },
     {
@@ -994,6 +994,288 @@ export const CONTENT_REGISTRY: Record<string, ContentFieldDef[]> = {
       type: 'text',
       defaultValue: 'Grown with mineral water & clean air · Harvested morning of delivery',
       description: 'Short trust badge displayed on the tracking result card.',
+    },
+  ],
+  'terms-and-conditions': [
+    {
+      key: 'page_title',
+      label: 'Page Title',
+      type: 'text',
+      defaultValue: 'Terms & Conditions',
+      description: 'Main heading displayed at the top left of the page.',
+    },
+    {
+      key: 'doc_heading',
+      label: 'Document Subheading',
+      type: 'text',
+      defaultValue: 'TERMS OF SERVICE',
+      description: 'Centered uppercase underlined title below the main heading.',
+    },
+    {
+      key: 'preamble',
+      label: 'Legal Preamble / Electronic Record Notice',
+      type: 'textarea',
+      defaultValue:
+        'THIS DOCUMENT IS AN ELECTRONIC RECORD IN TERMS OF THE INFORMATION TECHNOLOGY ACT, 2000 AND RULES MADE THEREUNDER. THIS ELECTRONIC RECORD IS GENERATED BY A COMPUTER SYSTEM AND DOES NOT REQUIRE ANY PHYSICAL OR DIGITAL SIGNATURES.',
+      description: 'Bold uppercase disclaimer paragraph displayed before the terms.',
+    },
+    {
+      key: 'body_content',
+      label: 'Terms & Conditions Content (Markdown / Text)',
+      type: 'textarea',
+      defaultValue: `OVERVIEW
+The domain name https://wildaboutgreens.com/ and its related sub-domains, sites, services, and tools (collectively, "Website") is owned and operated by Wild About Greens. Throughout the Website, the terms "we", "us" and "our" refer to Wild About Greens. We offer this Website, including all information, tools and services available from this Website to you, the user, conditioned upon your acceptance of all terms, conditions, policies and notices stated here.
+
+By visiting our site and/or purchasing fresh microgreens or subscriptions from us, you engage in our "Service" and agree to be bound by the following terms and conditions ("Terms of Service", "Terms"), including those additional terms and policies referenced herein and/or available by hyperlink.
+
+SECTION 1 - ONLINE STORE TERMS
+By agreeing to these Terms of Service, you represent that you are at least the age of majority in your state or province of residence, or that you are the age of majority and have given us your consent to allow any of your minor dependents to use this site.
+You may not use our products for any illegal or unauthorized purpose nor may you, in the use of the Service, violate any laws in your jurisdiction.
+
+SECTION 2 - GENERAL CONDITIONS & FRESH PRODUCE NATURE
+Wild About Greens provides freshly harvested microgreens grown on indoor vertical racks using RO mineral drinking water, clean air, and zero chemical pesticides.
+Because microgreens are freshly cut perishable produce with finite shelf life, all orders are harvested and prepared specifically for your scheduled delivery window. Microgreens must be promptly received, unboxed, and stored refrigerated at 4°C–7°C in accordance with provided care instructions.
+
+SECTION 3 - ACCURACY, COMPLETENESS AND TIMELINESS OF INFORMATION
+We are not responsible if information made available on this site is not accurate, complete or current. The material on this site is provided for general information only and should not be relied upon or used as the sole basis for making decisions without consulting primary or more timely sources of information. Any reliance on the material on this site is at your own risk.
+
+SECTION 4 - MODIFICATIONS TO THE SERVICE AND PRICES
+Prices for our microgreens and subscription bundles are subject to change without notice. We reserve the right at any time to modify or discontinue the Service (or any part or content thereof) without notice at any time. We shall not be liable to you or to any third-party for any modification, price change, suspension or discontinuance of the Service.
+
+SECTION 5 - PRODUCTS AND HARVEST FULFILLMENT
+Certain products or subscription plans may be available exclusively online through the Website. These products may have limited quantities based on our weekly indoor vertical rack capacity.
+We reserve the right, but are not obligated, to limit the sales of our products to any person, geographic region or jurisdiction. We fulfill morning deliveries across designated serviceable pin codes only.
+
+SECTION 6 - ACCURACY OF BILLING AND ACCOUNT INFORMATION
+We reserve the right to refuse any order you place with us. We may, in our sole discretion, limit or cancel quantities purchased per person, per household or per order. In the event that we make a change to or cancel an order, we will attempt to notify you by contacting the e-mail, billing address, or phone number provided at the time the order was made.
+Payments are processed securely via RBI-licensed payment gateways (Razorpay). We do not store credit card, debit card, or UPI credentials on our servers.
+
+SECTION 7 - RETURNS, REFUNDS AND CANCELLATIONS
+Due to the perishable nature of fresh microgreens, returns, replacements, and refunds are governed strictly by our Shipping & Returns Policy:
+- Any quality concerns, delivery damages, or missing items must be reported within 24 hours of delivery with photographic evidence.
+- Approved claims will receive a fresh replacement tray in our subsequent morning harvest or a full refund back to the original payment source.
+- Once harvested or dispatched, orders cannot be cancelled. Subscriptions may be paused or modified with at least 24 hours advance notice before the next scheduled harvest run.
+
+SECTION 8 - LIMITATION OF LIABILITY
+In no case shall Wild About Greens, our directors, officers, employees, affiliates, agents, contractors, or suppliers be liable for any injury, loss, claim, or any direct, indirect, incidental, punitive, special, or consequential damages of any kind, arising from your use of any of the service or any products procured using the service, including improper post-delivery storage or undisclosed individual dietary allergies.
+
+SECTION 9 - INDEMNIFICATION
+You agree to indemnify, defend and hold harmless Wild About Greens and our parent, subsidiaries, affiliates, partners, officers, directors, agents, contractors, licensors, service providers, subcontractors, suppliers, and employees, harmless from any claim or demand, including reasonable attorneys' fees, made by any third-party due to or arising out of your breach of these Terms of Service or the documents they incorporate by reference, or your violation of any law or the rights of a third-party.
+
+SECTION 10 - SEVERABILITY
+In the event that any provision of these Terms of Service is determined to be unlawful, void or unenforceable, such provision shall nonetheless be enforceable to the fullest extent permitted by applicable law, and the unenforceable portion shall be deemed to be severed from these Terms of Service, such determination shall not affect the validity and enforceability of any other remaining provisions.
+
+SECTION 11 - GOVERNING LAW & JURISDICTION
+These Terms of Service and any separate agreements whereby we provide you Services shall be governed by and construed in accordance with the laws of India, and any disputes shall be subject to the exclusive jurisdiction of the competent courts in the Tricity area (Chandigarh / Mohali / Panchkula).
+
+SECTION 12 - CONTACT INFORMATION
+Questions about the Terms of Service should be sent to us at:
+Wild About Greens Customer Care
+Email: hello@wildaboutgreens.com
+WhatsApp / Phone: +91 98XXXXXXXX
+Operating Hours: Monday – Sunday, 7:00 AM – 7:00 PM`,
+      description:
+        'Full legal content. All-caps lines automatically become bold uppercase underlined section headers. Lines starting with "-" or "*" become bullet points.',
+    },
+    {
+      key: 'last_updated',
+      label: 'Last Updated Date',
+      type: 'text',
+      defaultValue: 'October 2026',
+      description: 'Optional date note displayed at the bottom of the page.',
+    },
+  ],
+  'privacy-policy': [
+    {
+      key: 'page_title',
+      label: 'Page Title',
+      type: 'text',
+      defaultValue: 'Privacy Policy',
+      description: 'Main heading displayed at the top left of the page.',
+    },
+    {
+      key: 'doc_heading',
+      label: 'Document Subheading',
+      type: 'text',
+      defaultValue: 'PRIVACY POLICY',
+      description: 'Centered uppercase underlined title below the main heading.',
+    },
+    {
+      key: 'preamble',
+      label: 'Legal Preamble / Electronic Record Notice',
+      type: 'textarea',
+      defaultValue:
+        'THIS PRIVACY POLICY IS AN ELECTRONIC RECORD UNDER THE INFORMATION TECHNOLOGY ACT, 2000 AND THE RULES MADE THEREUNDER. THIS ELECTRONIC RECORD IS GENERATED BY A COMPUTER SYSTEM AND DOES NOT REQUIRE ANY PHYSICAL OR DIGITAL SIGNATURES.',
+      description: 'Bold uppercase disclaimer paragraph displayed before the policy.',
+    },
+    {
+      key: 'body_content',
+      label: 'Privacy Policy Content (Markdown / Text)',
+      type: 'textarea',
+      defaultValue: `OVERVIEW
+This Privacy Policy describes how Wild About Greens ("we", "us", or "our") collects, uses, stores, and discloses your personal information when you visit, use our services, or make a purchase from https://wildaboutgreens.com/ (the "Website").
+We respect your privacy and are committed to protecting personal data in compliance with the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011 and other applicable Indian laws.
+
+SECTION 1 - WHAT PERSONAL INFORMATION WE COLLECT
+When you visit the Website or place an order for fresh microgreens, we collect certain information to provide and fulfill our services:
+- Contact Information: Full name, phone number, and email address.
+- Delivery Information: Shipping street address, landmark, and delivery pincode.
+- Order History: Varieties selected, tray sizes, subscription frequencies, order dates, and payment identifiers.
+- Device & Browser Information: IP address, browser type, operating system, and timestamp logs collected for security and fraud prevention.
+
+SECTION 2 - HOW WE COLLECT INFORMATION
+We collect information directly from you when you:
+- Place an order or start a subscription on the Website.
+- Create an account or sign up for our newsletter.
+- Contact customer support via email, phone, or WhatsApp.
+- Track an existing harvest order using our order lookup tool.
+
+SECTION 3 - HOW WE USE YOUR PERSONAL INFORMATION
+We use your personal information strictly for legitimate business and operational purposes:
+- To harvest, pack, and deliver fresh microgreens to your designated address.
+- To send transactional order confirmations, harvest schedules, and delivery notifications.
+- To process payments securely through certified payment gateways.
+- To manage and fulfill recurring weekly subscription schedules.
+- To provide customer support, handle replacements, and process refunds.
+- To prevent fraudulent transactions and safeguard our store infrastructure.
+- To send promotional updates, seasonal recipes, and farming insights (only if you have opted into our newsletter, with a 1-click unsubscribe option in every email).
+
+SECTION 4 - PAYMENT SECURITY
+All online payments are securely processed through Razorpay, a PCI-DSS Level 1 compliant, RBI-licensed payment gateway.
+Wild About Greens does not capture, store, or process your credit card numbers, debit card details, net banking credentials, or UPI PINs on our servers. All payment information is encrypted and transmitted directly to the payment processor.
+
+SECTION 5 - COOKIES AND LOCAL STORAGE
+We use standard cookies and browser local storage strictly for essential store functionality:
+- Cart persistence: Remembering your selected trays while you browse.
+- Session authentication: Keeping you securely logged in if you hold an account.
+- Security tokens: Protecting against Cross-Site Request Forgery (CSRF) and bot attacks via Cloudflare Turnstile.
+We do not use invasive tracking cookies or sell your browsing history to third-party data brokers.
+
+SECTION 6 - DISCLOSURE OF YOUR INFORMATION
+We never sell, rent, or trade your personal data. We only share information with third-party service providers who assist us in fulfilling orders:
+- Logistics & Delivery Partners: To transport morning harvest orders to your doorstep.
+- Payment Gateways (Razorpay): To securely authorize transactions.
+- Transactional Email Services: To send receipts and tracking notifications.
+All third-party partners are bound by strict non-disclosure obligations and are permitted to use your information solely to provide their specified service to us.
+
+SECTION 7 - DATA RETENTION & SECURITY
+We retain your personal information only as long as necessary to fulfill the purposes outlined in this policy and to satisfy accounting, tax, and legal requirements.
+We implement industry-standard technical and organizational security measures, including HTTPS encryption in transit, strict access controls, and secure database hosting, to protect your data against unauthorized access, alteration, or disclosure.
+
+SECTION 8 - YOUR RIGHTS
+You have the right to:
+- Access the personal information we hold about you.
+- Request correction of inaccurate or incomplete contact or delivery information.
+- Opt out of marketing communications at any time via the unsubscribe link in our emails or by contacting customer support.
+- Request deletion of your customer profile, subject to statutory retention obligations under Indian tax and accounting laws.
+
+SECTION 9 - CHANGES TO THIS PRIVACY POLICY
+We reserve the right to modify this Privacy Policy at any time. Changes and clarifications will take effect immediately upon their posting on the Website. If we make material changes to this policy, we will update the "Last Updated" date at the bottom of this page.
+
+SECTION 10 - CONTACT INFORMATION & GRIEVANCE OFFICER
+If you have any questions, concerns, or requests regarding this Privacy Policy or the handling of your personal data, please contact our Grievance Officer:
+Wild About Greens
+Attn: Privacy & Grievance Officer
+Email: hello@wildaboutgreens.com
+WhatsApp / Phone: +91 98XXXXXXXX
+Operating Hours: Monday – Sunday, 7:00 AM – 7:00 PM`,
+      description:
+        'Full privacy policy content. All-caps lines automatically become bold uppercase underlined section headers. Lines starting with "-" or "*" become bullet points.',
+    },
+    {
+      key: 'last_updated',
+      label: 'Last Updated Date',
+      type: 'text',
+      defaultValue: 'October 2026',
+      description: 'Optional date note displayed at the bottom of the page.',
+    },
+  ],
+  'shipping-and-returns': [
+    {
+      key: 'page_title',
+      label: 'Page Title',
+      type: 'text',
+      defaultValue: 'Shipping & Returns',
+      description: 'Main heading displayed at the top left of the page.',
+    },
+    {
+      key: 'doc_heading',
+      label: 'Document Subheading',
+      type: 'text',
+      defaultValue: 'SHIPPING & RETURNS POLICY',
+      description: 'Centered uppercase underlined title below the main heading.',
+    },
+    {
+      key: 'preamble',
+      label: 'Policy Preamble / Quality Guarantee Notice',
+      type: 'textarea',
+      defaultValue:
+        'THIS DOCUMENT SETS FORTH THE SHIPPING, HARVEST DELIVERY, AND RETURN POLICIES FOR ALL ORDERS PLACED ON WILD ABOUT GREENS. BY PLACING AN ORDER, YOU AGREE TO THE TERMS OUTLINED BELOW.',
+      description: 'Bold uppercase notice paragraph displayed before the policy.',
+    },
+    {
+      key: 'body_content',
+      label: 'Shipping & Returns Content (Markdown / Text)',
+      type: 'textarea',
+      defaultValue: `OVERVIEW
+Wild About Greens operates an indoor vertical urban farm. Unlike traditional produce that sits in refrigerated distribution chains for days, our microgreens are cut to order on the morning of delivery to ensure you receive produce at peak biological vitality. Because fresh microgreens are highly perishable, our shipping and return policies are crafted to be prompt, transparent, and fair.
+
+SECTION 1 - SERVICEABLE DELIVERY AREAS
+We currently fulfill morning harvest deliveries across designated pin codes within the Tricity area (Chandigarh, Mohali, Panchkula, and immediate surroundings).
+You can verify whether your location is serviceable by entering your 6-digit delivery pincode at checkout or on any product page. Orders placed for addresses outside our active delivery zone will be cancelled and promptly refunded in full.
+
+SECTION 2 - HARVEST & DELIVERY SCHEDULE
+- Morning Delivery Window: Deliveries take place between 7:00 AM and 1:00 PM on your scheduled harvest day.
+- Cut-to-Order Process: Trays are harvested in the early morning hours preceding dispatch to preserve moisture, flavor, and nutrient density.
+- Delivery Handover: Please ensure that a valid 10-digit phone number is provided and that someone is available to receive the package during the morning delivery window. If no one is available, our delivery partner will attempt to reach you by phone.
+
+SECTION 3 - POST-DELIVERY STORAGE & CARE
+Microgreens are delicate, fresh produce. To enjoy 7 to 10 days of peak freshness:
+- Unpack immediately upon delivery.
+- Place the tray or clamshell into your refrigerator (optimal temperature: 4°C–7°C).
+- For fresh root trays, keep the roots lightly hydrated as instructed on the packaging sleeve.
+- Do not leave delivered packages in direct sunlight, warm cars, or outside doorways.
+
+SECTION 4 - RETURN & REPLACEMENT POLICY (24-HOUR GUARANTEE)
+We take pride in our harvest standards. However, because our produce is perishable, standard e-commerce return windows do not apply. We offer a 24-Hour Freshness Guarantee under the following conditions:
+- Eligible Situations:
+  1. Transit damage to the packaging resulting in crushed or unhygienic produce.
+  2. Produce that arrives spoiled, wilted, or failing our quality standards upon initial delivery.
+  3. Incorrect microgreen variety or package size delivered.
+- Notice Requirement: You must report any quality issue or damage within 24 hours of delivery.
+- Evidence Required: Send a clear photograph of the affected tray and packaging label to our customer support team via WhatsApp or Email.
+
+SECTION 5 - RESOLUTION OPTIONS: FRESH REPLACEMENT OR REFUND
+Upon verifying your claim:
+- Free Fresh Replacement (Recommended): We will harvest a fresh replacement tray and dispatch it on our subsequent morning delivery run at zero extra charge.
+- Full Refund: If you prefer a refund, we will credit the amount back to your original payment method (UPI, credit/debit card, net banking) via Razorpay. Refund processing typically takes 5–7 business days to reflect in your account.
+
+SECTION 6 - NON-ELIGIBLE SCENARIOS
+We cannot offer replacements or refunds for:
+- Claims reported more than 24 hours after delivery.
+- Quality degradation caused by improper storage (e.g. failure to refrigerate, leaving produce in hot environments, over-watering root beds).
+- Deliveries delayed or missed due to incorrect delivery address or unreachable recipient contact numbers provided at checkout.
+- Subjective taste preference (microgreens have distinct, bold natural flavor profiles).
+
+SECTION 7 - ORDER CANCELLATIONS & SUBSCRIPTION MODIFICATIONS
+- One-Time Orders: Harvesting begins in the early morning hours according to scheduled orders. You may cancel your order at no penalty provided harvesting has not commenced. Once harvested or dispatched with the morning delivery partner, orders cannot be cancelled.
+- Weekly Subscriptions: Subscribers can pause, skip a delivery, change variety preferences, or cancel their subscription by notifying us at least 24 hours prior to the upcoming delivery day. Subscription refunds for unused cycles will be prorated.
+
+SECTION 8 - CUSTOMER SUPPORT CONTACT
+To request a replacement, refund, or delivery inquiry:
+Wild About Greens Customer Care
+Email: hello@wildaboutgreens.com
+WhatsApp / Phone: +91 98XXXXXXXX
+Operating Hours: Monday – Sunday, 7:00 AM – 7:00 PM`,
+      description:
+        'Full shipping and returns policy content. All-caps lines automatically become bold uppercase underlined section headers. Lines starting with "-" or "*" become bullet points.',
+    },
+    {
+      key: 'last_updated',
+      label: 'Last Updated Date',
+      type: 'text',
+      defaultValue: 'October 2026',
+      description: 'Optional date note displayed at the bottom of the page.',
     },
   ],
 };

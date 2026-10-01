@@ -150,7 +150,7 @@ export default function ContactUsPage() {
               Contact Us
             </h1>
             <p className="text-[#151F19]/75 text-sm sm:text-base leading-relaxed">
-              Have questions about our living microgreens, subscription schedules, or custom orders? Send us a message and our harvest team will respond promptly.
+              Have questions about our microgreens, subscription schedules, or custom orders? Send us a message and our harvest team will respond promptly.
             </p>
           </div>
 

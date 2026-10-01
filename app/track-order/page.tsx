@@ -118,7 +118,7 @@ const TIMELINE_STEPS = [
   {
     key: 'delivered',
     title: 'Delivered Fresh',
-    desc: 'Delivered living to your doorstep',
+    desc: 'Delivered fresh to your doorstep',
     icon: '✨',
   },
 ];

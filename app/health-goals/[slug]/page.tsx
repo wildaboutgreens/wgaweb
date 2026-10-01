@@ -16,21 +16,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!goal) {
     return {
       title: 'Health Goals · Wild About Greens',
-      description: 'Living microgreens curated by health goal.',
+      description: 'Fresh microgreens curated by health goal.',
     };
   }
 
   return {
-    title: `${goal.title} · Living Microgreens | Wild About Greens`,
+    title: `${goal.title} · Fresh Microgreens | Wild About Greens`,
     description: goal.heroSubtitle,
     openGraph: {
-      title: `${goal.title} · Living Microgreens | Wild About Greens`,
+      title: `${goal.title} · Fresh Microgreens | Wild About Greens`,
       description: goal.heroSubtitle,
       images: [{ url: goal.heroImage }],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${goal.title} · Living Microgreens | Wild About Greens`,
+      title: `${goal.title} · Fresh Microgreens | Wild About Greens`,
       description: goal.heroSubtitle,
     },
   };

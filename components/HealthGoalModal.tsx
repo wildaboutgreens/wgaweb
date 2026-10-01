@@ -29,7 +29,7 @@ const PRODUCT_METAS: Record<string, ProductMeta> = {
     photo: 'https://images.unsplash.com/photo-1540073280202-6e5c781befec?fm=jpg&q=80&w=800&auto=format&fit=crop',
     benefit: '40x sulforaphane vs mature head',
     badge: { text: 'BESTSELLER', bg: '#9C4A5C', color: '#FFFDF8' },
-    sleeveDesc: 'Sulforaphane dense living shoots',
+    sleeveDesc: 'Sulforaphane dense fresh shoots',
   },
   'sunflower-microgreens': {
     photo: 'https://images.unsplash.com/photo-1613769049987-b31b641f25b1?fm=jpg&q=80&w=800&auto=format&fit=crop',
@@ -41,11 +41,11 @@ const PRODUCT_METAS: Record<string, ProductMeta> = {
     photo: 'https://images.unsplash.com/photo-1647613233075-e0d5546b0f22?fm=jpg&q=80&w=800&auto=format&fit=crop',
     benefit: 'Vitamins A, C & peppery kick',
     badge: { text: 'PEAK FLAVOUR', bg: '#FF9F5A', color: '#122A1F' },
-    sleeveDesc: 'Zesty, spicy living garnish',
+    sleeveDesc: 'Zesty, spicy fresh garnish',
   },
   'classic-trio-bundle': {
     photo: 'https://plus.unsplash.com/premium_photo-1703258064295-71c77cc0720f?fm=jpg&q=80&w=800&auto=format&fit=crop',
-    benefit: '3 living trays · all varieties',
+    benefit: '3 fresh trays · all varieties',
     badge: { text: 'VALUE BUNDLE', bg: '#9C4A5C', color: '#FFFDF8' },
     sleeveDesc: 'Broccoli, Radish & Sunflower trio',
   },
@@ -53,7 +53,7 @@ const PRODUCT_METAS: Record<string, ProductMeta> = {
     photo: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?fm=jpg&q=80&w=800&auto=format&fit=crop',
     benefit: 'Beta carotene & gentle sweetness',
     badge: { text: 'FRESH HARVEST', bg: '#E07A5F', color: '#FFFDF8' },
-    sleeveDesc: 'Sweet carrot living shoots',
+    sleeveDesc: 'Sweet carrot fresh shoots',
   },
 };
 
@@ -63,9 +63,9 @@ function getProductMeta(product: Product): ProductMeta {
   }
   return {
     photo: 'https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?fm=jpg&q=80&w=800&auto=format&fit=crop',
-    benefit: 'Living greens · peak density',
+    benefit: 'Fresh greens · peak density',
     badge: { text: 'FRESH HARVEST', bg: '#3E8F52', color: '#FFFDF8' },
-    sleeveDesc: 'Locally grown living microgreens',
+    sleeveDesc: 'Locally grown fresh microgreens',
   };
 }
 
@@ -255,7 +255,7 @@ export default function HealthGoalModal({
             >
               <div className="flex items-center justify-between border-b border-[#E4DDC8] pb-3">
                 <div className="font-mono text-[11px] sm:text-xs uppercase tracking-wider text-[#5C6B60] font-semibold flex items-center gap-1.5">
-                  <span>🌱</span> Available Living Trays ({mappedProducts.length})
+                  <span>🌱</span> Available Trays ({mappedProducts.length})
                 </div>
               </div>
 
@@ -353,7 +353,7 @@ export default function HealthGoalModal({
                                   </p>
                                 </div>
                                 <div className="font-mono text-[5.5px] uppercase tracking-wider text-[#5C6B60] pt-1 border-t border-black/10">
-                                  {isBundle ? 'LIVE BUNDLE · DAY 10' : '100G LIVE TRAY · DAY 10'}
+                                  {isBundle ? 'HARVEST BUNDLE · DAY 10' : '100G FRESH TRAY · DAY 10'}
                                 </div>
                               </div>
                             </div>
@@ -378,7 +378,7 @@ export default function HealthGoalModal({
                             <div className="flex items-center gap-1.5 truncate">
                               <span className="text-[#3E8F52]">🌿</span>
                               <span className="truncate">
-                                {product.highlight_2 || (isBundle ? 'Living bundle · 7-10 days fresh' : 'Living tray · 7-10 days fresh')}
+                                {product.highlight_2 || (isBundle ? 'Fresh bundle · 7-10 days fresh' : 'Fresh tray · 7-10 days fresh')}
                               </span>
                             </div>
                           </div>
@@ -426,7 +426,7 @@ export default function HealthGoalModal({
                     No microgreens currently mapped to {activeGoal.title}
                   </h4>
                   <p className="text-xs text-[#5C6B60] mb-4 max-w-sm mx-auto">
-                    Browse our full live variety lineup or assign products under this health goal in the admin panel.
+                    Browse our full variety lineup or assign products under this health goal in the admin panel.
                   </p>
                   <button
                     onClick={() => onSelectGoal('all-trays')}
